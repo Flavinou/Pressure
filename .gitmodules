@@ -1,3 +1,0 @@
-[submodule "Pressure/extern/spdlog"]
-	path = Pressure/extern/spdlog
-	url = https://github.com/gabime/spdlog
