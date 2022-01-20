@@ -29,7 +29,7 @@ namespace Pressure
 #define PRS_CORE_INFO(...)		  ::Pressure::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define PRS_CORE_TRACE(...)		  ::Pressure::Log::GetCoreLogger()->trace(__VA_ARGS__)
 
-// Core log macros				  
+// Client log macros				  
 #define PRS_CLIENT_FATAL(...)	  ::Pressure::Log::GetClientLogger()->fatal(__VA_ARGS__)
 #define PRS_CLIENT_ERROR(...)	  ::Pressure::Log::GetClientLogger()->error(__VA_ARGS__)
 #define PRS_CLIENT_WARN(...)	  ::Pressure::Log::GetClientLogger()->warn(__VA_ARGS__)
