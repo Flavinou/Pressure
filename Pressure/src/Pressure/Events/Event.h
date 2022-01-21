@@ -1,9 +1,7 @@
 #pragma once
 
+#include "prspch.h"
 #include "Pressure/Core.h"
-
-#include <string>
-#include <functional>
 
 namespace Pressure
 {

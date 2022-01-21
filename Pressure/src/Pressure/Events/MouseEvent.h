@@ -2,8 +2,6 @@
 
 #include "Event.h"
 
-#include <sstream>
-
 namespace Pressure {
 
 	class PRESSURE_API MouseMovedEvent : public Event

@@ -17,6 +17,9 @@ project "Pressure"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+    pchheader "prspch.h"
+    pchsource "Pressure/src/prspch.cpp"
     
     files
     {

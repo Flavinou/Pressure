@@ -34,6 +34,7 @@
     <ClInclude Include="src\Pressure\Log.h">
       <Filter>Pressure</Filter>
     </ClInclude>
+    <ClInclude Include="src\prspch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Pressure\Application.cpp">
@@ -42,5 +43,6 @@
     <ClCompile Include="src\Pressure\Log.cpp">
       <Filter>Pressure</Filter>
     </ClCompile>
+    <ClCompile Include="src\prspch.cpp" />
   </ItemGroup>
 </Project>
