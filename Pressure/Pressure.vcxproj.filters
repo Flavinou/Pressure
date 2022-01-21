@@ -4,6 +4,9 @@
     <Filter Include="Pressure">
       <UniqueIdentifier>{1EF8AF8B-0AC5-0A97-33DE-F83E1F0A4025}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pressure\Events">
+      <UniqueIdentifier>{429635F2-AE21-A3B6-B732-26AB233DFFB6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pressure.h" />
@@ -15,6 +18,18 @@
     </ClInclude>
     <ClInclude Include="src\Pressure\EntryPoint.h">
       <Filter>Pressure</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Events\ApplicationEvent.h">
+      <Filter>Pressure\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Events\Event.h">
+      <Filter>Pressure\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Events\KeyEvent.h">
+      <Filter>Pressure\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Events\MouseEvent.h">
+      <Filter>Pressure\Events</Filter>
     </ClInclude>
     <ClInclude Include="src\Pressure\Log.h">
       <Filter>Pressure</Filter>

@@ -8,7 +8,7 @@ int main(int argc, char** argv)
 {
 	Pressure::Log::Init();
 	PRS_CORE_WARN("Initialized Logging !");
-	PRS_CLIENT_INFO("Initialized Logging !");
+	PRS_INFO("Initialized Logging !");
 
 	auto app = Pressure::CreateApplication();
 	app->Run();

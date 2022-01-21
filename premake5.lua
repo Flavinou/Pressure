@@ -26,6 +26,7 @@ project "Pressure"
 
     includedirs
     {
+        "%{prj.name}/src",
         "%{prj.name}/extern/spdlog/include",
     }
 

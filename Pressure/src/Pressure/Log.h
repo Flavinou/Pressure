@@ -1,9 +1,10 @@
 #pragma once
 
 #include <memory>
+
 #include "Core.h"
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/fmt/ostr.h"
 
 namespace Pressure
 {
@@ -30,8 +31,8 @@ namespace Pressure
 #define PRS_CORE_TRACE(...)		  ::Pressure::Log::GetCoreLogger()->trace(__VA_ARGS__)
 
 // Client log macros				  
-#define PRS_CLIENT_FATAL(...)	  ::Pressure::Log::GetClientLogger()->fatal(__VA_ARGS__)
-#define PRS_CLIENT_ERROR(...)	  ::Pressure::Log::GetClientLogger()->error(__VA_ARGS__)
-#define PRS_CLIENT_WARN(...)	  ::Pressure::Log::GetClientLogger()->warn(__VA_ARGS__)
-#define PRS_CLIENT_INFO(...)	  ::Pressure::Log::GetClientLogger()->info(__VA_ARGS__)
-#define PRS_CLIENT_TRACE(...)	  ::Pressure::Log::GetClientLogger()->trace(__VA_ARGS__)
+#define PRS_FATAL(...)	  ::Pressure::Log::GetClientLogger()->fatal(__VA_ARGS__)
+#define PRS_ERROR(...)	  ::Pressure::Log::GetClientLogger()->error(__VA_ARGS__)
+#define PRS_WARN(...)	  ::Pressure::Log::GetClientLogger()->warn(__VA_ARGS__)
+#define PRS_INFO(...)	  ::Pressure::Log::GetClientLogger()->info(__VA_ARGS__)
+#define PRS_TRACE(...)	  ::Pressure::Log::GetClientLogger()->trace(__VA_ARGS__)

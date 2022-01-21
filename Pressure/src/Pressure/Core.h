@@ -9,3 +9,5 @@
 #else
 	#error Pressure only supports Windows for now !
 #endif // PRS_PLATFORM_WINDOWS
+
+#define BIT(x) (1 << x)
