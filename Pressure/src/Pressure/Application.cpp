@@ -4,11 +4,14 @@
 #include "Pressure/Events/ApplicationEvent.h"
 #include "Pressure/Log.h"
 
+#include <GLFW/glfw3.h>
+
 namespace Pressure
 {
 
 	Application::Application()
 	{
+		m_Window = std::unique_ptr<Window>(Window::Create());
 	}
 	
 	Application::~Application()
@@ -17,18 +20,12 @@ namespace Pressure
 
 	void Application::Run()
 	{
-		WindowResizeEvent e(1280, 720);
-		if (e.IsInCategory(EventCategoryApplication))
+		while (m_Running)
 		{
-			PRS_TRACE(e);
+			glClearColor(1, 0, 1, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
+			m_Window->OnUpdate();
 		}
-		if (e.IsInCategory(EventCategoryInput))
-		{
-			PRS_TRACE(e);
-		}
-
-
-		while (true);
 	}
 
 }

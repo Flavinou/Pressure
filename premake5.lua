@@ -10,6 +10,12 @@ workspace "Pressure"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- Include directories relative to root folder (solution directory)
+IncludeDir = {}
+IncludeDir["GLFW"] = "Pressure/extern/GLFW/include"
+
+include "Pressure/extern/GLFW"
+
 project "Pressure"
     location "Pressure"
     kind "SharedLib"
@@ -31,6 +37,13 @@ project "Pressure"
     {
         "%{prj.name}/src",
         "%{prj.name}/extern/spdlog/include",
+        "%{IncludeDir.GLFW}",
+    }
+    
+    links
+    {
+        "GLFW",
+        "opengl32.lib",
     }
 
     filter "system:windows"
