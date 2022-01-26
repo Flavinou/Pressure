@@ -13,8 +13,10 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["GLFW"] = "Pressure/extern/GLFW/include"
+IncludeDir["Glad"] = "Pressure/extern/Glad/include"
 
 include "Pressure/extern/GLFW"
+include "Pressure/extern/Glad"
 
 project "Pressure"
     location "Pressure"
@@ -38,11 +40,13 @@ project "Pressure"
         "%{prj.name}/src",
         "%{prj.name}/extern/spdlog/include",
         "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}",
     }
     
     links
     {
         "GLFW",
+        "Glad",
         "opengl32.lib",
     }
 
@@ -54,7 +58,8 @@ project "Pressure"
         defines
         {
             "PRS_PLATFORM_WINDOWS",
-            "PRS_BUILD_DLL"
+            "PRS_BUILD_DLL",
+            "GLFW_INCLUDE_NONE"
         }
 
         postbuildcommands
