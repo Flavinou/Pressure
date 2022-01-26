@@ -64,14 +64,17 @@ project "Pressure"
 
     filter "configurations:Debug"
         defines "PRS_DEBUG"
+        buildoptions "/MDd"
         symbols "On"
 
     filter "configurations:Release"
         defines "PRS_RELEASE"
+        buildoptions "/MD"
         optimize "On"
 
     filter "configurations:Dist"
         defines "PRS_DIST"
+        buildoptions "/MD"
         optimize "On"
 
 project "Sandbox"
@@ -111,12 +114,15 @@ project "Sandbox"
 
     filter "configurations:Debug"
         defines "PRS_DEBUG"
+        buildoptions "/MDd"
         symbols "On"
 
     filter "configurations:Release"
         defines "PRS_RELEASE"
+        buildoptions "/MD"
         optimize "On"
 
     filter "configurations:Dist"
         defines "PRS_DIST"
+        buildoptions "/MD"
         optimize "On"
