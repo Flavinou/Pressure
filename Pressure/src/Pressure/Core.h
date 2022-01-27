@@ -10,6 +10,10 @@
 	#error Pressure only supports Windows for now !
 #endif // PRS_PLATFORM_WINDOWS
 
+#ifdef PRS_DEBUG
+	#define PRS_ENABLE_ASSERTS
+#endif // PRS_DEBUG
+
 #ifdef PRS_ENABLE_ASSERTS
 	#define PRS_ASSERT(x, ...) { if(!(x)) { PRS_ERROR("Assertion failed: {0}", __VA_ARGS__); __debugbreak(); } }
 	#define PRS_CORE_ASSERT(x, ...) { if(!(x)) { PRS_CORE_ERROR("Assertion failed: {0}", __VA_ARGS__); __debugbreak(); } }
