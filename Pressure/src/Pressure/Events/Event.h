@@ -84,5 +84,4 @@ namespace Pressure
 	{
 		return os << e.ToString();
 	}
-
 }

@@ -7,3 +7,6 @@
 [submodule "Pressure/extern/imgui"]
 	path = Pressure/extern/imgui
 	url = https://github.com/Flavinou/imgui
+[submodule "Pressure/extern/glm"]
+	path = Pressure/extern/glm
+	url = https://github.com/g-truc/glm

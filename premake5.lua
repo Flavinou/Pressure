@@ -16,6 +16,7 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Pressure/extern/GLFW/include"
 IncludeDir["Glad"] = "Pressure/extern/Glad/include"
 IncludeDir["ImGui"] = "Pressure/extern/imgui"
+IncludeDir["glm"] = "Pressure/extern/glm"
 
 include "Pressure/extern/GLFW"
 include "Pressure/extern/Glad"
@@ -37,6 +38,9 @@ project "Pressure"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "%{prj.name}/src/**.cpp",
+		"%{prj.name}/extern/glm/glm/**.hpp",
+		"%{prj.name}/extern/glm/glm/**.inl",
     }
 
     includedirs
@@ -46,6 +50,7 @@ project "Pressure"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
+        "%{IncludeDir.glm}",
     }
     
     links
@@ -105,7 +110,8 @@ project "Sandbox"
     includedirs
     {
         "Pressure/extern/spdlog/include",
-        "Pressure/src"
+        "Pressure/src",
+        "%{IncludeDir.glm}"
     }
 
     links
