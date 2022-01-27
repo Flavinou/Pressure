@@ -10,12 +10,19 @@ public:
 
 	void OnUpdate() override
 	{
-		PRS_INFO("ExampleLayer::Update");
+		if (Pressure::Input::IsKeyPressed(PRS_KEY_TAB))
+			PRS_TRACE("Tab key is pressed ! (poll)");
 	}
 
 	void OnEvent(Pressure::Event& event) override
 	{
-		PRS_TRACE("{0}", event);
+		if (event.GetEventType() == Pressure::EventType::KeyPressed)
+		{
+			Pressure::KeyPressedEvent& e = (Pressure::KeyPressedEvent&)event;
+			if (e.GetKeyCode() == PRS_KEY_TAB)
+				PRS_TRACE("Tab key is pressed ! (event)");
+			PRS_TRACE("{0}", (char)e.GetKeyCode());
+		}
 	}
 };
 

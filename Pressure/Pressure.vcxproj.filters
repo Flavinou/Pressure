@@ -70,6 +70,8 @@
     <ClInclude Include="src\prspch.h" />
     <ClInclude Include="src\Pressure\Input.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
+    <ClInclude Include="src\Pressure\KeyCodes.h" />
+    <ClInclude Include="src\Pressure\MouseButtonCodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">

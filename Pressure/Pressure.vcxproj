@@ -162,9 +162,11 @@
     <ClInclude Include="src\Pressure\Events\MouseEvent.h" />
     <ClInclude Include="src\Pressure\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Pressure\Input.h" />
+    <ClInclude Include="src\Pressure\KeyCodes.h" />
     <ClInclude Include="src\Pressure\Layer.h" />
     <ClInclude Include="src\Pressure\LayerStack.h" />
     <ClInclude Include="src\Pressure\Log.h" />
+    <ClInclude Include="src\Pressure\MouseButtonCodes.h" />
     <ClInclude Include="src\Pressure\Window.h" />
     <ClInclude Include="src\prspch.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
