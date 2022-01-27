@@ -5,6 +5,8 @@
 #include "Pressure/Layer.h"
 #include "Pressure/Log.h"
 
+#include "Pressure/ImGui/ImGuiLayer.h"
+
 // -------- ENTRY POINT ---------
 #include "Pressure/EntryPoint.h"
 // ------------------------------

@@ -1,5 +1,6 @@
 workspace "Pressure"
     architecture "x64"
+    startproject "Sandbox"
 
     configurations
     {
@@ -14,9 +15,11 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "Pressure/extern/GLFW/include"
 IncludeDir["Glad"] = "Pressure/extern/Glad/include"
+IncludeDir["ImGui"] = "Pressure/extern/imgui"
 
 include "Pressure/extern/GLFW"
 include "Pressure/extern/Glad"
+include "Pressure/extern/imgui"
 
 project "Pressure"
     location "Pressure"
@@ -41,12 +44,14 @@ project "Pressure"
         "%{prj.name}/extern/spdlog/include",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
+        "%{IncludeDir.ImGui}",
     }
     
     links
     {
         "GLFW",
         "Glad",
+        "ImGui",
         "opengl32.lib",
     }
 
