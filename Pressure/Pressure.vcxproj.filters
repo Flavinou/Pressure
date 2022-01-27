@@ -68,6 +68,8 @@
       <Filter>Pressure</Filter>
     </ClInclude>
     <ClInclude Include="src\prspch.h" />
+    <ClInclude Include="src\Pressure\Input.h" />
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp">
@@ -92,5 +94,6 @@
       <Filter>Pressure</Filter>
     </ClCompile>
     <ClCompile Include="src\prspch.cpp" />
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
   </ItemGroup>
 </Project>
