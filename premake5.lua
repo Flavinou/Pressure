@@ -38,7 +38,6 @@ project "Pressure"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
-        "%{prj.name}/src/**.cpp",
 		"%{prj.name}/extern/glm/glm/**.hpp",
 		"%{prj.name}/extern/glm/glm/**.inl",
     }
@@ -111,6 +110,7 @@ project "Sandbox"
     {
         "Pressure/extern/spdlog/include",
         "Pressure/src",
+        "Pressure/extern",
         "%{IncludeDir.glm}"
     }
 

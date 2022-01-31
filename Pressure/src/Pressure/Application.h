@@ -7,6 +7,8 @@
 #include "Pressure/Events/Event.h"
 #include "Pressure/Events/ApplicationEvent.h"
 
+#include "Pressure/ImGui/ImGuiLayer.h"
+
 namespace Pressure
 {
 
@@ -30,6 +32,7 @@ namespace Pressure
 		bool OnWindowClose(WindowCloseEvent& e);
 
 		std::unique_ptr<Window> m_Window;
+		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 	private:

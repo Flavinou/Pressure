@@ -564,8 +564,6 @@
     <ClInclude Include="extern\glm\glm\vec3.hpp" />
     <ClInclude Include="extern\glm\glm\vec4.hpp" />
     <ClInclude Include="extern\glm\glm\vector_relational.hpp" />
-    <ClInclude Include="src\Platform\OpenGL\ImGuiOpenGLLoader.h" />
-    <ClInclude Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Pressure.h" />
@@ -587,10 +585,10 @@
     <ClInclude Include="src\prspch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Pressure\Application.cpp" />
+    <ClCompile Include="src\Pressure\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Pressure\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Pressure\Layer.cpp" />
     <ClCompile Include="src\Pressure\LayerStack.cpp" />

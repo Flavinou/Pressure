@@ -1,5 +1,7 @@
 #include <Pressure.h>
 
+#include "imgui/imgui.h"
+
 class ExampleLayer : public Pressure::Layer
 {
 public:
@@ -12,6 +14,13 @@ public:
 	{
 		if (Pressure::Input::IsKeyPressed(PRS_KEY_TAB))
 			PRS_TRACE("Tab key is pressed ! (poll)");
+	}
+
+	void OnImGuiRender()
+	{
+		ImGui::Begin("Test");
+		ImGui::Text("Hello World");
+		ImGui::End();
 	}
 
 	void OnEvent(Pressure::Event& event) override
@@ -32,7 +41,6 @@ public:
 	Sandbox()
 	{
 		PushLayer(new ExampleLayer());
-		PushOverlay(new Pressure::ImGuiLayer());
 	}
 
 	~Sandbox()
