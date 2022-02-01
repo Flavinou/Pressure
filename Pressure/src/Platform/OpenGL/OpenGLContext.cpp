@@ -19,6 +19,11 @@ namespace Pressure
         glfwMakeContextCurrent(m_WindowHandle);
         int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
         PRS_CORE_ASSERT(status, "Failed to initialize Glad!");
+
+        PRS_CORE_INFO("OpenGL Information :");
+        PRS_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
+        PRS_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
+        PRS_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
     }
 
     void OpenGLContext::SwapBuffers()
