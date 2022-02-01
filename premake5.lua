@@ -24,9 +24,10 @@ include "Pressure/extern/imgui"
 
 project "Pressure"
     location "Pressure"
-    kind "SharedLib"
+    kind "StaticLib"
     language "C++"
-    staticruntime "off"
+    cppdialect "C++17"
+    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -38,8 +39,13 @@ project "Pressure"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
-		"%{prj.name}/extern/glm/glm/**.hpp",
-		"%{prj.name}/extern/glm/glm/**.inl",
+        "%{prj.name}/extern/glm/glm/**.hpp",
+        "%{prj.name}/extern/glm/glm/**.inl",
+    }
+
+    defines
+    {
+        "_CRT_NO_SECURE_WARNINGS"
     }
 
     includedirs
@@ -61,7 +67,6 @@ project "Pressure"
     }
 
     filter "system:windows"
-        cppdialect "C++17"
         systemversion "latest"
 
         defines
@@ -71,31 +76,27 @@ project "Pressure"
             "GLFW_INCLUDE_NONE"
         }
 
-        postbuildcommands
-        {
-            ("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
-        }
-
     filter "configurations:Debug"
         defines "PRS_DEBUG"
         runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
         defines "PRS_RELEASE"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
     filter "configurations:Dist"
         defines "PRS_DIST"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
 project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
     language "C++"
-    staticruntime "off"
+    cppdialect "C++17"
+    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")    
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -120,7 +121,6 @@ project "Sandbox"
     }
 
     filter "system:windows"
-        cppdialect "C++17"
         systemversion "latest"
 
         defines
@@ -131,14 +131,14 @@ project "Sandbox"
     filter "configurations:Debug"
         defines "PRS_DEBUG"
         runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
         defines "PRS_RELEASE"
         runtime "Release"
-        optimize "On"
+        optimize "on"
 
     filter "configurations:Dist"
         defines "PRS_DIST"
         runtime "Release"
-        optimize "On"
+        optimize "on"

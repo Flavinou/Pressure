@@ -3,8 +3,7 @@
 #include "Pressure/Window.h"
 
 #include <GLFW/glfw3.h>
-
-
+#include "Pressure/Renderer/GraphicsContext.h"
 
 namespace Pressure
 {
@@ -31,6 +30,7 @@ namespace Pressure
 		virtual void Shutdown();
 	private:
 		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
 
 		struct WindowData
 		{

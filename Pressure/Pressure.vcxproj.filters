@@ -28,6 +28,9 @@
     <Filter Include="src\Platform">
       <UniqueIdentifier>{21CA02E5-0D2D-9289-B6B2-CA3FA2F45D0C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Platform\OpenGL">
+      <UniqueIdentifier>{35A49437-A105-7245-2A73-B8F796D3A804}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Platform\Windows">
       <UniqueIdentifier>{5B054582-4794-CE4B-F0B2-E246DC20DFF1}</UniqueIdentifier>
     </Filter>
@@ -39,6 +42,9 @@
     </Filter>
     <Filter Include="src\Pressure\ImGui">
       <UniqueIdentifier>{FFAB0994-EB8F-CAE9-54F0-C43C40F3B46B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Pressure\Renderer">
+      <UniqueIdentifier>{5B86FDA1-C7F2-B89C-90E6-50FAFC11DB04}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1287,6 +1293,9 @@
     <ClInclude Include="extern\glm\glm\vector_relational.hpp">
       <Filter>extern\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
       <Filter>src\Platform\Windows</Filter>
     </ClInclude>
@@ -1338,6 +1347,9 @@
     <ClInclude Include="src\Pressure\MouseButtonCodes.h">
       <Filter>src\Pressure</Filter>
     </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\GraphicsContext.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Pressure\Window.h">
       <Filter>src\Pressure</Filter>
     </ClInclude>
@@ -1346,6 +1358,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
       <Filter>src\Platform\Windows</Filter>
     </ClCompile>
