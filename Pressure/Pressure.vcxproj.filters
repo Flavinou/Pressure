@@ -1350,6 +1350,9 @@
     <ClInclude Include="src\Pressure\Renderer\GraphicsContext.h">
       <Filter>src\Pressure\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\Shader.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Pressure\Window.h">
       <Filter>src\Pressure</Filter>
     </ClInclude>
@@ -1384,6 +1387,9 @@
     </ClCompile>
     <ClCompile Include="src\Pressure\Log.cpp">
       <Filter>src\Pressure</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pressure\Renderer\Shader.cpp">
+      <Filter>src\Pressure\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\prspch.cpp">
       <Filter>src</Filter>

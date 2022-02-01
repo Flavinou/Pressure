@@ -22,6 +22,13 @@ include "Pressure/extern/GLFW"
 include "Pressure/extern/Glad"
 include "Pressure/extern/imgui"
 
+group "Dependencies"
+	include "Pressure/extern/GLFW"
+	include "Pressure/extern/Glad"
+	include "Pressure/extern/imgui"
+
+group ""
+
 project "Pressure"
     location "Pressure"
     kind "StaticLib"

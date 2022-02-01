@@ -8,6 +8,7 @@
 #include "Pressure/Events/ApplicationEvent.h"
 
 #include "Pressure/ImGui/ImGuiLayer.h"
+#include "Pressure/Renderer/Shader.h"
 
 namespace Pressure
 {
@@ -37,6 +38,7 @@ namespace Pressure
 		LayerStack m_LayerStack;
 
 		unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer;
+		std::unique_ptr<Shader> m_Shader;
 	private:
 		static Application* s_Instance;
 	};

@@ -574,6 +574,7 @@
     <ClInclude Include="src\Pressure\Log.h" />
     <ClInclude Include="src\Pressure\MouseButtonCodes.h" />
     <ClInclude Include="src\Pressure\Renderer\GraphicsContext.h" />
+    <ClInclude Include="src\Pressure\Renderer\Shader.h" />
     <ClInclude Include="src\Pressure\Window.h" />
     <ClInclude Include="src\prspch.h" />
   </ItemGroup>
@@ -587,6 +588,7 @@
     <ClCompile Include="src\Pressure\Layer.cpp" />
     <ClCompile Include="src\Pressure\LayerStack.cpp" />
     <ClCompile Include="src\Pressure\Log.cpp" />
+    <ClCompile Include="src\Pressure\Renderer\Shader.cpp" />
     <ClCompile Include="src\prspch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
