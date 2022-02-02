@@ -3,12 +3,16 @@
 #include "Core.h"
 
 #include "Window.h"
+
 #include "Pressure/LayerStack.h"
+
 #include "Pressure/Events/Event.h"
 #include "Pressure/Events/ApplicationEvent.h"
 
 #include "Pressure/ImGui/ImGuiLayer.h"
+
 #include "Pressure/Renderer/Shader.h"
+#include "Pressure/Renderer/Buffer.h"
 
 namespace Pressure
 {
@@ -37,8 +41,10 @@ namespace Pressure
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 
-		unsigned int m_VertexArray, m_VertexBuffer, m_IndexBuffer;
+		unsigned int m_VertexArray;
 		std::unique_ptr<Shader> m_Shader;
+		std::unique_ptr<VertexBuffer> m_VertexBuffer;
+		std::unique_ptr<IndexBuffer> m_IndexBuffer;
 	private:
 		static Application* s_Instance;
 	};
