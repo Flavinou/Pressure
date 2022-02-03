@@ -22,15 +22,15 @@ namespace Pressure
 }
 
 // Core log macros
-#define PRS_CORE_FATAL(...)		  ::Pressure::Log::GetCoreLogger()->fatal(__VA_ARGS__)
+#define PRS_CORE_CRITICAL(...)	  ::Pressure::Log::GetCoreLogger()->critical(__VA_ARGS__)
 #define PRS_CORE_ERROR(...)		  ::Pressure::Log::GetCoreLogger()->error(__VA_ARGS__)
 #define PRS_CORE_WARN(...)		  ::Pressure::Log::GetCoreLogger()->warn(__VA_ARGS__)
 #define PRS_CORE_INFO(...)		  ::Pressure::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define PRS_CORE_TRACE(...)		  ::Pressure::Log::GetCoreLogger()->trace(__VA_ARGS__)
 
 // Client log macros				  
-#define PRS_FATAL(...)	  ::Pressure::Log::GetClientLogger()->fatal(__VA_ARGS__)
-#define PRS_ERROR(...)	  ::Pressure::Log::GetClientLogger()->error(__VA_ARGS__)
-#define PRS_WARN(...)	  ::Pressure::Log::GetClientLogger()->warn(__VA_ARGS__)
-#define PRS_INFO(...)	  ::Pressure::Log::GetClientLogger()->info(__VA_ARGS__)
-#define PRS_TRACE(...)	  ::Pressure::Log::GetClientLogger()->trace(__VA_ARGS__)
+#define PRS_CRITICAL(...)		  ::Pressure::Log::GetClientLogger()->critical(__VA_ARGS__)
+#define PRS_ERROR(...)			  ::Pressure::Log::GetClientLogger()->error(__VA_ARGS__)
+#define PRS_WARN(...)			  ::Pressure::Log::GetClientLogger()->warn(__VA_ARGS__)
+#define PRS_INFO(...)			  ::Pressure::Log::GetClientLogger()->info(__VA_ARGS__)
+#define PRS_TRACE(...)			  ::Pressure::Log::GetClientLogger()->trace(__VA_ARGS__)

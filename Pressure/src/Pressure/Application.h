@@ -13,6 +13,7 @@
 
 #include "Pressure/Renderer/Shader.h"
 #include "Pressure/Renderer/Buffer.h"
+#include "Pressure/Renderer/VertexArray.h"
 
 namespace Pressure
 {
@@ -21,7 +22,7 @@ namespace Pressure
 	{
 	public:
 		Application();
-		virtual ~Application();
+		virtual ~Application() = default;
 
 		void Run();
 
@@ -41,10 +42,11 @@ namespace Pressure
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 
-		unsigned int m_VertexArray;
-		std::unique_ptr<Shader> m_Shader;
-		std::unique_ptr<VertexBuffer> m_VertexBuffer;
-		std::unique_ptr<IndexBuffer> m_IndexBuffer;
+		std::shared_ptr<Shader> m_Shader;
+		std::shared_ptr<VertexArray> m_VertexArray;
+
+		std::shared_ptr<Shader> m_BlueShader;
+		std::shared_ptr<VertexArray> m_SquareVA;
 	private:
 		static Application* s_Instance;
 	};

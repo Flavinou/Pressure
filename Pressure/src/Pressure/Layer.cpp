@@ -7,9 +7,4 @@ namespace Pressure
 		: m_DebugName(debugName)
 	{
 	}
-
-	Layer::~Layer()
-	{
-
-	}
 }
