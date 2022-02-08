@@ -1293,7 +1293,16 @@
     <ClInclude Include="extern\glm\glm\vector_relational.hpp">
       <Filter>extern\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="src\Platform\Windows\WindowsInput.h">
@@ -1347,10 +1356,25 @@
     <ClInclude Include="src\Pressure\MouseButtonCodes.h">
       <Filter>src\Pressure</Filter>
     </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\Buffer.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Pressure\Renderer\GraphicsContext.h">
       <Filter>src\Pressure\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\RenderCommand.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\Renderer.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\RendererAPI.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Pressure\Renderer\Shader.h">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pressure\Renderer\VertexArray.h">
       <Filter>src\Pressure\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Pressure\Window.h">
@@ -1359,17 +1383,19 @@
     <ClInclude Include="src\prspch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\Pressure\Renderer\Buffer.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
-    <ClInclude Include="src\Pressure\Renderer\Renderer.h" />
-    <ClInclude Include="src\Pressure\Renderer\VertexArray.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLVertexArray.h" />
-    <ClInclude Include="src\Pressure\Renderer\RendererAPI.h" />
-    <ClInclude Include="src\Pressure\Renderer\RenderCommand.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h" />
+    <ClInclude Include="src\Pressure\Renderer\OrthographicCamera.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp">
+      <Filter>src\Platform\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsInput.cpp">
@@ -1396,19 +1422,27 @@
     <ClCompile Include="src\Pressure\Log.cpp">
       <Filter>src\Pressure</Filter>
     </ClCompile>
+    <ClCompile Include="src\Pressure\Renderer\Buffer.cpp">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pressure\Renderer\RenderCommand.cpp">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pressure\Renderer\Renderer.cpp">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pressure\Renderer\RendererAPI.cpp">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="src\Pressure\Renderer\Shader.cpp">
+      <Filter>src\Pressure\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pressure\Renderer\VertexArray.cpp">
       <Filter>src\Pressure\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\prspch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Pressure\Renderer\Buffer.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
-    <ClCompile Include="src\Pressure\Renderer\Renderer.cpp" />
-    <ClCompile Include="src\Pressure\Renderer\VertexArray.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLVertexArray.cpp" />
-    <ClCompile Include="src\Pressure\Renderer\RendererAPI.cpp" />
-    <ClCompile Include="src\Pressure\Renderer\RenderCommand.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp" />
+    <ClCompile Include="src\Pressure\Renderer\OrthographicCamera.cpp" />
   </ItemGroup>
 </Project>

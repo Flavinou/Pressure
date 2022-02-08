@@ -15,6 +15,8 @@
 #include "Pressure/Renderer/Buffer.h"
 #include "Pressure/Renderer/VertexArray.h"
 
+#include "Pressure/Renderer/OrthographicCamera.h"
+
 namespace Pressure
 {
 
@@ -32,6 +34,7 @@ namespace Pressure
 		void PushOverlay(Layer* overlay);
 
 		inline Window& GetWindow() { return *m_Window; }
+		inline OrthographicCamera& GetMainCamera() { return m_Camera; }
 
 		inline static Application& Get() { return *s_Instance; }
 	private:
@@ -47,6 +50,8 @@ namespace Pressure
 
 		std::shared_ptr<Shader> m_BlueShader;
 		std::shared_ptr<VertexArray> m_SquareVA;
+
+		OrthographicCamera m_Camera;
 	private:
 		static Application* s_Instance;
 	};

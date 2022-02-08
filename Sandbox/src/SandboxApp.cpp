@@ -5,8 +5,10 @@
 class ExampleLayer : public Pressure::Layer
 {
 public:
+	Pressure::OrthographicCamera& m_MainCamera;
+
 	ExampleLayer()
-		:Layer("Example")
+		:Layer("Example"), m_MainCamera((&Pressure::Application::Get())->GetMainCamera())
 	{
 	}
 
@@ -31,6 +33,22 @@ public:
 			if (e.GetKeyCode() == PRS_KEY_TAB)
 				PRS_TRACE("Tab key is pressed ! (event)");
 			PRS_TRACE("{0}", (char)e.GetKeyCode());
+
+			switch (e.GetKeyCode())
+			{
+			case PRS_KEY_LEFT:
+				m_MainCamera.SetPosition({ m_MainCamera.GetPosition().x + 0.05f, m_MainCamera.GetPosition().y, 0.0f });
+				break;
+			case PRS_KEY_RIGHT:
+				m_MainCamera.SetPosition({ m_MainCamera.GetPosition().x - 0.05f, m_MainCamera.GetPosition().y, 0.0f });
+				break;
+			case PRS_KEY_UP:
+				m_MainCamera.SetPosition({ m_MainCamera.GetPosition().x, m_MainCamera.GetPosition().y - 0.05f, 0.0f });
+				break;
+			case PRS_KEY_DOWN:
+				m_MainCamera.SetPosition({ m_MainCamera.GetPosition().x, m_MainCamera.GetPosition().y + 0.05f, 0.0f });
+				break;
+			}
 		}
 	}
 };
