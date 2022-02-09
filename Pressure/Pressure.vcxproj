@@ -555,6 +555,7 @@
     <ClInclude Include="extern\glm\glm\vec3.hpp" />
     <ClInclude Include="extern\glm\glm\vec4.hpp" />
     <ClInclude Include="extern\glm\glm\vector_relational.hpp" />
+    <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Pressure\Core\Timestep.h" />
     <ClInclude Include="src\Pressure\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
@@ -589,6 +590,7 @@
     <ClInclude Include="src\prspch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Pressure\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />

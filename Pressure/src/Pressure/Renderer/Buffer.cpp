@@ -15,7 +15,7 @@ namespace Pressure
 			case RendererAPI::API::OpenGL: return new OpenGLVertexBuffer(vertices, size);
 		}
 
-		PRS_CORE_ASSERT(false, "Unknow RendererAPI !");
+		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");
 		return nullptr;
 	}
 
@@ -27,7 +27,7 @@ namespace Pressure
 			case RendererAPI::API::OpenGL: return new OpenGLIndexBuffer(vertices, count);
 		}
 
-		PRS_CORE_ASSERT(false, "Unknow RendererAPI !");
+		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");
 		return nullptr;
 	}
 

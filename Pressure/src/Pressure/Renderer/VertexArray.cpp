@@ -15,7 +15,7 @@ namespace Pressure
 			case RendererAPI::API::OpenGL: return new OpenGLVertexArray();
 		}
 
-		PRS_CORE_ASSERT(false, "Unknow RendererAPI !");
+		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");
 		return nullptr;
 	}
 
