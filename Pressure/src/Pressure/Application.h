@@ -9,18 +9,14 @@
 #include "Pressure/Events/Event.h"
 #include "Pressure/Events/ApplicationEvent.h"
 
+#include "Pressure/Core/Timestep.h"
+
 #include "Pressure/ImGui/ImGuiLayer.h"
-
-#include "Pressure/Renderer/Shader.h"
-#include "Pressure/Renderer/Buffer.h"
-#include "Pressure/Renderer/VertexArray.h"
-
-#include "Pressure/Renderer/OrthographicCamera.h"
 
 namespace Pressure
 {
 
-	class PRESSURE_API Application
+	class Application
 	{
 	public:
 		Application();
@@ -34,24 +30,17 @@ namespace Pressure
 		void PushOverlay(Layer* overlay);
 
 		inline Window& GetWindow() { return *m_Window; }
-		inline OrthographicCamera& GetMainCamera() { return m_Camera; }
 
 		inline static Application& Get() { return *s_Instance; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
-
+	private:
 		std::unique_ptr<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
-
-		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<VertexArray> m_VertexArray;
-
-		std::shared_ptr<Shader> m_BlueShader;
-		std::shared_ptr<VertexArray> m_SquareVA;
-
-		OrthographicCamera m_Camera;
+		Timestep m_Timestep;
+		float m_LastFrameTime = 0.0f;
 	private:
 		static Application* s_Instance;
 	};

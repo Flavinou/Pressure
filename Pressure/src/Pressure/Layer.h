@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Pressure/Core.h"
+#include "Pressure/Core/Timestep.h"
 #include "Pressure/Events/Event.h"
 
 namespace Pressure
@@ -14,7 +15,7 @@ namespace Pressure
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(Timestep ts) {}
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}
 

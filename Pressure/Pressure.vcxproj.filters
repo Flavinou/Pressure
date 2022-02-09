@@ -1384,6 +1384,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Pressure\Renderer\OrthographicCamera.h" />
+    <ClInclude Include="src\Pressure\Core\Timestep.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">

@@ -555,6 +555,7 @@
     <ClInclude Include="extern\glm\glm\vec3.hpp" />
     <ClInclude Include="extern\glm\glm\vec4.hpp" />
     <ClInclude Include="extern\glm\glm\vector_relational.hpp" />
+    <ClInclude Include="src\Pressure\Core\Timestep.h" />
     <ClInclude Include="src\Pressure\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
