@@ -1,12 +1,13 @@
 #include <Pressure.h>
 
 #include "imgui/imgui.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 class ExampleLayer : public Pressure::Layer
 {
 public:
 	ExampleLayer()
-		:Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_CameraRotation(0.0f)
+		:Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f)
 	{
         m_VertexArray.reset(Pressure::VertexArray::Create());
 
@@ -33,10 +34,10 @@ public:
         m_SquareVA.reset(Pressure::VertexArray::Create());
 
         float squareVertices[3 * 4] = {
-            -0.75f, -0.75f, 0.0f,
-             0.75f, -0.75f, 0.0f,
-             0.75f,  0.75f, 0.0f,
-            -0.75f,  0.75f, 0.0f,
+			-0.5f, -0.5f, 0.0f,
+			 0.5f, -0.5f, 0.0f,
+			 0.5f,  0.5f, 0.0f,
+			-0.5f,  0.5f, 0.0f,
         };
         std::shared_ptr<Pressure::VertexBuffer> squareVB;
         squareVB.reset(Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
@@ -59,6 +60,7 @@ public:
 			layout(location = 1) in vec4 a_Color;
 
 			uniform mat4 u_ViewProjectionMatrix;
+            uniform mat4 u_Transform;
 
 			out vec3 v_Position;
 			out vec4 v_Color;
@@ -67,7 +69,7 @@ public:
 			{
 				v_Position = a_Position;
 				v_Color = a_Color;
-				gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);
+				gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
 			}
 		)";
 
@@ -94,13 +96,14 @@ public:
 			layout(location = 0) in vec3 a_Position;
 
 			uniform mat4 u_ViewProjectionMatrix;
+            uniform mat4 u_Transform;
 
 			out vec3 v_Position;
 
 			void main()
 			{
 				v_Position = a_Position;
-				gl_Position = u_ViewProjectionMatrix * vec4(a_Position, 1.0);
+				gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
 			}
 		)";
 
@@ -148,12 +151,18 @@ public:
 
         Pressure::Renderer::BeginScene(m_Camera);
 
-        m_BlueShader->Bind();
-        m_BlueShader->UploadUniformMat4("u_ViewProjectionMatrix", m_Camera.GetViewProjectionMatrix());
-        Pressure::Renderer::Submit(m_BlueShader, m_SquareVA);
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
-        m_Shader->Bind();
-        m_Shader->UploadUniformMat4("u_ViewProjectionMatrix", m_Camera.GetViewProjectionMatrix());
+        for (int x = 0; x < 20; x++)
+        {
+			for (int y = 0; y < 20; y++)
+			{
+				glm::vec3 pos(x * 0.11f, y * 0.11f, 0.0f);
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
+				Pressure::Renderer::Submit(m_BlueShader, m_SquareVA, transform);
+			}
+        }
+
         Pressure::Renderer::Submit(m_Shader, m_VertexArray);
 
         Pressure::Renderer::EndScene();
