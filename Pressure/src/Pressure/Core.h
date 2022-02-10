@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #ifdef PRS_PLATFORM_WINDOWS
 #if PRS_DYNAMIC_LINK
 	#ifdef PRS_BUILD_DLL
@@ -29,3 +31,14 @@
 #define BIT(x) (1 << x)
 
 #define PRS_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+namespace Pressure
+{
+
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+
+}

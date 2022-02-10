@@ -21,7 +21,7 @@ public:
              0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
         };
 
-        std::shared_ptr<Pressure::VertexBuffer> vertexBuffer;
+        Pressure::Ref<Pressure::VertexBuffer> vertexBuffer;
         vertexBuffer.reset(Pressure::VertexBuffer::Create(vertices, sizeof(vertices)));
 		Pressure::BufferLayout layout = {
             { Pressure::ShaderDataType::Float3, "a_Position" },
@@ -31,7 +31,7 @@ public:
         m_VertexArray->AddVertexBuffer(vertexBuffer);
 
         unsigned int indices[3] = { 0, 1, 2 };
-        std::shared_ptr<Pressure::IndexBuffer> indexBuffer;
+        Pressure::Ref<Pressure::IndexBuffer> indexBuffer;
         indexBuffer.reset(Pressure::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
@@ -43,7 +43,7 @@ public:
 			 0.5f,  0.5f, 0.0f,
 			-0.5f,  0.5f, 0.0f,
         };
-        std::shared_ptr<Pressure::VertexBuffer> squareVB;
+        Pressure::Ref<Pressure::VertexBuffer> squareVB;
         squareVB.reset(Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
         squareVB->SetLayout({
@@ -52,7 +52,7 @@ public:
         m_SquareVA->AddVertexBuffer(squareVB);
 
         unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-        std::shared_ptr<Pressure::IndexBuffer> squareIB;
+        Pressure::Ref<Pressure::IndexBuffer> squareIB;
         squareIB.reset(Pressure::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
         m_SquareVA->SetIndexBuffer(squareIB);
 
@@ -204,11 +204,11 @@ public:
 	}
 
 private:
-    std::shared_ptr<Pressure::Shader> m_Shader;
-    std::shared_ptr<Pressure::VertexArray> m_VertexArray;
+    Pressure::Ref<Pressure::Shader> m_Shader;
+    Pressure::Ref<Pressure::VertexArray> m_VertexArray;
 
-    std::shared_ptr<Pressure::Shader> m_FlatColorShader;
-    std::shared_ptr<Pressure::VertexArray> m_SquareVA;
+    Pressure::Ref<Pressure::Shader> m_FlatColorShader;
+    Pressure::Ref<Pressure::VertexArray> m_SquareVA;
 
     Pressure::OrthographicCamera m_Camera;
 
