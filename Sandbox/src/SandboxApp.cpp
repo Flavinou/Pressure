@@ -37,18 +37,19 @@ public:
 
         m_SquareVA.reset(Pressure::VertexArray::Create());
 
-        float squareVertices[3 * 4] = {
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.5f,  0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f,
+        float squareVertices[5 * 4] = {
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
         };
         Pressure::Ref<Pressure::VertexBuffer> squareVB;
         squareVB.reset(Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
         squareVB->SetLayout({
             { Pressure::ShaderDataType::Float3, "a_Position" },
-            });
+            { Pressure::ShaderDataType::Float2, "a_TexCoord"}
+        });
         m_SquareVA->AddVertexBuffer(squareVB);
 
         unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
@@ -127,6 +128,46 @@ public:
 		)";
 
         m_FlatColorShader.reset(Pressure::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+
+		std::string textureShaderVertexSrc = R"(
+			#version 330 core
+
+			layout(location = 0) in vec3 a_Position;
+            layout(location = 1) in vec2 a_TexCoord;
+
+			uniform mat4 u_ViewProjectionMatrix;
+            uniform mat4 u_Transform;
+
+            out vec2 v_TexCoord;
+
+			void main()
+			{
+				v_TexCoord = a_TexCoord;
+				gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
+			}
+		)";
+
+		std::string textureShaderFragmentSrc = R"(
+			#version 330 core
+
+			layout(location = 0) out vec4 color;
+
+            in vec2 v_TexCoord;
+
+            uniform sampler2D u_Texture;
+
+			void main()
+			{
+				color = texture(u_Texture, v_TexCoord);
+			}
+		)";
+
+		m_TextureShader.reset(Pressure::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
+
+        m_WaterTexture = Pressure::Texture2D::Create("assets/textures/Water.png");
+
+		std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_TextureShader)->Bind();
+		std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	void OnUpdate(Pressure::Timestep ts) override
@@ -186,7 +227,11 @@ public:
 			}
         }
 
-        Pressure::Renderer::Submit(m_Shader, m_VertexArray);
+        m_WaterTexture->Bind();
+        Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+
+        // Triangle draw call
+        // Pressure::Renderer::Submit(m_Shader, m_VertexArray);
 
         Pressure::Renderer::EndScene();
 	}
@@ -207,8 +252,10 @@ private:
     Pressure::Ref<Pressure::Shader> m_Shader;
     Pressure::Ref<Pressure::VertexArray> m_VertexArray;
 
-    Pressure::Ref<Pressure::Shader> m_FlatColorShader;
+    Pressure::Ref<Pressure::Shader> m_FlatColorShader, m_TextureShader;
     Pressure::Ref<Pressure::VertexArray> m_SquareVA;
+
+    Pressure::Ref<Pressure::Texture2D> m_WaterTexture;
 
     Pressure::OrthographicCamera m_Camera;
 

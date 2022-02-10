@@ -17,6 +17,7 @@ IncludeDir["GLFW"] = "Pressure/extern/GLFW/include"
 IncludeDir["Glad"] = "Pressure/extern/Glad/include"
 IncludeDir["ImGui"] = "Pressure/extern/imgui"
 IncludeDir["glm"] = "Pressure/extern/glm"
+IncludeDir["stb_image"] = "Pressure/extern/stb_image"
 
 include "Pressure/extern/GLFW"
 include "Pressure/extern/Glad"
@@ -46,6 +47,8 @@ project "Pressure"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "%{prj.name}/extern/stb_image/**.h",
+        "%{prj.name}/extern/stb_image/**.cpp",
         "%{prj.name}/extern/glm/glm/**.hpp",
         "%{prj.name}/extern/glm/glm/**.inl",
     }
@@ -63,6 +66,7 @@ project "Pressure"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
+        "%{IncludeDir.stb_image}",
     }
     
     links
