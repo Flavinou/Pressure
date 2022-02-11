@@ -7,24 +7,24 @@
 namespace Pressure
 {
 
-	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-			case RendererAPI::API::OpenGL: return new OpenGLVertexBuffer(vertices, size);
+			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLVertexBuffer>(vertices, size);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");
 		return nullptr;
 	}
 
-	IndexBuffer* IndexBuffer::Create(uint32_t* vertices, uint32_t count)
+	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* vertices, uint32_t count)
 	{
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-			case RendererAPI::API::OpenGL: return new OpenGLIndexBuffer(vertices, count);
+			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLIndexBuffer>(vertices, count);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");

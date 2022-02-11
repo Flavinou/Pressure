@@ -13,7 +13,7 @@ public:
 	ExampleLayer()
 		:Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_SquareColor(1.0f)
 	{
-        m_VertexArray.reset(Pressure::VertexArray::Create());
+        m_VertexArray = Pressure::VertexArray::Create();
 
         float vertices[3 * 7] = {
             -0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
@@ -22,7 +22,7 @@ public:
         };
 
         Pressure::Ref<Pressure::VertexBuffer> vertexBuffer;
-        vertexBuffer.reset(Pressure::VertexBuffer::Create(vertices, sizeof(vertices)));
+        vertexBuffer = Pressure::VertexBuffer::Create(vertices, sizeof(vertices));
 		Pressure::BufferLayout layout = {
             { Pressure::ShaderDataType::Float3, "a_Position" },
             { Pressure::ShaderDataType::Float4, "a_Color" }
@@ -32,10 +32,10 @@ public:
 
         unsigned int indices[3] = { 0, 1, 2 };
         Pressure::Ref<Pressure::IndexBuffer> indexBuffer;
-        indexBuffer.reset(Pressure::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+        indexBuffer = Pressure::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
-        m_SquareVA.reset(Pressure::VertexArray::Create());
+        m_SquareVA = Pressure::VertexArray::Create();
 
         float squareVertices[5 * 4] = {
 			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
@@ -44,7 +44,7 @@ public:
 			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
         };
         Pressure::Ref<Pressure::VertexBuffer> squareVB;
-        squareVB.reset(Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+        squareVB = Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
 
         squareVB->SetLayout({
             { Pressure::ShaderDataType::Float3, "a_Position" },
@@ -54,7 +54,7 @@ public:
 
         unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
         Pressure::Ref<Pressure::IndexBuffer> squareIB;
-        squareIB.reset(Pressure::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
+        squareIB = Pressure::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
         m_SquareVA->SetIndexBuffer(squareIB);
 
         // Shader "magic"
@@ -93,7 +93,7 @@ public:
 			}
 		)";
 
-        m_Shader.reset(Pressure::Shader::Create(vertexSrc, fragmentSrc));
+        m_Shader = Pressure::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
 
         std::string flatColorShaderVertexSrc = R"(
 			#version 330 core
@@ -127,15 +127,15 @@ public:
 			}
 		)";
 
-        m_FlatColorShader.reset(Pressure::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+        m_FlatColorShader = Pressure::Shader::Create("FlatColor", flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
-		m_TextureShader.reset(Pressure::Shader::Create("assets/shaders/Texture.glsl"));
+		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
         m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
         m_CloudyTexture = Pressure::Texture2D::Create("assets/textures/cloudy.png");
 
-		std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
+		std::dynamic_pointer_cast<Pressure::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Pressure::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	void OnUpdate(Pressure::Timestep ts) override
@@ -184,11 +184,13 @@ public:
 			}
         }
 
+        auto textureShader = m_ShaderLibrary.Get("Texture");
+
 		m_VoronoiTexture->Bind();
-		Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Pressure::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		m_CloudyTexture->Bind();
-		Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Pressure::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
         // Triangle draw call
         // Pressure::Renderer::Submit(m_Shader, m_VertexArray);
@@ -209,10 +211,11 @@ public:
 	}
 
 private:
+    Pressure::ShaderLibrary m_ShaderLibrary;
     Pressure::Ref<Pressure::Shader> m_Shader;
     Pressure::Ref<Pressure::VertexArray> m_VertexArray;
 
-    Pressure::Ref<Pressure::Shader> m_FlatColorShader, m_TextureShader;
+    Pressure::Ref<Pressure::Shader> m_FlatColorShader;
     Pressure::Ref<Pressure::VertexArray> m_SquareVA;
 
     Pressure::Ref<Pressure::Texture2D> m_VoronoiTexture, m_CloudyTexture;
