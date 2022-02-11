@@ -129,42 +129,8 @@ public:
 
         m_FlatColorShader.reset(Pressure::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
 
-		std::string textureShaderVertexSrc = R"(
-			#version 330 core
+		m_TextureShader.reset(Pressure::Shader::Create("assets/shaders/Texture.glsl"));
 
-			layout(location = 0) in vec3 a_Position;
-            layout(location = 1) in vec2 a_TexCoord;
-
-			uniform mat4 u_ViewProjectionMatrix;
-            uniform mat4 u_Transform;
-
-            out vec2 v_TexCoord;
-
-			void main()
-			{
-				v_TexCoord = a_TexCoord;
-				gl_Position = u_ViewProjectionMatrix * u_Transform * vec4(a_Position, 1.0);
-			}
-		)";
-
-		std::string textureShaderFragmentSrc = R"(
-			#version 330 core
-
-			layout(location = 0) out vec4 color;
-
-            in vec2 v_TexCoord;
-
-            uniform sampler2D u_Texture;
-
-			void main()
-			{
-				color = texture(u_Texture, v_TexCoord);
-			}
-		)";
-
-		m_TextureShader.reset(Pressure::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
-
-        m_WaterTexture = Pressure::Texture2D::Create("assets/textures/Water.png");
         m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
         m_CloudyTexture = Pressure::Texture2D::Create("assets/textures/cloudy.png");
 
@@ -205,17 +171,6 @@ public:
         glm::vec4 redColor(0.8f, 0.2f, 0.3f, 1.0f);
         glm::vec4 blueColor(0.2f, 0.3f, 0.8f, 1.0f);
 
-        // Goal API for Material system
-        //  - Create a Material object that will take a Shader Object as parameter
-        //  - This way, when doing this through a potential editor, we can settle "standard" 
-        //    data/ information for future objects that would use a particular material
-        // 
-        // Pressure::MaterialRef material = new Pressure::Material(m_FlatColorShader);
-        // Pressure::MaterialInstanceRef mi = new Pressure::MaterialInstance(material);
-        // 
-        // material->Set("u_Color", m_PickableColor);
-        // squareMesh->SetMaterial(material);
-
         std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_FlatColorShader)->Bind();
         std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_SquareColor);
 
@@ -228,9 +183,6 @@ public:
 				Pressure::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);
 			}
         }
-
-        /*m_WaterTexture->Bind();
-        Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));*/
 
 		m_VoronoiTexture->Bind();
 		Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
@@ -263,7 +215,7 @@ private:
     Pressure::Ref<Pressure::Shader> m_FlatColorShader, m_TextureShader;
     Pressure::Ref<Pressure::VertexArray> m_SquareVA;
 
-    Pressure::Ref<Pressure::Texture2D> m_WaterTexture, m_VoronoiTexture, m_CloudyTexture;
+    Pressure::Ref<Pressure::Texture2D> m_VoronoiTexture, m_CloudyTexture;
 
     Pressure::OrthographicCamera m_Camera;
 
