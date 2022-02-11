@@ -165,6 +165,8 @@ public:
 		m_TextureShader.reset(Pressure::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
 
         m_WaterTexture = Pressure::Texture2D::Create("assets/textures/Water.png");
+        m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
+        m_CloudyTexture = Pressure::Texture2D::Create("assets/textures/cloudy.png");
 
 		std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_TextureShader)->Bind();
 		std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
@@ -227,8 +229,14 @@ public:
 			}
         }
 
-        m_WaterTexture->Bind();
-        Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+        /*m_WaterTexture->Bind();
+        Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));*/
+
+		m_VoronoiTexture->Bind();
+		Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+
+		m_CloudyTexture->Bind();
+		Pressure::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
         // Triangle draw call
         // Pressure::Renderer::Submit(m_Shader, m_VertexArray);
@@ -255,7 +263,7 @@ private:
     Pressure::Ref<Pressure::Shader> m_FlatColorShader, m_TextureShader;
     Pressure::Ref<Pressure::VertexArray> m_SquareVA;
 
-    Pressure::Ref<Pressure::Texture2D> m_WaterTexture;
+    Pressure::Ref<Pressure::Texture2D> m_WaterTexture, m_VoronoiTexture, m_CloudyTexture;
 
     Pressure::OrthographicCamera m_Camera;
 
