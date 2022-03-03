@@ -11,7 +11,7 @@ class ExampleLayer : public Pressure::Layer
 {
 public:
 	ExampleLayer()
-		:Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_SquareColor(1.0f)
+		:Layer("Example"), m_CameraController(1280.0f / 720.0f)
 	{
         m_VertexArray = Pressure::VertexArray::Create();
 
@@ -140,31 +140,14 @@ public:
 
 	void OnUpdate(Pressure::Timestep ts) override
 	{
-        PRS_TRACE("Delta time : {0}s ({1})", ts, ts.GetMilliseconds());
+		// Update
+		m_CameraController.OnUpdate(ts);
 
-        // Camera movement with arrows
-        if (Pressure::Input::IsKeyPressed(PRS_KEY_LEFT))
-            m_CameraPosition.x -= m_CameraMoveSpeed * ts;
-        else if (Pressure::Input::IsKeyPressed(PRS_KEY_RIGHT))
-            m_CameraPosition.x += m_CameraMoveSpeed * ts;
-        if (Pressure::Input::IsKeyPressed(PRS_KEY_UP))
-            m_CameraPosition.y -= m_CameraMoveSpeed * ts;
-        else if (Pressure::Input::IsKeyPressed(PRS_KEY_DOWN))
-            m_CameraPosition.y += m_CameraMoveSpeed * ts;
-
-        // Camera rotation
-        if (Pressure::Input::IsKeyPressed(PRS_KEY_A))
-            m_CameraRotation += m_CameraRotationSpeed * ts;
-        if (Pressure::Input::IsKeyPressed(PRS_KEY_D))
-            m_CameraRotation -= m_CameraRotationSpeed * ts;
-
+		// Render
         Pressure::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         Pressure::RenderCommand::Clear();
 
-        m_Camera.SetPosition(m_CameraPosition);
-        m_Camera.SetRotation(m_CameraRotation);
-
-        Pressure::Renderer::BeginScene(m_Camera);
+        Pressure::Renderer::BeginScene(m_CameraController.GetCamera());
 
         glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
@@ -205,9 +188,9 @@ public:
         ImGui::End();
 	}
 
-	void OnEvent(Pressure::Event& event) override
+	void OnEvent(Pressure::Event& e) override
 	{
-
+		m_CameraController.OnEvent(e);
 	}
 
 private:
@@ -220,14 +203,8 @@ private:
 
     Pressure::Ref<Pressure::Texture2D> m_VoronoiTexture, m_CloudyTexture;
 
-    Pressure::OrthographicCamera m_Camera;
-
-    glm::vec3 m_CameraPosition;
-    float m_CameraRotation = 0.0f;
-
-    float m_CameraRotationSpeed = 180.0f;
-    float m_CameraMoveSpeed = 10.0f;
-    glm::vec3 m_SquareColor;
+    Pressure::OrthographicCameraController m_CameraController;
+	glm::vec3 m_SquareColor = { 0.2f, 0.3f, 0.8f };
 };
 
 class Sandbox : public Pressure::Application 
