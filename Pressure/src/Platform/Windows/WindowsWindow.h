@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Pressure/Window.h"
+#include "Pressure/Core/Window.h"
 
 #include <GLFW/glfw3.h>
 #include "Pressure/Renderer/GraphicsContext.h"

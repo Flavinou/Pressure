@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "Pressure/Log.h"
+#include "Pressure/Core/Log.h"
 
 #ifdef PRS_PLATFORM_WINDOWS
 	#include <Windows.h>

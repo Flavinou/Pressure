@@ -1,16 +1,16 @@
 #pragma once
 
 // For use by client applications
-#include "Pressure/Application.h"
-#include "Pressure/Layer.h"
-#include "Pressure/Log.h"
+#include "Pressure/Core/Application.h"
+#include "Pressure/Core/Layer.h"
+#include "Pressure/Core/Log.h"
 
 #include "Pressure/Core/Timestep.h"
 
-#include "Pressure/Input.h"
-#include "Pressure/KeyCodes.h"
-#include "Pressure/MouseButtonCodes.h"
-#include "Pressure/OrthographicCameraController.h"
+#include "Pressure/Core/Input.h"
+#include "Pressure/Core/KeyCodes.h"
+#include "Pressure/Core/MouseButtonCodes.h"
+#include "Pressure/Renderer/OrthographicCameraController.h"
 
 #include "Pressure/ImGui/ImGuiLayer.h"
 
@@ -27,5 +27,5 @@
 // ------------------------------
 
 // -------- ENTRY POINT ---------
-#include "Pressure/EntryPoint.h"
+#include "Pressure/Core/EntryPoint.h"
 // ------------------------------

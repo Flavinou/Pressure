@@ -1,8 +1,8 @@
 #include "prspch.h"
 #include "OrthographicCameraController.h"
 
-#include "Pressure/Input.h"
-#include "Pressure/KeyCodes.h"
+#include "Pressure/Core/Input.h"
+#include "Pressure/Core/KeyCodes.h"
 
 namespace Pressure
 {

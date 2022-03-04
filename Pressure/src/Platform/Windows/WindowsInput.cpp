@@ -1,7 +1,7 @@
 #include "prspch.h"
 #include "WindowsInput.h"
 
-#include "Pressure/Application.h"
+#include "Pressure/Core/Application.h"
 #include <GLFW/glfw3.h>
 
 namespace Pressure

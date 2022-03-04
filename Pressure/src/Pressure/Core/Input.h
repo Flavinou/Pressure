@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Pressure/Core.h"
+#include "Pressure/Core/Core.h"
 
 namespace Pressure
 {

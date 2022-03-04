@@ -2,7 +2,7 @@
 
 #include "prspch.h"
 
-#include "Pressure/Core.h"
+#include "Pressure/Core/Core.h"
 #include "Pressure/Events/Event.h"
 
 namespace Pressure
