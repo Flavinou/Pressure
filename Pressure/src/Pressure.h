@@ -25,7 +25,3 @@
 
 #include "Pressure/Renderer/OrthographicCamera.h"
 // ------------------------------
-
-// -------- ENTRY POINT ---------
-#include "Pressure/Core/EntryPoint.h"
-// ------------------------------
