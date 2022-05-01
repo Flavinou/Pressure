@@ -1,12 +1,16 @@
 [submodule "Pressure/extern/spdlog"]
 	path = Pressure/extern/spdlog
 	url = https://github.com/gabime/spdlog
+	branch = v1.x
 [submodule "Pressure/extern/GLFW"]
 	path = Pressure/extern/GLFW
 	url = https://github.com/Flavinou/glfw.git
+	branch = master
 [submodule "Pressure/extern/imgui"]
 	path = Pressure/extern/imgui
 	url = https://github.com/Flavinou/imgui
+	branch = docking
 [submodule "Pressure/extern/glm"]
 	path = Pressure/extern/glm
 	url = https://github.com/g-truc/glm
+	branch = master
