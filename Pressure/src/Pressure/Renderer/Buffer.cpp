@@ -1,7 +1,8 @@
 #include "prspch.h"
-#include "Buffer.h"
+#include "Pressure/Renderer/Buffer.h"
 
-#include "Renderer.h"
+#include "Pressure/Renderer/Renderer.h"
+
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Pressure
@@ -12,7 +13,7 @@ namespace Pressure
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLVertexBuffer>(vertices, size);
+			case RendererAPI::API::OpenGL: return CreateRef<OpenGLVertexBuffer>(vertices, size);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");
@@ -24,7 +25,7 @@ namespace Pressure
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLIndexBuffer>(vertices, count);
+			case RendererAPI::API::OpenGL: return CreateRef<OpenGLIndexBuffer>(vertices, count);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");

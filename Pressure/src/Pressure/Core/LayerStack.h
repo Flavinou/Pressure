@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Pressure/Core/Core.h"
-#include "Layer.h"
+#include "Pressure/Core/Layer.h"
 
 namespace Pressure
 {
 
-	class PRESSURE_API LayerStack
+	class LayerStack
 	{
 	public:
-		LayerStack();
+		LayerStack() = default;
 		~LayerStack();
 
 		void PushLayer(Layer* layer);

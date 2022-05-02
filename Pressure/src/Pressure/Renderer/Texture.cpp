@@ -1,7 +1,7 @@
 #include "prspch.h"
-#include "Texture.h"
+#include "Pressure/Renderer/Texture.h"
 
-#include "Renderer.h"
+#include "Pressure/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
 
 namespace Pressure

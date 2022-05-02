@@ -1,6 +1,6 @@
 #pragma once
-
 #include "prspch.h"
+
 #include "Pressure/Core/Core.h"
 
 namespace Pressure
@@ -39,7 +39,7 @@ namespace Pressure
 
 #define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
-	class PRESSURE_API Event
+	class Event
 	{
 	public:
 		bool Handled = false;

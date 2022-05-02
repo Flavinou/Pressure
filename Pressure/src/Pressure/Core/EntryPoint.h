@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Pressure/Core/Core.h"
+
 #ifdef PRS_PLATFORM_WINDOWS
 
 extern Pressure::Application* Pressure::CreateApplication();

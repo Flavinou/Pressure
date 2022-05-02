@@ -1,7 +1,7 @@
 #include "prspch.h"
-#include "Shader.h"
+#include "Pressure/Renderer/Shader.h"
 
-#include "Renderer.h"
+#include "Pressure/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 
 namespace Pressure
@@ -12,7 +12,7 @@ namespace Pressure
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLShader>(filePath);
+			case RendererAPI::API::OpenGL: return CreateRef<OpenGLShader>(filePath);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");
@@ -24,7 +24,7 @@ namespace Pressure
 		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			case RendererAPI::API::OpenGL: return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");

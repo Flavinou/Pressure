@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Event.h"
+#include "Pressure/Events/Event.h"
 
 namespace Pressure {
 
-	class PRESSURE_API KeyEvent : public Event
+	class KeyEvent : public Event
 	{
 	public:
 		inline int GetKeyCode() const { return m_KeyCode; }
@@ -17,7 +17,7 @@ namespace Pressure {
 		int m_KeyCode;
 	};
 
-	class PRESSURE_API KeyPressedEvent : public KeyEvent
+	class KeyPressedEvent : public KeyEvent
 	{
 	public:
 		KeyPressedEvent(int keycode, int repeatCount)
@@ -37,7 +37,7 @@ namespace Pressure {
 		int m_RepeatCount;
 	};
 
-	class PRESSURE_API KeyReleasedEvent : public KeyEvent
+	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
 		KeyReleasedEvent(int keycode)
@@ -53,7 +53,7 @@ namespace Pressure {
 		EVENT_CLASS_TYPE(KeyReleased)
 	};
 
-	class PRESSURE_API KeyTypedEvent : public KeyEvent
+	class KeyTypedEvent : public KeyEvent
 	{
 	public:
 		KeyTypedEvent(int keycode)

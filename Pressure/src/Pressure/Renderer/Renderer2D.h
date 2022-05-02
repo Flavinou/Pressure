@@ -1,7 +1,8 @@
 #pragma once
 
-#include "OrthographicCamera.h"
-#include <Pressure/Renderer/Texture.h>
+#include "Pressure/Renderer/OrthographicCamera.h"
+
+#include "Pressure/Renderer/Texture.h"
 
 namespace Pressure 
 {

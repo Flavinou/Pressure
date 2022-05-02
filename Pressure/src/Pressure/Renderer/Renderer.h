@@ -1,9 +1,9 @@
 #pragma once
 
-#include "RenderCommand.h"
+#include "Pressure/Renderer/RenderCommand.h"
 
-#include "OrthographicCamera.h"
-#include "Shader.h"
+#include "Pressure/Renderer/OrthographicCamera.h"
+#include "Pressure/Renderer/Shader.h"
 
 namespace Pressure
 {
@@ -12,6 +12,8 @@ namespace Pressure
 	{
 	public:
 		static void Init();
+		static void Shutdown();
+
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void BeginScene(OrthographicCamera& camera);

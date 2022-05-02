@@ -1,12 +1,8 @@
 #include "prspch.h"
-#include "LayerStack.h"
+#include "Pressure/Core/LayerStack.h"
 
 namespace Pressure
 {
-
-	LayerStack::LayerStack()
-	{
-	}
 
 	LayerStack::~LayerStack()
 	{

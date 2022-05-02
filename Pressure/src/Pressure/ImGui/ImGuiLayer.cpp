@@ -1,14 +1,14 @@
 #include "prspch.h"
-#include "ImGuiLayer.h"
+#include "Pressure/ImGui/ImGuiLayer.h"
 
-#include "imgui.h"
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_glfw.h"
+#include <imgui.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_glfw.h>
 
 #include "Pressure/Core/Application.h"
 
 // TEMPORARY
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
 namespace Pressure

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Core.h"
+#include "Pressure/Core/Core.h"
 
-#include "Window.h"
+#include "Pressure/Core/Window.h"
 
 #include "Pressure/Core/LayerStack.h"
 
@@ -20,7 +20,7 @@ namespace Pressure
 	{
 	public:
 		Application();
-		virtual ~Application() = default;
+		virtual ~Application();
 
 		void Run();
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "Pressure/Renderer/VertexArray.h"
 
-#include "VertexArray.h"
+#include <glm/glm.hpp>
 
 namespace Pressure
 {
@@ -23,6 +23,7 @@ namespace Pressure
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 
 		inline static API GetAPI() { return s_API; }
+		static Scope<RendererAPI> Create();
 	private:
 		static API s_API;
 	};

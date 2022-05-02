@@ -1,6 +1,8 @@
 #pragma once
 
 // For use by client applications
+#include "Pressure/Core/Core.h"
+
 #include "Pressure/Core/Application.h"
 #include "Pressure/Core/Layer.h"
 #include "Pressure/Core/Log.h"

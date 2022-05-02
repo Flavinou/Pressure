@@ -1,11 +1,9 @@
 #include <Pressure.h>
 #include <Pressure/Core/EntryPoint.h>
 
-#include <Platform/OpenGL/OpenGLShader.h>
+#include <imgui/imgui.h>
 
-#include "imgui/imgui.h"
-
-#include "glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Sandbox2D.h"
@@ -24,8 +22,7 @@ public:
              0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
         };
 
-        Pressure::Ref<Pressure::VertexBuffer> vertexBuffer;
-        vertexBuffer = Pressure::VertexBuffer::Create(vertices, sizeof(vertices));
+        Pressure::Ref<Pressure::VertexBuffer> vertexBuffer = Pressure::VertexBuffer::Create(vertices, sizeof(vertices));
 		Pressure::BufferLayout layout = {
             { Pressure::ShaderDataType::Float3, "a_Position" },
             { Pressure::ShaderDataType::Float4, "a_Color" }
@@ -34,8 +31,7 @@ public:
         m_VertexArray->AddVertexBuffer(vertexBuffer);
 
         unsigned int indices[3] = { 0, 1, 2 };
-        Pressure::Ref<Pressure::IndexBuffer> indexBuffer;
-        indexBuffer = Pressure::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
+        Pressure::Ref<Pressure::IndexBuffer> indexBuffer = Pressure::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
         m_SquareVA = Pressure::VertexArray::Create();
@@ -46,8 +42,7 @@ public:
 			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
 			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
         };
-        Pressure::Ref<Pressure::VertexBuffer> squareVB;
-        squareVB = Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
+        Pressure::Ref<Pressure::VertexBuffer> squareVB = Pressure::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
 
         squareVB->SetLayout({
             { Pressure::ShaderDataType::Float3, "a_Position" },
@@ -56,8 +51,7 @@ public:
         m_SquareVA->AddVertexBuffer(squareVB);
 
         unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-        Pressure::Ref<Pressure::IndexBuffer> squareIB;
-        squareIB = Pressure::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
+        Pressure::Ref<Pressure::IndexBuffer> squareIB = Pressure::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
         m_SquareVA->SetIndexBuffer(squareIB);
 
         // Shader "magic"
@@ -137,8 +131,8 @@ public:
         m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
         m_CloudyTexture = Pressure::Texture2D::Create("assets/textures/cloudy.png");
 
-		std::dynamic_pointer_cast<Pressure::OpenGLShader>(textureShader)->Bind();
-		std::dynamic_pointer_cast<Pressure::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
+		textureShader->Bind();
+		textureShader->SetInt("u_Texture", 0);
 	}
 
 	void OnUpdate(Pressure::Timestep ts) override
@@ -157,8 +151,8 @@ public:
         glm::vec4 redColor(0.8f, 0.2f, 0.3f, 1.0f);
         glm::vec4 blueColor(0.2f, 0.3f, 0.8f, 1.0f);
 
-        std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_FlatColorShader)->Bind();
-        std::dynamic_pointer_cast<Pressure::OpenGLShader>(m_FlatColorShader)->UploadUniformFloat3("u_Color", m_SquareColor);
+        m_FlatColorShader->Bind();
+        m_FlatColorShader->SetFloat3("u_Color", m_SquareColor);
 
         for (int x = 0; x < 20; x++)
         {

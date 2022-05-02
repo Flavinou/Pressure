@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Core.h"
-#include "spdlog/spdlog.h"
-#include "spdlog/fmt/ostr.h"
+#include "Pressure/Core/Core.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 namespace Pressure
 {
 
-	class PRESSURE_API Log
+	class Log
 	{
 	public:
 		static void Init();

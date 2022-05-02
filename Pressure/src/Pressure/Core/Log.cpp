@@ -1,7 +1,7 @@
 #include "prspch.h"
-#include "Log.h"
+#include "Pressure/Core/Log.h"
 
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace Pressure
 {
