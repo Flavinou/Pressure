@@ -16,6 +16,7 @@
 
 // -------- RENDERING ---------
 #include "Pressure/Renderer/Renderer.h"
+#include "Pressure/Renderer/Renderer2D.h"
 #include "Pressure/Renderer/RenderCommand.h"
 
 #include "Pressure/Renderer/Buffer.h"
