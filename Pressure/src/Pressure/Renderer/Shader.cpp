@@ -11,8 +11,8 @@ namespace Pressure
 	{
 		switch (Renderer::GetAPI())
 		{
-		case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
-		case RendererAPI::API::OpenGL: return std::make_shared<OpenGLShader>(filePath);
+			case RendererAPI::API::None: PRS_CORE_ASSERT(false, "RendererAPI::None is currently not supported !"); return nullptr;
+			case RendererAPI::API::OpenGL: return std::make_shared<OpenGLShader>(filePath);
 		}
 
 		PRS_CORE_ASSERT(false, "Unknown RendererAPI !");

@@ -7,7 +7,7 @@
 namespace Pressure
 {
 
-	Input* Input::s_Instance = new WindowsInput();
+	Scope<Input> Input::s_Instance = CreateScope<WindowsInput>();
 
 	bool Pressure::WindowsInput::IsKeyPressedImpl(int keycode)
 	{
