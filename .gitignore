@@ -1,9 +1,13 @@
-# Directories
-.vs/
-/bin/
+# Binaries
+**/bin/
+!vendor/bin/premake
 bin-int/
 
-# Files
-*.user
-imgui.ini
-Sandbox/imgui.ini
+# Visual Studio files and folder
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user 
+**.vcxproj
+**.filters
