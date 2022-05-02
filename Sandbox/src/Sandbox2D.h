@@ -20,6 +20,7 @@ private:
 	// Temporary
 	Pressure::Ref<Pressure::VertexArray> m_SquareVA;
 	Pressure::Ref<Pressure::Shader> m_FlatColorShader;
+	Pressure::Ref<Pressure::Texture2D> m_VoronoiTexture;
 
 	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 };
