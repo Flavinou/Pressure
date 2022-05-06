@@ -15,6 +15,8 @@
 
 #include "Pressure/Core/Log.h"
 
+#include "Pressure/Debug/Instrumentor.h"
+
 #ifdef PRS_PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif
