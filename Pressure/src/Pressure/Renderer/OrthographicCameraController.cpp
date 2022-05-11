@@ -14,6 +14,8 @@ namespace Pressure
 
     void OrthographicCameraController::OnUpdate(Timestep ts)
     {
+        PRS_PROFILE_FUNCTION();
+
         // Camera movement with arrows
         if (Input::IsKeyPressed(PRS_KEY_A))
             m_CameraPosition.x -= m_CameraTranslationSpeed * ts;
@@ -44,6 +46,8 @@ namespace Pressure
 
     void OrthographicCameraController::OnEvent(Event& e)
     {
+        PRS_PROFILE_FUNCTION();
+
         EventDispatcher dispatcher(e);
         dispatcher.Dispatch<MouseScrolledEvent>(PRS_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
         dispatcher.Dispatch<WindowResizeEvent>(PRS_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
@@ -51,6 +55,8 @@ namespace Pressure
 
     bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
     {
+        PRS_PROFILE_FUNCTION();
+
         m_ZoomLevel -= e.GetYOffset() * 0.25f;
         m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -59,6 +65,8 @@ namespace Pressure
 
     bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
     {
+        PRS_PROFILE_FUNCTION();
+
         m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
         return false;

@@ -13,11 +13,14 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
+	PRS_PROFILE_FUNCTION();
+
 	m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
 }
 
 void Sandbox2D::OnDetach()
 {
+	PRS_PROFILE_FUNCTION();
 }
 
 void Sandbox2D::OnUpdate(Pressure::Timestep ts)
@@ -25,10 +28,7 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 	PRS_PROFILE_FUNCTION();
 
 	// Update
-	{
-		PRS_PROFILE_SCOPE("CameraController::OnUpdate");
-		m_CameraController.OnUpdate(ts);
-	}
+	m_CameraController.OnUpdate(ts);
 
 	// Render
 	{

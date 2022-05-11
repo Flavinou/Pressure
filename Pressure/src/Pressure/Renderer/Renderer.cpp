@@ -10,6 +10,8 @@ namespace Pressure
 
 	void Renderer::Init()
 	{
+		PRS_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}
