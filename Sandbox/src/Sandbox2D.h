@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Pressure.h"
+#include <Pressure.h>
 
 class Sandbox2D : public Pressure::Layer
 {
