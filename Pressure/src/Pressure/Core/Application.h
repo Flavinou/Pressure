@@ -32,9 +32,20 @@ namespace Pressure
 		inline Window& GetWindow() { return *m_Window; }
 
 		inline static Application& Get() { return *s_Instance; }
+	public:
+        // Statistics
+        struct Statistics
+        {
+			float FrameTime = 0.0f;
+            float FramesPerSecond = 0.0f;
+        };
+
+        static Statistics GetStats();
+		static float GetFramesPerSecond(Timestep ts) { return 1 / ts; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+        static void ResetStats();
 	private:
 		std::unique_ptr<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
@@ -43,6 +54,7 @@ namespace Pressure
 		LayerStack m_LayerStack;
 		Timestep m_Timestep;
 		float m_LastFrameTime = 0.0f;
+		uint32_t m_FrameId = 0;
 	private:
 		static Application* s_Instance;
 	};

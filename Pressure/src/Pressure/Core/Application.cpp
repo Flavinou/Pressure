@@ -13,6 +13,8 @@ namespace Pressure
 
 	Application* Application::s_Instance = nullptr;
 
+	static Application::Statistics s_Stats;
+
 	Application::Application()
 	{
 		PRS_CORE_ASSERT(!s_Instance, "Application already exists !");
@@ -50,7 +52,17 @@ namespace Pressure
 		overlay->OnAttach();
 	}
 
-	void Application::OnEvent(Event& e)
+    void Application::ResetStats()
+    {
+        memset(&s_Stats, 0, sizeof(Application::Statistics));
+    }
+
+    Application::Statistics Application::GetStats()
+    {
+        return s_Stats;
+    }
+
+    void Application::OnEvent(Event& e)
 	{
 		PRS_PROFILE_FUNCTION();
 
@@ -74,9 +86,19 @@ namespace Pressure
 		{
 			PRS_PROFILE_SCOPE("RunLoop");
 
+			m_FrameId++;
+
 			float time = (float)glfwGetTime(); // Platform::GetTime
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
+
+			// Engine stats every 25th frame
+			if (m_FrameId % 25 == 0) 
+			{
+				ResetStats();
+				s_Stats.FrameTime = timestep.GetMilliseconds();
+				s_Stats.FramesPerSecond = GetFramesPerSecond(timestep);
+			}
 
 			if (!m_Minimized)
 			{
