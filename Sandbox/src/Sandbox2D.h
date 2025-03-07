@@ -2,6 +2,8 @@
 
 #include <Pressure.h>
 
+#include "ParticleSystem.h"
+
 class Sandbox2D : public Pressure::Layer
 {
 public:
@@ -23,4 +25,7 @@ private:
 	Pressure::Ref<Pressure::Texture2D> m_VoronoiTexture;
 
 	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
+
+	ParticleSystem m_ParticleSystem;
+	ParticleProps m_ParticleProps;
 };
