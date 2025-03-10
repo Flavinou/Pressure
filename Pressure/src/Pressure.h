@@ -24,6 +24,7 @@
 #include "Pressure/Renderer/Buffer.h"
 #include "Pressure/Renderer/Shader.h"
 #include "Pressure/Renderer/Texture.h"
+#include "Pressure/Renderer/SubTexture2D.h"
 #include "Pressure/Renderer/VertexArray.h"
 
 #include "Pressure/Renderer/OrthographicCamera.h"

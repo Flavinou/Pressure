@@ -16,6 +16,10 @@ void Sandbox2D::OnAttach()
 	PRS_PROFILE_FUNCTION();
 
 	m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
+	m_SpriteSheet = Pressure::Texture2D::Create("assets/game/textures/RPGpack_sheet_2X.png");
+	m_TextureStairs = Pressure::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 7.0f, 6.0f }, { 128.0f, 128.0f });
+    m_TextureBarrel = Pressure::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 8.0f, 2.0f }, { 128.0f, 128.0f });
+	m_TextureTree = Pressure::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 2.0f, 1.0f }, { 128.0f, 128.0f }, { 1.0f, 2.0f });
 
 	m_ParticleProps.ColorBegin = { 254 / 255.0f, 212 / 255.0f, 123 / 255.0f, 1.0f };
 	m_ParticleProps.ColorEnd = { 254 / 255.0f, 109 / 255.0f, 41 / 255.0f, 1.0f };
@@ -47,6 +51,7 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 		Pressure::RenderCommand::Clear();
 	}
 
+#if 0
 	{
 		static float rotation = 0.0f;
 		rotation += ts * 50.0f;
@@ -71,6 +76,7 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 		}
 		Pressure::Renderer2D::EndScene();
 	}
+#endif
 
 	{
 		if (Pressure::Input::IsMouseButtonPressed(PRS_MOUSE_BUTTON_LEFT))
@@ -84,12 +90,20 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 			x = (x / width) * bounds.GetWidth() - bounds.GetWidth() * 0.5f;
 			y = bounds.GetHeight() * 0.5f - (y / height) * bounds.GetHeight();
 			m_ParticleProps.Position = { x + pos.x, y + pos.y };
-			for (int i = 0; i < 50; i++)
+			for (int i = 0; i < 5; i++)
 				m_ParticleSystem.Emit(m_ParticleProps);
 		}
 
 		m_ParticleSystem.OnUpdate(ts);
 		m_ParticleSystem.OnRender(m_CameraController.GetCamera());
+	}
+
+	{
+        Pressure::Renderer2D::BeginScene(m_CameraController.GetCamera());
+        Pressure::Renderer2D::DrawQuad({ 0.0f, 0.0f, 0.5f }, { 1.0f, 1.0f }, m_TextureStairs);
+        Pressure::Renderer2D::DrawQuad({ 1.0f, 0.0f, 0.5f }, { 1.0f, 1.0f }, m_TextureBarrel);
+		Pressure::Renderer2D::DrawQuad({ -1.0f, 0.0f, 0.5f }, { 1.0f, 2.0f }, m_TextureTree);
+		Pressure::Renderer2D::EndScene();
 	}
 }
 
