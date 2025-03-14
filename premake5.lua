@@ -55,7 +55,8 @@ project "Pressure"
 
     defines
     {
-        "_CRT_NO_SECURE_WARNINGS"
+        "_CRT_NO_SECURE_WARNINGS",
+ 		"GLFW_INCLUDE_NONE"
     }
 
     includedirs
@@ -82,9 +83,7 @@ project "Pressure"
 
         defines
         {
-            "PRS_PLATFORM_WINDOWS",
-            "PRS_BUILD_DLL",
-            "GLFW_INCLUDE_NONE"
+            "PRS_PLATFORM_WINDOWS"
         }
 
     filter "configurations:Debug"

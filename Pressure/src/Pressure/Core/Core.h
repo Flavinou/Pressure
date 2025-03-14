@@ -3,12 +3,22 @@
 #include <memory>
 
 #ifdef PRS_DEBUG
+	#if defined(PRS_PLATFORM_WINDOWS)
+		#define PRS_DEBUGBREAK() __debugbreak()
+	#elif defined(PRS_PLATFORM_LINUX)
+		#include <signal.h>
+		#define PRS_DEBUGBREAK() raise(SIGTRAP)
+	#else
+		#error "Platform doesn't support debugbreak yet!"
+	#endif
 	#define PRS_ENABLE_ASSERTS
+#else
+	#define PRS_DEBUGBREAK()
 #endif // PRS_DEBUG
 
 #ifdef PRS_ENABLE_ASSERTS
-	#define PRS_ASSERT(x, ...) { if(!(x)) { PRS_ERROR("Assertion failed: {0}", __VA_ARGS__); __debugbreak(); } }
-	#define PRS_CORE_ASSERT(x, ...) { if(!(x)) { PRS_CORE_ERROR("Assertion failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define PRS_ASSERT(x, ...) { if(!(x)) { PRS_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
+	#define PRS_CORE_ASSERT(x, ...) { if(!(x)) { PRS_CORE_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
 #else
 	#define PRS_ASSERT(x, ...)
 	#define PRS_CORE_ASSERT(x, ...)
