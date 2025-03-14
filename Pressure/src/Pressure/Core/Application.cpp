@@ -52,6 +52,11 @@ namespace Pressure
 		overlay->OnAttach();
 	}
 
+    void Application::Close()
+    {
+		m_Running = false;
+    }
+
     void Application::ResetStats()
     {
         memset(&s_Stats, 0, sizeof(Application::Statistics));
