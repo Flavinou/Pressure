@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Pressure/Core/Core.h"
+#include "Pressure/Core/Base.h"
+
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
