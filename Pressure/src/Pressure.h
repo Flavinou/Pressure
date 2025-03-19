@@ -22,6 +22,7 @@
 #include "Pressure/Renderer/RenderCommand.h"
 
 #include "Pressure/Renderer/Buffer.h"
+#include "Pressure/Renderer/FrameBuffer.h"
 #include "Pressure/Renderer/Shader.h"
 #include "Pressure/Renderer/Texture.h"
 #include "Pressure/Renderer/VertexArray.h"

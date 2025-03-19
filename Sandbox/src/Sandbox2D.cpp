@@ -15,6 +15,11 @@ void Sandbox2D::OnAttach()
 {
 	PRS_PROFILE_FUNCTION();
 
+    Pressure::FrameBufferSpecification fbSpec;
+    fbSpec.Width = 1280;
+    fbSpec.Height = 720;
+    m_FrameBuffer = Pressure::FrameBuffer::Create(fbSpec);
+
 	m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
 }
 
@@ -35,6 +40,9 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 
 	{
 		PRS_PROFILE_SCOPE("Renderer preparation");
+
+        m_FrameBuffer->Bind();
+
 		Pressure::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Pressure::RenderCommand::Clear();
 	}
@@ -44,6 +52,7 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 		rotation += ts * 50.0f;
 
 		PRS_PROFILE_SCOPE("Renderer Draw");
+
 		Pressure::Renderer2D::BeginScene(m_CameraController.GetCamera());
 		Pressure::Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, -45.0f, { 0.8f, 0.2f, 0.3f, 1.0f });
         Pressure::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
@@ -62,6 +71,8 @@ void Sandbox2D::OnUpdate(Pressure::Timestep ts)
 			}
 		}
 		Pressure::Renderer2D::EndScene();
+
+        m_FrameBuffer->Unbind();
 	}
 }
 
@@ -154,8 +165,8 @@ void Sandbox2D::OnImGuiRender()
 
         ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
-        uint32_t textureID = m_VoronoiTexture->GetRendererID();
-        ImGui::Image((void*)textureID, ImVec2{ 256.0f, 256.0f });
+        uint32_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
+        ImGui::Image((void*)textureID, ImVec2{ 1280.0, 720.0f });
         ImGui::End();
 
         ImGui::End();
@@ -178,7 +189,10 @@ void Sandbox2D::OnImGuiRender()
 	    ImGui::NewLine();
 
 	    ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
-	    ImGui::End();
+
+        uint32_t textureID = m_VoronoiTexture->GetRendererID();
+        ImGui::Image((void*)textureID, ImVec2{ 1280.0, 720.0f });
+        ImGui::End();
     }
 
 }
