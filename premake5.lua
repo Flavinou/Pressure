@@ -101,8 +101,9 @@ project "Pressure"
         runtime "Release"
         optimize "on"
 
-project "Sandbox"
-    location "Sandbox"
+
+project "Pressure-Editor"
+    location "Pressure-Editor"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
@@ -152,3 +153,55 @@ project "Sandbox"
         defines "PRS_DIST"
         runtime "Release"
         optimize "on"
+
+        project "Sandbox"
+        location "Sandbox"
+        kind "ConsoleApp"
+        language "C++"
+        cppdialect "C++17"
+        staticruntime "on"
+    
+        targetdir ("bin/" .. outputdir .. "/%{prj.name}")    
+        objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    
+        files
+        {
+            "%{prj.name}/src/**.h",
+            "%{prj.name}/src/**.cpp",
+        }
+    
+        includedirs
+        {
+            "Pressure/extern/spdlog/include",
+            "Pressure/src",
+            "Pressure/extern",
+            "%{IncludeDir.glm}"
+        }
+    
+        links
+        {
+            "Pressure"
+        }
+    
+        filter "system:windows"
+            systemversion "latest"
+    
+            defines
+            {
+                "PRS_PLATFORM_WINDOWS"
+            }
+    
+        filter "configurations:Debug"
+            defines "PRS_DEBUG"
+            runtime "Debug"
+            symbols "on"
+    
+        filter "configurations:Release"
+            defines "PRS_RELEASE"
+            runtime "Release"
+            optimize "on"
+    
+        filter "configurations:Dist"
+            defines "PRS_DIST"
+            runtime "Release"
+            optimize "on"

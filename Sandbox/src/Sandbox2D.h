@@ -20,7 +20,6 @@ private:
 	// Temporary
 	Pressure::Ref<Pressure::VertexArray> m_SquareVA;
 	Pressure::Ref<Pressure::Shader> m_FlatColorShader;
-	Pressure::Ref<Pressure::FrameBuffer> m_FrameBuffer;
 
 	Pressure::Ref<Pressure::Texture2D> m_VoronoiTexture;
 

@@ -21,7 +21,7 @@ namespace Pressure
 	class Application
 	{
 	public:
-		Application();
+		Application(const std::string& name = "Pressure App");
 		virtual ~Application();
 
 		void OnEvent(Event& e);
