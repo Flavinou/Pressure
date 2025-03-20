@@ -6,23 +6,23 @@
 namespace Pressure
 {
 
-	class PressureEditor : public Application 
+	class Sigil : public Application 
 	{
 	public:
-		PressureEditor()
-			: Application("Pressure Editor")
+		Sigil()
+			: Application("Sigil")
 		{
 			PushLayer(new EditorLayer());
 		}
 
-		~PressureEditor()
+		~Sigil()
 		{
 		}
 	};
 
 	Application* CreateApplication()
 	{
-		return new PressureEditor();
+		return new Sigil();
 	}
 
 }

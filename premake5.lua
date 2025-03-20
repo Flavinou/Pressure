@@ -1,6 +1,6 @@
 workspace "Pressure"
     architecture "x64"
-    startproject "Sandbox"
+    startproject "Sigil"
 
     configurations
     {
@@ -102,8 +102,8 @@ project "Pressure"
         optimize "on"
 
 
-project "Pressure-Editor"
-    location "Pressure-Editor"
+project "Sigil"
+    location "Sigil"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
