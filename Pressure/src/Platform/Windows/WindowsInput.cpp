@@ -1,30 +1,27 @@
 #include "prspch.h"
-#include "Platform/Windows/WindowsInput.h"
-
 #include "Pressure/Core/Application.h"
+#include "Pressure/Core/Input.h"
 
 #include <GLFW/glfw3.h>
 
 namespace Pressure
 {
 
-	Scope<Input> Input::s_Instance = CreateScope<WindowsInput>();
-
-	bool Pressure::WindowsInput::IsKeyPressedImpl(int keycode)
+	bool Input::IsKeyPressed(int keycode)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetKey(window, keycode);
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
 	}
 	
-	bool Pressure::WindowsInput::IsMouseButtonPressedImpl(int button)
+	bool Input::IsMouseButtonPressed(int button)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetMouseButton(window, button);
 		return state == GLFW_PRESS;
 	}
 	
-	std::pair<float, float> Pressure::WindowsInput::GetMousePositionImpl()
+	std::pair<float, float> Input::GetMousePosition()
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		double xpos, ypos;
@@ -33,15 +30,15 @@ namespace Pressure
 		return { (float)xpos, (float)ypos };
 	}
 	
-	float Pressure::WindowsInput::GetMouseXImpl()
+	float Input::GetMouseX()
 	{
-		auto [x, y] = GetMousePositionImpl();
+		auto [x, y] = GetMousePosition();
 		return x;
 	}
 	
-	float Pressure::WindowsInput::GetMouseYImpl()
+	float Input::GetMouseY()
 	{
-		auto [x, y] = GetMousePositionImpl();
+		auto [x, y] = GetMousePosition();
 		return x;
 	}
 
