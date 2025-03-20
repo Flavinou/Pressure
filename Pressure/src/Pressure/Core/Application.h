@@ -13,6 +13,8 @@
 
 #include "Pressure/ImGui/ImGuiLayer.h"
 
+int main(int argc, char** argv);
+
 namespace Pressure
 {
 
@@ -21,8 +23,6 @@ namespace Pressure
 	public:
 		Application();
 		virtual ~Application();
-
-		void Run();
 
 		void OnEvent(Event& e);
 
@@ -45,6 +45,7 @@ namespace Pressure
         static Statistics GetStats();
 		static float GetFramesPerSecond(Timestep ts) { return 1 / ts; }
 	private:
+		void Run();
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
         static void ResetStats();
@@ -59,6 +60,7 @@ namespace Pressure
 		uint32_t m_FrameId = 0;
 	private:
 		static Application* s_Instance;
+		friend int ::main(int argc, char** argv);
 	};
 
 	// To be defined in client application
