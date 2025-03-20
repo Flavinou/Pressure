@@ -1,6 +1,6 @@
 # Binaries
 **/bin/
-!vendor/bin/premake
+!extern/bin/premake
 bin-int/
 
 # Pressure files
@@ -9,7 +9,7 @@ bin-int/
 # Visual Studio files and folder
 .vs/
 **.sln
-**.vcxproj
+*.vcxproj
 **.vcxproj.filters
 **.vcxproj.user 
 **.vcxproj
