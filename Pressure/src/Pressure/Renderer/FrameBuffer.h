@@ -17,6 +17,8 @@ namespace Pressure
     class FrameBuffer
     {
     public:
+        virtual ~FrameBuffer() = default;
+
         virtual void Bind() = 0;
         virtual void Unbind() = 0;
 
