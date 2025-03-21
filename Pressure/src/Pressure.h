@@ -11,7 +11,7 @@
 
 #include "Pressure/Core/Input.h"
 #include "Pressure/Core/KeyCodes.h"
-#include "Pressure/Core/MouseButtonCodes.h"
+#include "Pressure/Core/MouseCodes.h"
 #include "Pressure/Renderer/OrthographicCameraController.h"
 
 #include "Pressure/ImGui/ImGuiLayer.h"

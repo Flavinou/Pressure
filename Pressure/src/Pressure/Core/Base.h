@@ -16,6 +16,7 @@
 	#define PRS_DEBUGBREAK()
 #endif // PRS_DEBUG
 
+// TODO: Make this macro able to take in no argument except condition
 #ifdef PRS_ENABLE_ASSERTS
 	#define PRS_ASSERT(x, ...) { if(!(x)) { PRS_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
 	#define PRS_CORE_ASSERT(x, ...) { if(!(x)) { PRS_CORE_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
