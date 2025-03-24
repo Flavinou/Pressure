@@ -16,6 +16,9 @@
 
 #include "Pressure/ImGui/ImGuiLayer.h"
 
+#include "Pressure/Scene/Scene.h"
+#include "Pressure/Scene/Components.h"
+
 // -------- RENDERING ---------
 #include "Pressure/Renderer/Renderer.h"
 #include "Pressure/Renderer/Renderer2D.h"

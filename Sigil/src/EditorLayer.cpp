@@ -24,6 +24,14 @@ namespace Pressure
         m_FrameBuffer = FrameBuffer::Create(fbSpec);
 
         m_VoronoiTexture = Texture2D::Create("assets/textures/Voronoi2.png");
+
+        m_ActiveScene = CreateRef<Scene>();
+        
+        auto square = m_ActiveScene->CreateEntity();
+        m_ActiveScene->Registry().emplace<TransformComponent>(square);
+        m_ActiveScene->Registry().emplace<SpriteRendererComponent>(square, glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
+
+        m_SquareEntity = square;
     }
 
     void EditorLayer::OnDetach()
@@ -44,42 +52,19 @@ namespace Pressure
         // Render
         Renderer2D::ResetStats();
 
-        {
-            PRS_PROFILE_SCOPE("Renderer preparation");
+        m_FrameBuffer->Bind();
 
-            m_FrameBuffer->Bind();
+        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+        RenderCommand::Clear();
 
-            RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-            RenderCommand::Clear();
-        }
+        Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-        {
-            static float rotation = 0.0f;
-            rotation += ts * 50.0f;
+        // Update Scene
+        m_ActiveScene->OnUpdate(ts);
 
-            PRS_PROFILE_SCOPE("Renderer Draw");
+        Renderer2D::EndScene();
 
-            Renderer2D::BeginScene(m_CameraController.GetCamera());
-            Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, -45.0f, { 0.8f, 0.2f, 0.3f, 1.0f });
-            Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
-            Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, m_SquareColor);
-            Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 20.0f, 20.0f }, m_VoronoiTexture, 10.0f);
-            Renderer2D::DrawRotatedQuad({ -2.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, rotation, m_VoronoiTexture, 20.0f);
-            Renderer2D::EndScene();
-
-            Renderer2D::BeginScene(m_CameraController.GetCamera());
-            for (float y = -5.0f; y < 5.0f; y += 0.5f)
-            {
-                for (float x = -5.0f; x < 5.0f; x += 0.5f)
-                {
-                    glm::vec4 color = { (x + 5.0f) / 10.0f, 0.4f, (y + 5.0f) / 10.0f, 0.7f };
-                    Renderer2D::DrawQuad({ x, y }, { 0.45f, 0.45f }, color);
-                }
-            }
-            Renderer2D::EndScene();
-
-            m_FrameBuffer->Unbind();
-        }
+        m_FrameBuffer->Unbind();
     }
 
     void EditorLayer::OnEvent(Event& e)
@@ -166,7 +151,8 @@ namespace Pressure
         ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
         ImGui::NewLine();
 
-        ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
+        auto& squareColor = m_ActiveScene->Registry().get<SpriteRendererComponent>(m_SquareEntity).Color;
+        ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
 
         ImGui::End();
 

@@ -25,6 +25,9 @@ namespace Pressure
 		Ref<Shader> m_FlatColorShader;
 		Ref<Texture2D> m_VoronoiTexture;
 
+		Ref<Scene> m_ActiveScene;
+		entt::entity m_SquareEntity;
+
 		Ref<FrameBuffer> m_FrameBuffer;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
