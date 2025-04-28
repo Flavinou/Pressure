@@ -7,20 +7,21 @@
 namespace Pressure
 {
 
+    class Entity;
+
     class Scene
     {
     public:
         Scene();
         ~Scene();
 
-        entt::entity CreateEntity();
-
-        // TODO: Remove this getter
-        entt::registry& Registry() { return m_Registry; }
+        Entity CreateEntity(const std::string& name = std::string());
 
         void OnUpdate(Timestep ts);
     private:
         entt::registry m_Registry;
+
+        friend class Entity;
     };
 
 }

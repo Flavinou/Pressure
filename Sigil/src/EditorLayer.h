@@ -26,7 +26,7 @@ namespace Pressure
 		Ref<Texture2D> m_VoronoiTexture;
 
 		Ref<Scene> m_ActiveScene;
-		entt::entity m_SquareEntity;
+		Entity m_SquareEntity;
 
 		Ref<FrameBuffer> m_FrameBuffer;
 

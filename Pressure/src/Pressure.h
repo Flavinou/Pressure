@@ -16,6 +16,7 @@
 
 #include "Pressure/ImGui/ImGuiLayer.h"
 
+#include "Pressure/Scene/Entity.h"
 #include "Pressure/Scene/Scene.h"
 #include "Pressure/Scene/Components.h"
 

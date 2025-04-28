@@ -27,9 +27,9 @@ namespace Pressure
 
         m_ActiveScene = CreateRef<Scene>();
         
-        auto square = m_ActiveScene->CreateEntity();
-        m_ActiveScene->Registry().emplace<TransformComponent>(square);
-        m_ActiveScene->Registry().emplace<SpriteRendererComponent>(square, glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
+        // Entity handling
+        auto square = m_ActiveScene->CreateEntity("Square");
+        square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
 
         m_SquareEntity = square;
     }
@@ -151,8 +151,16 @@ namespace Pressure
         ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
         ImGui::NewLine();
 
-        auto& squareColor = m_ActiveScene->Registry().get<SpriteRendererComponent>(m_SquareEntity).Color;
-        ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
+        if (m_SquareEntity)
+        {
+            ImGui::Separator();
+            auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
+            ImGui::Text("%s", tag.c_str());
+
+            auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+            ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
+            ImGui::Separator();
+        }
 
         ImGui::End();
 
