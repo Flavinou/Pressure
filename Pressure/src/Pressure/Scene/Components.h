@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Pressure/Renderer/Camera.h"
+
 namespace Pressure
 {
 
@@ -36,6 +38,19 @@ namespace Pressure
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
         SpriteRendererComponent(const glm::vec4& color)
             : Color(color) {}
+    };
+
+    struct CameraComponent
+    {
+        Pressure::Camera Camera;
+
+        // TODO: Move to Scene ? Shouldn't it be exposed somewhere else ?
+        bool Primary = true;
+
+        CameraComponent() = default;
+        CameraComponent(const CameraComponent&) = default;
+        CameraComponent(const glm::mat4& projection)
+            : Camera(projection) {}
     };
 
 }

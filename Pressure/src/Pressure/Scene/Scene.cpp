@@ -53,7 +53,7 @@ namespace Pressure
     {
     }
 
-    Entity Scene::CreateEntity(const std::string& name /* = std::string()*/)
+    Entity Scene::CreateEntity(const std::string& name/* = std::string()*/)
     {
         Entity entity = { m_Registry.create(), this };
         entity.AddComponent<TransformComponent>();
@@ -65,12 +65,38 @@ namespace Pressure
 
     void Scene::OnUpdate(Timestep ts)
     {
-        auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-        for (auto entity : group)
-        {
-            auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+        // Render 2D
+        Camera* mainCamera = nullptr;
+        glm::mat4* mainCameraTransform = nullptr;
 
-            Renderer2D::DrawQuad(transform, sprite.Color);
+        {
+            auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            for (auto entity : view)
+            {
+                auto& [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
+
+                if (camera.Primary)
+                {
+                    mainCamera = &camera.Camera;
+                    mainCameraTransform = &transform.Transform;
+                    break;
+                }
+            }
+        }
+
+        if (mainCamera)
+        {
+            Renderer2D::BeginScene(mainCamera->GetProjection(), *mainCameraTransform);
+
+            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+            for (auto entity : group)
+            {
+                auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+
+                Renderer2D::DrawQuad(transform, sprite.Color);
+            }
+
+            Renderer2D::EndScene();
         }
     }
 

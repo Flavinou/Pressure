@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Pressure/Renderer/Camera.h"
 #include "Pressure/Renderer/OrthographicCamera.h"
 
 #include "Pressure/Renderer/Texture.h"
@@ -13,7 +14,8 @@ namespace Pressure
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene(const OrthographicCamera& camera);
+        static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const OrthographicCamera& camera); // TODO: Remove
 		static void EndScene();
 		static void Flush();
 
