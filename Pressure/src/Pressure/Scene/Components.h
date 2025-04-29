@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Pressure/Renderer/Camera.h"
+#include "Pressure/Scene/SceneCamera.h"
 
 namespace Pressure
 {
@@ -42,15 +42,14 @@ namespace Pressure
 
     struct CameraComponent
     {
-        Pressure::Camera Camera;
+        SceneCamera Camera;
 
         // TODO: Move to Scene ? Shouldn't it be exposed somewhere else ?
         bool Primary = true;
+        bool FixedAspectRatio = false;
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
-        CameraComponent(const glm::mat4& projection)
-            : Camera(projection) {}
     };
 
 }
