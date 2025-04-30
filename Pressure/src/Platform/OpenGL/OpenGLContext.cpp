@@ -25,6 +25,8 @@ namespace Pressure
         PRS_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
         PRS_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
         PRS_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
+
+		PRS_CORE_ASSERT(GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5), "Pressure requires at least OpenGL version 4.5!");
     }
 
     void OpenGLContext::SwapBuffers()
