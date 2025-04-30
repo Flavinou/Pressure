@@ -1,6 +1,6 @@
 # Binaries
 **/bin/
-!extern/bin/premake
+!extern/premake/bin
 bin-int/
 
 # Pressure files
