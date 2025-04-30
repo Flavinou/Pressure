@@ -39,6 +39,37 @@ namespace Pressure
         m_SecondCameraEntity = m_ActiveScene->CreateEntity("Clip-Space Camera Entity");
         auto& cameraComponent = m_SecondCameraEntity.AddComponent<CameraComponent>();
         cameraComponent.Primary = false;
+
+        class CameraController : public ScriptableEntity
+        {
+        public:
+            void OnCreate()
+            {
+                m_Transform = &GetComponent<TransformComponent>().Transform;
+            } 
+
+            void OnDestroy()
+            {
+            }
+
+            void OnUpdate(Timestep ts)
+            {
+                float speed = 5.0f;
+
+                if (Input::IsKeyPressed(KeyCode::A)) 
+                    (*m_Transform)[3][0] -= speed * ts;
+                if (Input::IsKeyPressed(KeyCode::D))
+                    (*m_Transform)[3][0] += speed * ts;
+                if (Input::IsKeyPressed(KeyCode::W))
+                    (*m_Transform)[3][1] += speed * ts;
+                if (Input::IsKeyPressed(KeyCode::S))
+                    (*m_Transform)[3][1] -= speed * ts;
+            }
+        private:
+            glm::mat4* m_Transform = nullptr;
+        };
+
+        m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
     }
 
     void EditorLayer::OnDetach()
