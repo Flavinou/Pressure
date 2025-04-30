@@ -23,6 +23,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Pressure/Core/Base.h"
+
 #include "Pressure/Core/Log.h"
 
 #include "Pressure/Debug/Instrumentor.h"
