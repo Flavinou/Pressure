@@ -23,7 +23,8 @@ project "Pressure"
     defines
     {
         "_CRT_NO_SECURE_WARNINGS",
- 		"GLFW_INCLUDE_NONE"
+ 		"GLFW_INCLUDE_NONE",
+		"_SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING"
     }
 
     includedirs

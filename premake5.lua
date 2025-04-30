@@ -10,12 +10,12 @@ workspace "Pressure"
         "Release",
         "Dist"
     }
-    
+
     solution_items
     {
     	".editorconfig"
     }
-    
+
     flags
     {
     	"MultiProcessorCompile"

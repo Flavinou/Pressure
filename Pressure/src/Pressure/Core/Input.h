@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Pressure/Core/Base.h"
 #include "Pressure/Core/KeyCodes.h"
 #include "Pressure/Core/MouseCodes.h"
+
+#include <glm/glm.hpp>
 
 namespace Pressure
 {
@@ -13,7 +14,7 @@ namespace Pressure
 		static bool IsKeyPressed(KeyCode key);
 
 		static bool IsMouseButtonPressed(MouseCode button);
-		static std::pair<float, float> GetMousePosition();
+		static glm::vec2 GetMousePosition();
         static float GetMouseX();
         static float GetMouseY();
 	};
