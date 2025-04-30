@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Pressure/Core/PlatformDetection.h"
+
 #include <memory>
 
 #ifdef PRS_DEBUG
