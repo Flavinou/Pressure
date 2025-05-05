@@ -43,17 +43,17 @@ namespace Pressure
         class CameraController : public ScriptableEntity
         {
         public:
-            void OnCreate()
+            virtual void OnCreate() override
             {
                 m_Transform = &GetComponent<TransformComponent>().Transform;
 				(*m_Transform)[3][0] = rand() % 10 - 5.0f;
             } 
 
-            void OnDestroy()
+            virtual void OnDestroy() override
             {
             }
 
-            void OnUpdate(Timestep ts)
+            virtual void OnUpdate(Timestep ts) override
             {
                 float speed = 5.0f;
 
