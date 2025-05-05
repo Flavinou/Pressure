@@ -46,6 +46,7 @@ namespace Pressure
             void OnCreate()
             {
                 m_Transform = &GetComponent<TransformComponent>().Transform;
+				m_Transform[3][0] = rand() % 10 - 5.0f;
             } 
 
             void OnDestroy()
@@ -70,6 +71,7 @@ namespace Pressure
         };
 
         m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+		m_SecondCameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
     }
 
     void EditorLayer::OnDetach()
