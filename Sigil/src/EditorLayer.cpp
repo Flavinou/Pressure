@@ -36,10 +36,10 @@ namespace Pressure
 
         m_SquareEntity = square;
 
-        m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+        m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
         m_CameraEntity.AddComponent<CameraComponent>();
 
-        m_SecondCameraEntity = m_ActiveScene->CreateEntity("Clip-Space Camera Entity");
+        m_SecondCameraEntity = m_ActiveScene->CreateEntity("Camera B");
         auto& cameraComponent = m_SecondCameraEntity.AddComponent<CameraComponent>();
         cameraComponent.Primary = false;
 
@@ -190,7 +190,7 @@ namespace Pressure
 
 		m_SceneHierarchyPanel.OnImGuiRender();
 
-        ImGui::Begin("Settings");
+        ImGui::Begin("Stats");
 
         auto engineStats = Application::GetStats();
         ImGui::Text("Engine Stats:");
@@ -204,32 +204,6 @@ namespace Pressure
         ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
         ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
         ImGui::NewLine();
-
-        if (m_SquareEntity)
-        {
-            ImGui::Separator();
-            auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
-            ImGui::Text("%s", tag.c_str());
-
-            auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
-            ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
-            ImGui::Separator();
-        }
-
-        ImGui::DragFloat3("Camera Transform", glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
-
-        if (ImGui::Checkbox("Camera A", &m_PrimaryCamera))
-        {
-            m_SecondCameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
-            m_SecondCameraEntity.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
-        }
-
-        {
-            auto& camera = m_SecondCameraEntity.GetComponent<CameraComponent>().Camera;
-            float orthoSize = camera.GetOrthographicSize();
-            if (ImGui::DragFloat("Second Camera Ortho Size", &orthoSize))
-                camera.SetOrthographicSize(orthoSize);
-        }
 
         ImGui::End();
 
