@@ -67,7 +67,7 @@ namespace Pressure
 
         if (mainCamera)
         {
-            Renderer2D::BeginScene(mainCamera->GetProjection(), *mainCameraTransform);
+            Renderer2D::BeginScene(*mainCamera, *mainCameraTransform);
 
             auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
             for (auto entity : group)

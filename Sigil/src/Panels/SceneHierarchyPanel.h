@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Pressure/Core/Base.h"
-#include "Pressure/Core/Log.h"
 #include "Pressure/Scene/Entity.h"
 #include "Pressure/Scene/Scene.h"
 

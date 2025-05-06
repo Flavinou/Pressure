@@ -18,14 +18,17 @@
 	#define PRS_DEBUGBREAK()
 #endif // PRS_DEBUG
 
-// TODO: Make this macro able to take in no argument except condition
-#ifdef PRS_ENABLE_ASSERTS
-	#define PRS_ASSERT(x, ...) { if(!(x)) { PRS_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
-	#define PRS_CORE_ASSERT(x, ...) { if(!(x)) { PRS_CORE_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
-#else
-	#define PRS_ASSERT(x, ...)
-	#define PRS_CORE_ASSERT(x, ...)
-#endif // PRS_ENABLE_ASSERTS
+#define PRS_EXPAND_MACRO(x) x
+#define PRS_STRINGIFY_MACRO(x) #x
+
+//// TODO: Make this macro able to take in no argument except condition
+//#ifdef PRS_ENABLE_ASSERTS
+//	#define PRS_ASSERT(x, ...) { if(!(x)) { PRS_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
+//	#define PRS_CORE_ASSERT(x, ...) { if(!(x)) { PRS_CORE_ERROR("Assertion failed: {0}", __VA_ARGS__); PRS_DEBUGBREAK(); } }
+//#else
+//	#define PRS_ASSERT(x, ...)
+//	#define PRS_CORE_ASSERT(x, ...)
+//#endif // PRS_ENABLE_ASSERTS
 
 #define BIT(x) (1 << x)
 
@@ -51,3 +54,6 @@ namespace Pressure
 	}
 
 }
+
+#include "Pressure/Core/Log.h"
+#include "Pressure/Core/Assert.h"
