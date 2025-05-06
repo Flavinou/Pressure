@@ -45,7 +45,6 @@ namespace Pressure
     {
         SceneCamera Camera;
 
-        // TODO: Move to Scene ? Shouldn't it be exposed somewhere else ?
         bool Primary = true;
         bool FixedAspectRatio = false;
 
