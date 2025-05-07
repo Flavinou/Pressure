@@ -1,5 +1,6 @@
 #include "EditorLayer.h"
 
+#include "Pressure/Core/Base.h"
 #include <Platform/OpenGL/OpenGLShader.h>
 
 #include <imgui/imgui.h>
@@ -48,29 +49,30 @@ namespace Pressure
         public:
             virtual void OnCreate() override
             {
-                m_Transform = &GetComponent<TransformComponent>().Transform;
-				(*m_Transform)[3][0] = rand() % 10 - 5.0f;
+				m_Translation = &GetComponent<TransformComponent>().Translation;
+				m_Translation->x = rand() % 10 - 5.0f;
             } 
 
             virtual void OnDestroy() override
             {
+				m_Translation = nullptr;
             }
 
             virtual void OnUpdate(Timestep ts) override
             {
-                float speed = 5.0f;
+                float speed = 5.0f; 
 
                 if (Input::IsKeyPressed(Key::A)) 
-                    (*m_Transform)[3][0] -= speed * ts;
+					m_Translation->x -= speed * ts;
                 if (Input::IsKeyPressed(Key::D))
-                    (*m_Transform)[3][0] += speed * ts;
+					m_Translation->x += speed * ts;
                 if (Input::IsKeyPressed(Key::W))
-                    (*m_Transform)[3][1] += speed * ts;
+					m_Translation->y += speed * ts;
                 if (Input::IsKeyPressed(Key::S))
-                    (*m_Transform)[3][1] -= speed * ts;
+					m_Translation->y -= speed * ts;
             }
         private:
-            glm::mat4* m_Transform = nullptr;
+            glm::vec3* m_Translation = nullptr;
         };
 
         m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();

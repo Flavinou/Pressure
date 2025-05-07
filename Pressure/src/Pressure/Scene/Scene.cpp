@@ -48,7 +48,7 @@ namespace Pressure
 
         // Render 2D
         Camera* mainCamera = nullptr;
-        glm::mat4* mainCameraTransform = nullptr;
+        glm::mat4 mainCameraTransform;
 
         {
             auto view = m_Registry.view<TransformComponent, CameraComponent>();
@@ -59,7 +59,7 @@ namespace Pressure
                 if (camera.Primary)
                 {
                     mainCamera = &camera.Camera;
-                    mainCameraTransform = &transform.Transform;
+                    mainCameraTransform = transform.GetTransform();
                     break;
                 }
             }
@@ -67,14 +67,14 @@ namespace Pressure
 
         if (mainCamera)
         {
-            Renderer2D::BeginScene(*mainCamera, *mainCameraTransform);
+            Renderer2D::BeginScene(*mainCamera, mainCameraTransform);
 
             auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
             for (auto entity : group)
             {
                 auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-                Renderer2D::DrawQuad(transform, sprite.Color);
+                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
             }
 
             Renderer2D::EndScene();

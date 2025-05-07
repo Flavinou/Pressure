@@ -42,7 +42,7 @@ ExampleLayer::ExampleLayer()
 	squareVB->SetLayout({
 		{ Pressure::ShaderDataType::Float3, "a_Position" },
 		{ Pressure::ShaderDataType::Float2, "a_TexCoord"}
-		});
+	});
 	m_SquareVA->AddVertexBuffer(squareVB);
 
 	unsigned int squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
