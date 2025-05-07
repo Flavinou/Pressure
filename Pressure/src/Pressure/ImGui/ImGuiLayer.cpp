@@ -34,8 +34,11 @@ namespace Pressure
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
 		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
 
+		io.Fonts->AddFontFromFileTTF("assets/fonts/roboto/Roboto_SemiCondensed-Bold.ttf", 18.0f);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("assets/fonts/roboto/Roboto_SemiCondensed-Regular.ttf", 18.0f);
+
 		// Setup Dear ImGui style
-		ImGui::StyleColorsDark();
+		ImGui::StyleColorsDark(); 
 		//ImGui::StyleColorsClassic();
 
 		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
