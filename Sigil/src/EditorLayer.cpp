@@ -1,7 +1,8 @@
 #include "EditorLayer.h"
 
+#include "Platform/OpenGL/OpenGLShader.h"
 #include "Pressure/Core/Base.h"
-#include <Platform/OpenGL/OpenGLShader.h>
+#include "Pressure/Scene/SceneSerializer.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,6 +29,7 @@ namespace Pressure
 
         m_ActiveScene = CreateRef<Scene>();
         
+#if PRS_EXAMPLE_ENTITY_SETUP
         // Entity handling
         auto square = m_ActiveScene->CreateEntity("Green Square");
         square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
@@ -70,15 +72,16 @@ namespace Pressure
 					m_Translation->y += speed * ts;
                 if (Input::IsKeyPressed(Key::S))
 					m_Translation->y -= speed * ts;
-            }
+            } 
         private:
             glm::vec3* m_Translation = nullptr;
         };
 
         m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 		m_SecondCameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+#endif
 
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene); 
     }
 
     void EditorLayer::OnDetach()
@@ -186,6 +189,18 @@ namespace Pressure
                 // Disabling fullscreen would allow the window to be moved to the front of other windows, 
                 // which we can't undo at the moment without finer window depth/z control.
                 //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+
+				if (ImGui::MenuItem("Save Current Scene"))
+				{
+					SceneSerializer serializer(m_ActiveScene);
+					serializer.Serialize("assets/scenes/Example.prs");
+				}
+
+				if (ImGui::MenuItem("Load Scene"))
+				{
+					SceneSerializer serializer(m_ActiveScene);
+					serializer.Deserialize("assets/scenes/Example.prs");
+				}
 
                 if (ImGui::MenuItem("Exit")) Application::Get().Close();
                 ImGui::EndMenu();

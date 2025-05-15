@@ -14,3 +14,6 @@
 	path = Pressure/extern/glm
 	url = https://github.com/g-truc/glm
 	branch = master
+[submodule "Pressure/extern/yaml-cpp"]
+	path = Pressure/extern/yaml-cpp
+	url = https://github.com/Flavinou/yaml-cpp.git

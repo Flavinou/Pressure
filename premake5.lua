@@ -31,16 +31,19 @@ IncludeDir["ImGui"] = "%{wks.location}/Pressure/extern/imgui"
 IncludeDir["glm"] = "%{wks.location}/Pressure/extern/glm"
 IncludeDir["stb_image"] = "%{wks.location}/Pressure/extern/stb_image"
 IncludeDir["entt"] = "%{wks.location}/Pressure/extern/entt/include"
+IncludeDir["yaml_cpp"] = "%{wks.location}/Pressure/extern/yaml-cpp/include"
 
 include "Pressure/extern/GLFW"
 include "Pressure/extern/Glad"
 include "Pressure/extern/imgui"
+include "Pressure/extern/yaml-cpp"
 
 group "Dependencies"
 	include "extern/premake"
 	include "Pressure/extern/GLFW"
 	include "Pressure/extern/Glad"
 	include "Pressure/extern/imgui"
+	include "Pressure/extern/yaml-cpp"
 
 group ""
 

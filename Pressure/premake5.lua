@@ -8,7 +8,7 @@ project "Pressure"
     objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
     pchheader "prspch.h"
-    pchsource "Pressure/src/prspch.cpp"
+    pchsource "src/prspch.cpp"
 
     files
     {
@@ -24,7 +24,8 @@ project "Pressure"
     {
         "_CRT_NO_SECURE_WARNINGS",
  		"GLFW_INCLUDE_NONE",
-		"_SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING"
+		"_SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING",
+		"YAML_CPP_STATIC_DEFINE"
     }
 
     includedirs
@@ -36,7 +37,8 @@ project "Pressure"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}"
     }
 
     links
@@ -44,6 +46,7 @@ project "Pressure"
         "GLFW",
         "Glad",
         "ImGui",
+		"yaml-cpp",
         "opengl32.lib",
     }
 
