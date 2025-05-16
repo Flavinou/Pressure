@@ -3,6 +3,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Pressure/Core/Base.h"
 #include "Pressure/Scene/SceneSerializer.h"
+#include "Pressure/Utils/PlatformUtils.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -124,11 +125,6 @@ namespace Pressure
         m_FrameBuffer->Unbind();
     }
 
-    void EditorLayer::OnEvent(Event& e)
-    {
-         m_CameraController.OnEvent(e);
-    }
-
     void EditorLayer::OnImGuiRender()
     {
         PRS_PROFILE_FUNCTION();
@@ -190,16 +186,19 @@ namespace Pressure
                 // which we can't undo at the moment without finer window depth/z control.
                 //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-				if (ImGui::MenuItem("Save Current Scene"))
+				if (ImGui::MenuItem("New", "Ctrl+N"))
 				{
-					SceneSerializer serializer(m_ActiveScene);
-					serializer.Serialize("assets/scenes/Example.prs");
+					NewScene();
 				}
 
-				if (ImGui::MenuItem("Load Scene"))
+				if (ImGui::MenuItem("Open...", "Ctrl+O"))
 				{
-					SceneSerializer serializer(m_ActiveScene);
-					serializer.Deserialize("assets/scenes/Example.prs");
+					OpenScene();
+				}
+
+				if (ImGui::MenuItem("Save Scene as...", "Ctrl+Shift+S"))
+				{
+					SaveSceneAs();
 				}
 
                 if (ImGui::MenuItem("Exit")) Application::Get().Close();
@@ -245,5 +244,83 @@ namespace Pressure
 
         ImGui::End();
     }
+
+	void EditorLayer::OnEvent(Event& e)
+	{
+		m_CameraController.OnEvent(e);
+
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(PRS_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+	}
+
+	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
+	{
+		// Shortcuts
+		if (e.GetRepeatCount() > 0)
+		{
+			return false;
+		}
+
+		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (control)
+					NewScene();
+				break;
+			}
+			case Key::O: 
+			{
+				if (control)
+					OpenScene();
+				break;
+			}
+			case Key::S:
+			{
+				if (control && shift)
+					SaveSceneAs();
+				break;
+			}
+		}
+	}
+
+	void EditorLayer::NewScene()
+	{
+		m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		std::string filePath = FileDialogs::OpenFile({
+						{ "Pressure Scene files", "*.prs" },
+						{ "All files", "*.*" }
+			});
+		if (!filePath.empty())
+		{
+			m_ActiveScene = CreateRef<Scene>();
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Deserialize(filePath);
+		}
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		std::string filePath = FileDialogs::SaveFile({
+						{ "Pressure Scene files", "*.prs" },
+						{ "All files", "*.*" }
+			});
+		if (!filePath.empty())
+		{
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(filePath);
+		}
+	}
 
 }

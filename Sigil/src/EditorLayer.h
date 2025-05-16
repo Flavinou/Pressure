@@ -20,6 +20,12 @@ namespace Pressure
 		void OnEvent(Event& e) override;
 		virtual void OnImGuiRender() override;
 	private:
+		bool OnKeyPressed(KeyPressedEvent& e);
+
+		void NewScene();
+		void OpenScene();
+		void SaveSceneAs();
+	private:
 		OrthographicCameraController m_CameraController;
 
 		// Temporary
