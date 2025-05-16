@@ -32,6 +32,7 @@ IncludeDir["glm"] = "%{wks.location}/Pressure/extern/glm"
 IncludeDir["stb_image"] = "%{wks.location}/Pressure/extern/stb_image"
 IncludeDir["entt"] = "%{wks.location}/Pressure/extern/entt/include"
 IncludeDir["yaml_cpp"] = "%{wks.location}/Pressure/extern/yaml-cpp/include"
+IncludeDir["ImGuizmo"] = "%{wks.location}/Pressure/extern/ImGuizmo"
 
 include "Pressure/extern/GLFW"
 include "Pressure/extern/Glad"

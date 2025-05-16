@@ -18,6 +18,8 @@ project "Pressure"
         "extern/stb_image/**.cpp",
         "extern/glm/glm/**.hpp",
         "extern/glm/glm/**.inl",
+		"extern/ImGuizmo/ImGuizmo.h",
+		"extern/ImGuizmo/ImGuizmo.cpp"
     }
 
     defines
@@ -38,7 +40,8 @@ project "Pressure"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}"
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.ImGuizmo}"
     }
 
     links
@@ -49,6 +52,9 @@ project "Pressure"
 		"yaml-cpp",
         "opengl32.lib",
     }
+
+	filter "files:extern/ImGuizmo/**.cpp"
+	flags { "NoPCH" }
 
     filter "system:windows"
         systemversion "latest"

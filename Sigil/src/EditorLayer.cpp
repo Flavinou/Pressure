@@ -1,13 +1,16 @@
 #include "EditorLayer.h"
 
-#include "Platform/OpenGL/OpenGLShader.h"
-#include "Pressure/Core/Base.h"
-#include "Pressure/Scene/SceneSerializer.h"
-#include "Pressure/Utils/PlatformUtils.h"
-
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Platform/OpenGL/OpenGLShader.h"
+#include "Pressure/Core/Base.h"
+#include "Pressure/Math/Math.h"
+#include "Pressure/Scene/SceneSerializer.h"
+#include "Pressure/Utils/PlatformUtils.h"
+
+#include "ImGuizmo.h"
 
 namespace Pressure
 {
@@ -232,13 +235,67 @@ namespace Pressure
 
         m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
-        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
         uint64_t textureID = m_FrameBuffer->GetColorAttachmentRendererID();
         ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		// Gizmos
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity && m_GizmoType != -1)
+		{
+			IMGUIZMO_NAMESPACE::SetOrthographic(false);
+			IMGUIZMO_NAMESPACE::SetDrawlist();
+
+			float windowWidth = (float)ImGui::GetWindowWidth();
+			float windowHeight = (float)ImGui::GetWindowHeight();
+			IMGUIZMO_NAMESPACE::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			// Camera
+			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+			const glm::mat4& cameraProjection = camera.GetProjection();
+			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+			// Entity transform
+			auto& tc = selectedEntity.GetComponent<TransformComponent>();
+			glm::mat4 transform = tc.GetTransform();
+
+			// Snapping
+			bool snap = Input::IsKeyPressed(Key::LeftControl);
+			float snapValue = 0.5f; // Snap to 0.5m for translation/ scale
+			
+			// Snap to 45 degrees for rotation
+			if (m_GizmoType == IMGUIZMO_NAMESPACE::OPERATION::ROTATE)
+				snapValue = 45.0f;
+
+			float snapValues[3] = { snapValue, snapValue, snapValue };
+
+			IMGUIZMO_NAMESPACE::Manipulate(
+				glm::value_ptr(cameraView), 
+				glm::value_ptr(cameraProjection), 
+				(IMGUIZMO_NAMESPACE::OPERATION)m_GizmoType,
+				IMGUIZMO_NAMESPACE::LOCAL, 
+				glm::value_ptr(transform),
+				nullptr,
+				snap ? snapValues : nullptr
+			);
+
+			if (IMGUIZMO_NAMESPACE::IsUsing())
+			{
+				glm::vec3 translation, rotation, scale;
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+
+				glm::vec3 deltaRotation = rotation - tc.Rotation;
+				tc.Translation = translation;
+				tc.Rotation += deltaRotation;
+				tc.Scale = scale;
+			}
+		}
+
         ImGui::End();
         ImGui::PopStyleVar();
 
@@ -265,6 +322,7 @@ namespace Pressure
 		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
 		switch (e.GetKeyCode())
 		{
+			// File menu shortcuts
 			case Key::N:
 			{
 				if (control)
@@ -283,6 +341,20 @@ namespace Pressure
 					SaveSceneAs();
 				break;
 			}
+
+			// Gizmos shortcuts
+			case Key::Q:
+				m_GizmoType = -1;
+				break;
+			case Key::W:
+				m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::TRANSLATE;
+				break;
+			case Key::E:
+				m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::ROTATE;
+				break;
+			case Key::R:
+				m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::SCALE;
+				break;
 		}
 	}
 

@@ -24,7 +24,8 @@ project "Sigil"
         "%{wks.location}/Pressure/src",
         "%{wks.location}/Pressure/extern",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.ImGuizmo}"
     }
 
     links

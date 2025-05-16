@@ -17,3 +17,6 @@
 [submodule "Pressure/extern/yaml-cpp"]
 	path = Pressure/extern/yaml-cpp
 	url = https://github.com/Flavinou/yaml-cpp.git
+[submodule "Pressure/extern/ImGuizmo"]
+	path = Pressure/extern/ImGuizmo
+	url = https://github.com/Flavinou/ImGuizmo.git

@@ -11,6 +11,8 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
+#include "ImGuizmo.h"
+
 namespace Pressure
 {
 
@@ -85,6 +87,7 @@ namespace Pressure
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		IMGUIZMO_NAMESPACE::BeginFrame();
 	}
 
 	void ImGuiLayer::End()
