@@ -260,13 +260,19 @@ namespace Pressure
 		{
 			if (ImGui::MenuItem("Camera"))
 			{
-				m_SelectionContext.AddComponent<CameraComponent>();
+				if (!m_SelectionContext.HasComponent<CameraComponent>())
+					m_SelectionContext.AddComponent<CameraComponent>();
+				else
+					PRS_CORE_WARN("The entity {0} already has the Camera Component!", m_SelectionContext.GetComponent<TagComponent>().Tag.c_str());
 				ImGui::CloseCurrentPopup();
 			}
 
 			if (ImGui::MenuItem("Sprite Renderer"))
 			{
-				m_SelectionContext.AddComponent<SpriteRendererComponent>();
+				if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
+					m_SelectionContext.AddComponent<SpriteRendererComponent>();
+				else
+					PRS_CORE_WARN("The entity {0} already has the Sprite Renderer Component!", m_SelectionContext.GetComponent<TagComponent>().Tag.c_str());
 				ImGui::CloseCurrentPopup();
 			}
 
