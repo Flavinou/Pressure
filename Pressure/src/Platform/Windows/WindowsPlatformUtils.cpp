@@ -109,41 +109,57 @@ namespace Pressure
 				hr = pfd->Advise(eventHandler, &cookie);
 				if (SUCCEEDED(hr))
 				{
-					// Set the default extension to the first filter
-					hr = pfd->SetDefaultExtension(WindowsPlatformUtils::ToWideString(filters[0].FilterExtension).c_str());
+					// Get the current working directory
+					CHAR currentDir[256];
+					if (!GetCurrentDirectoryA(256, currentDir))
+					{
+						return std::string();
+					}
+
+					IShellItem* pFolder;
+					hr = SHCreateItemFromParsingName(WindowsPlatformUtils::ToWideString(std::string(currentDir)).c_str(), nullptr, IID_PPV_ARGS(&pFolder));
 					if (SUCCEEDED(hr))
 					{
-						// Show the dialog parented to the current native window
-						hr = pfd->Show(glfwGetWin32Window((GLFWwindow*)Application::Get().GetWindow().GetNativeWindow()));
+						// Set the default directory to the process current directory
+						pfd->SetDefaultFolder(pFolder);
+
+						// Set the default extension to the first filter
+						hr = pfd->SetDefaultExtension(WindowsPlatformUtils::ToWideString(filters[0].FilterExtension).c_str());
 						if (SUCCEEDED(hr))
 						{
-							IShellItem* psiResult;
-							hr = pfd->GetResult(&psiResult);
+							// Show the dialog parented to the current native window
+							hr = pfd->Show(glfwGetWin32Window((GLFWwindow*)Application::Get().GetWindow().GetNativeWindow()));
 							if (SUCCEEDED(hr))
 							{
-								PWSTR pszFilePath = NULL;
-								psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+								IShellItem* psiResult;
+								hr = pfd->GetResult(&psiResult);
 								if (SUCCEEDED(hr))
 								{
-									std::string result = ToString(pszFilePath);
-									CoTaskMemFree(pszFilePath);
-									psiResult->Release();
-									pfd->Release();
+									PWSTR pszFilePath = NULL;
+									psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+									if (SUCCEEDED(hr))
+									{
+										std::string result = ToString(pszFilePath);
+										CoTaskMemFree(pszFilePath);
+										psiResult->Release();
+										pfd->Release();
 
-									// Check and add extension if needed
-									std::filesystem::path filePath(result);
-									if (!filePath.has_extension() && !filters.empty()) {
-										// Add the selected filter extension as default extension at the end of the file name
-										filePath.replace_extension(filters[eventHandler->GetSelectedFileTypeIndex()].FilterExtension.substr(1)); // Delete the '*'
-										result = filePath.string();
+										// Check and add extension if needed
+										std::filesystem::path filePath(result);
+										if (!filePath.has_extension() && !filters.empty()) {
+											// Add the selected filter extension as default extension at the end of the file name
+											filePath.replace_extension(filters[eventHandler->GetSelectedFileTypeIndex()].FilterExtension.substr(1)); // Delete the '*'
+											result = filePath.string();
+										}
+
+										return result;
 									}
-
-									return result;
 								}
+								psiResult->Release();
 							}
-							psiResult->Release();
 						}
 					}
+					pFolder->Release();
 				}
 				eventHandler->Release();
 				pfd->Unadvise(cookie);
