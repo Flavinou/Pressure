@@ -125,6 +125,18 @@ namespace Pressure
 		StartBatch();
     }
 
+	void Renderer2D::BeginScene(const EditorCamera& camera)
+	{
+		PRS_PROFILE_FUNCTION();
+
+		glm::mat4 viewProjection = camera.GetViewProjection();
+
+		s_Data.TextureShader->Bind();
+		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProjection);
+
+		StartBatch();
+	}
+
 	void Renderer2D::BeginScene(const OrthographicCamera& camera)
 	{
 		PRS_PROFILE_FUNCTION();
@@ -135,7 +147,7 @@ namespace Pressure
 		StartBatch();
 	}
 
-    void Renderer2D::EndScene()
+	void Renderer2D::EndScene()
 	{
 		PRS_PROFILE_FUNCTION();
 

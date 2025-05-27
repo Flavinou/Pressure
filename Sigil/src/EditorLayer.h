@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Pressure.h>
+#include "Pressure.h"
+#include "Pressure/Renderer/EditorCamera.h"
 
 #include "Panels/SceneHierarchyPanel.h"
 
@@ -39,6 +40,8 @@ namespace Pressure
 		Entity m_SecondCameraEntity;
 
 		bool m_PrimaryCamera = true;
+
+		EditorCamera m_EditorCamera;
 
 		Ref<FrameBuffer> m_FrameBuffer;
 
