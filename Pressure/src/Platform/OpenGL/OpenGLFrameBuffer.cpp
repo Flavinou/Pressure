@@ -18,12 +18,25 @@ namespace Pressure
 		{
 			switch (format)
 			{
-			case FrameBufferTextureFormat::DEPTH24STENCIL8:
-				return GL_DEPTH24_STENCIL8;
-					break;
-			case FrameBufferTextureFormat::RGBA8:
-				return GL_RGBA8;
-				break;
+				case FrameBufferTextureFormat::DEPTH24STENCIL8:
+					return GL_DEPTH24_STENCIL8;
+				case FrameBufferTextureFormat::RGBA8:
+					return GL_RGBA8;
+				case FrameBufferTextureFormat::RED_INTEGER:
+					return GL_R32I;
+			}
+
+			return GL_NONE;
+		}
+
+		static GLenum PixelDataFormat(FrameBufferTextureFormat format)
+		{
+			switch (format)
+			{
+				case FrameBufferTextureFormat::RGBA8:
+					return GL_RGBA;
+				case FrameBufferTextureFormat::RED_INTEGER:
+					return GL_RED_INTEGER;
 			}
 
 			return GL_NONE;
@@ -49,6 +62,7 @@ namespace Pressure
 			bool multiSampled = samples > 1;
 			GLenum target = TextureTarget(multiSampled);
 			GLenum internalFormat = TextureFormat(format);
+			GLenum pixelDataFormat = PixelDataFormat(format);
 			if (multiSampled)
 			{
 				glTexImage2DMultisample(target, samples, internalFormat, width, height, GL_FALSE);
@@ -59,7 +73,7 @@ namespace Pressure
 				if (IsDepthFormat(format))
 					glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
 				else // Create color texture attachment
-					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, pixelDataFormat, GL_UNSIGNED_BYTE, nullptr);
 
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -178,5 +192,15 @@ namespace Pressure
 
         Invalidate();
     }
+
+	int OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
+	{
+		PRS_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		int pixelData;
+		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+		return pixelData;
+	}
 
 }
