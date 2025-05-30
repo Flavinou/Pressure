@@ -18,14 +18,15 @@ namespace Pressure
 		{
 			switch (format)
 			{
-				case FrameBufferTextureFormat::DEPTH24STENCIL8:
-					return GL_DEPTH24_STENCIL8;
 				case FrameBufferTextureFormat::RGBA8:
 					return GL_RGBA8;
 				case FrameBufferTextureFormat::RED_INTEGER:
 					return GL_R32I;
+				case FrameBufferTextureFormat::DEPTH24STENCIL8:
+					return GL_DEPTH24_STENCIL8;
 			}
 
+			PRS_CORE_ASSERT(false, "Unsupported FrameBufferTextureFormat for texture format conversion!");
 			return GL_NONE;
 		}
 
@@ -37,8 +38,11 @@ namespace Pressure
 					return GL_RGBA;
 				case FrameBufferTextureFormat::RED_INTEGER:
 					return GL_RED_INTEGER;
+				case FrameBufferTextureFormat::DEPTH24STENCIL8:
+					return GL_DEPTH_STENCIL; // Depth textures don't have a pixel data format, but we use this for glTexStorage2D
 			}
 
+			PRS_CORE_ASSERT(false, "Unsupported FrameBufferTextureFormat for pixel data format conversion!");
 			return GL_NONE;
 		}
 
@@ -62,7 +66,6 @@ namespace Pressure
 			bool multiSampled = samples > 1;
 			GLenum target = TextureTarget(multiSampled);
 			GLenum internalFormat = TextureFormat(format);
-			GLenum pixelDataFormat = PixelDataFormat(format);
 			if (multiSampled)
 			{
 				glTexImage2DMultisample(target, samples, internalFormat, width, height, GL_FALSE);
@@ -71,15 +74,19 @@ namespace Pressure
 			{
 				// Create depth texture attachment
 				if (IsDepthFormat(format))
-					glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
+				{
+					glTexStorage2D(target, 1, internalFormat, width, height);
+				}
 				else // Create color texture attachment
-					glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, pixelDataFormat, GL_UNSIGNED_BYTE, nullptr);
+				{
+					glTexImage2D(target, 0, internalFormat, width, height, 0, PixelDataFormat(format), GL_UNSIGNED_BYTE, nullptr);
+				}
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType + index, target, id, 0);
@@ -201,6 +208,14 @@ namespace Pressure
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		return pixelData;
+	}
+
+	void OpenGLFrameBuffer::ClearAttachment(uint32_t attachmentIndex, int value)
+	{
+		PRS_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+
+		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
+		glClearTexImage(m_ColorAttachments[attachmentIndex], 0, Utils::PixelDataFormat(spec.TextureFormat), GL_INT, &value);
 	}
 
 }
