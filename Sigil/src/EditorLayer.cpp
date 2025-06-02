@@ -350,6 +350,7 @@ namespace Pressure
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(PRS_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(PRS_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -404,6 +405,16 @@ namespace Pressure
 		}
 	}
 
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft)
+		{
+			if (m_ViewportHovered && !IMGUIZMO_NAMESPACE::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+		}
+		return false;
+	}
+
 	void EditorLayer::NewScene()
 	{
 		m_ActiveScene = CreateRef<Scene>();
@@ -414,9 +425,9 @@ namespace Pressure
 	void EditorLayer::OpenScene()
 	{
 		std::string filePath = FileDialogs::OpenFile({
-						{ "Pressure Scene files", "*.prs" },
-						{ "All files", "*.*" }
-			});
+			{ "Pressure Scene files", "*.prs" },
+			{ "All files", "*.*" }
+		});
 		if (!filePath.empty())
 		{
 			m_ActiveScene = CreateRef<Scene>();
@@ -431,9 +442,9 @@ namespace Pressure
 	void EditorLayer::SaveSceneAs()
 	{
 		std::string filePath = FileDialogs::SaveFile({
-						{ "Pressure Scene files", "*.prs" },
-						{ "All files", "*.*" }
-			});
+			{ "Pressure Scene files", "*.prs" },
+			{ "All files", "*.*" }
+		});
 		if (!filePath.empty())
 		{
 			SceneSerializer serializer(m_ActiveScene);
