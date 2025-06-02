@@ -379,16 +379,20 @@ namespace Pressure
 
 			// Gizmos shortcuts
 			case Key::Q:
-				m_GizmoType = -1;
+				if (!IMGUIZMO_NAMESPACE::IsUsing())
+					m_GizmoType = -1;
 				break;
 			case Key::W:
-				m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::TRANSLATE;
+				if (!IMGUIZMO_NAMESPACE::IsUsing())
+					m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::TRANSLATE;
 				break;
 			case Key::E:
-				m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::ROTATE;
+				if (!IMGUIZMO_NAMESPACE::IsUsing())
+					m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::ROTATE;
 				break;
 			case Key::R:
-				m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::SCALE;
+				if (!IMGUIZMO_NAMESPACE::IsUsing())
+					m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::SCALE;
 				break;
 		}
 	}
