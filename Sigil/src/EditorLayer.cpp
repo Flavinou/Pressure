@@ -144,6 +144,7 @@ namespace Pressure
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
 			PRS_CORE_WARN("Pixel data = {0}", pixelData);
 		}
 
@@ -236,6 +237,12 @@ namespace Pressure
 		m_SceneHierarchyPanel.OnImGuiRender();
 
         ImGui::Begin("Stats");
+
+		std::string name = "None";
+		if (m_HoveredEntity)
+			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
+
+		ImGui::Text("Hovered Entity : %s", name.c_str());
 
         auto engineStats = Application::GetStats();
         ImGui::Text("Engine Stats:");

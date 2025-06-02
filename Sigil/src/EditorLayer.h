@@ -39,6 +39,8 @@ namespace Pressure
         Entity m_CameraEntity;		
 		Entity m_SecondCameraEntity;
 
+		Entity m_HoveredEntity;
+
 		bool m_PrimaryCamera = true;
 
 		EditorCamera m_EditorCamera;
