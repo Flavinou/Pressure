@@ -15,8 +15,14 @@
 namespace Pressure
 {
 
+	// TODO: Once we have projects, change this
+	static const std::filesystem::path s_AssetsPath = "assets";
+
     EditorLayer::EditorLayer()
-        : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
+        : Layer("EditorLayer")
+		, m_CameraController(1280.0f / 720.0f)
+		, m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
+		, m_ContentBrowserPanel(s_AssetsPath)
     {
     }
 
@@ -243,6 +249,7 @@ namespace Pressure
         }
 
 		m_SceneHierarchyPanel.OnImGuiRender();
+		m_ContentBrowserPanel.OnImGuiRender();
 
         ImGui::Begin("Stats");
 

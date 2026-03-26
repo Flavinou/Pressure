@@ -3,6 +3,7 @@
 #include "Pressure.h"
 #include "Pressure/Renderer/EditorCamera.h"
 
+#include "Panels/ContentBrowserPanel.h"
 #include "Panels/SceneHierarchyPanel.h"
 
 namespace Pressure
@@ -57,7 +58,8 @@ namespace Pressure
 		int m_GizmoType = -1;
 
 		// Panels
-		SceneHierarchyPanel m_SceneHierarchyPanel;
+		SceneHierarchyPanel m_SceneHierarchyPanel{};
+		ContentBrowserPanel m_ContentBrowserPanel;
 	};
 
 }
