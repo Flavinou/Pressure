@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Pressure/Core/Base.h"
+#include "Pressure/Core/Application.h"
 
 #ifdef PRS_PLATFORM_WINDOWS
 
-extern Pressure::Application* Pressure::CreateApplication();
+extern Pressure::Application* Pressure::CreateApplication(ApplicationCommandLineArgs args);
 
 int main(int argc, char** argv)
 {
@@ -12,7 +13,7 @@ int main(int argc, char** argv)
 	PRS_CORE_INFO("Initialized Logging.");
 
 	PRS_PROFILE_BEGIN_SESSION("Startup", "PressureProfile-Startup.json");
-	auto app = Pressure::CreateApplication();
+	auto app = Pressure::CreateApplication({ argc, argv });
     PRS_PROFILE_END_SESSION();
 
 	PRS_PROFILE_BEGIN_SESSION("Runtime", "PressureProfile-Runtime.json");

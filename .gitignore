@@ -17,3 +17,8 @@ bin-int/
 
 # Profiling files
 *.json
+
+# Directories
+Pressure/extern/VulkanSDK
+Sigil/assets/cache
+scripts/__pycache__

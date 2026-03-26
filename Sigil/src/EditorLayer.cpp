@@ -34,6 +34,14 @@ namespace Pressure
 
         m_ActiveScene = CreateRef<Scene>();
 
+		const auto commandLineArgs = Application::Get().GetCommandLineArgs();
+        if (commandLineArgs.Count > 1)
+		{
+			const std::string sceneFilePath = commandLineArgs[1];
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Deserialize(sceneFilePath);
+		}
+
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         
 #if PRS_EXAMPLE_ENTITY_SETUP

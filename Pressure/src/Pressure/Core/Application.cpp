@@ -15,7 +15,7 @@ namespace Pressure
 
 	static Application::Statistics s_Stats;
 
-	Application::Application(const std::string& name)
+	Application::Application(const std::string& name, ApplicationCommandLineArgs args)
 	{
 		PRS_CORE_ASSERT(!s_Instance, "Application already exists !");
 		s_Instance = this;

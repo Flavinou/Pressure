@@ -11,7 +11,8 @@
 class Sandbox : public Pressure::Application 
 {
 public:
-	Sandbox()
+	Sandbox(Pressure::ApplicationCommandLineArgs args)
+		: Application("Sandbox", args)
 	{
 		//PushLayer(new ExampleLayer());
 		PushLayer(new Sandbox2D());
@@ -22,7 +23,7 @@ public:
 	}
 };
 
-Pressure::Application* Pressure::CreateApplication()
+Pressure::Application* Pressure::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new Sandbox();
+	return new Sandbox(args);
 }
