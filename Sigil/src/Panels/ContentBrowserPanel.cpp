@@ -3,42 +3,75 @@
 
 #include <imgui/imgui.h>
 
-ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& assetsPath)
-	: m_CurrentDirectory(assetsPath)
-	, m_InitialWorkingDirectory(assetsPath)
+namespace Pressure
 {
-}
-
-void ContentBrowserPanel::OnImGuiRender()
-{
-	ImGui::Begin("Content Browser");
-
-	if (m_CurrentDirectory != std::filesystem::path(m_InitialWorkingDirectory))
+	
+	ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& assetsPath)
+		: m_CurrentDirectory(assetsPath)
+		, m_InitialWorkingDirectory(assetsPath)
 	{
-		if (ImGui::Button(".."))
-		{
-			m_CurrentDirectory = m_CurrentDirectory.parent_path();
-		}
+		m_DirectoryIcon = Texture2D::Create("resources/icons/folder_icon.png");
+		m_FileIcon = Texture2D::Create("resources/icons/file_icon.png");
 	}
 
-	for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
+	void ContentBrowserPanel::OnImGuiRender()
 	{
-		const auto& path = directoryEntry.path();
-		auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
-		std::string filenameString = relativePath.filename().string();
+		ImGui::Begin("Content Browser");
 
-		if (directoryEntry.is_directory())
+		if (m_CurrentDirectory != std::filesystem::path(m_InitialWorkingDirectory))
 		{
-			if (ImGui::Button(filenameString.c_str()))
+			if (ImGui::Button(".."))
 			{
-				m_CurrentDirectory /= path.filename();
+				m_CurrentDirectory = m_CurrentDirectory.parent_path();
 			}
 		}
-		else
+
+		static float padding = 16.0f;
+		static float thumbnailSize = 128.0f;
+		float cellSize = thumbnailSize + padding;
+
+		// The idea is to show the directory and file icons as buttons
+		// If the user clicks on them, we navigate into the directory. 
+		// We also want to show the filename below the icon. 
+		// We need to calculate the available space for each item to properly layout the icons and text.
+		auto availableSpace = ImGui::GetContentRegionAvail();
+		const int columnCount = std::max(1, static_cast<int>(availableSpace.x / cellSize));
+
+		ImGui::Columns(columnCount, nullptr, false);
+
+		for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
 		{
-			ImGui::Text(filenameString.c_str());
+			const auto& path = directoryEntry.path();
+			auto relativePath = std::filesystem::relative(path, m_CurrentDirectory);
+			std::string filenameString = relativePath.filename().string();
+
+			Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+			ImGui::ImageButton(reinterpret_cast<ImTextureID>(icon->GetRendererID())
+				, { thumbnailSize, thumbnailSize }
+				, { 0, 1 }
+			, { 1, 0 });
+
+			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			{
+				if (directoryEntry.is_directory())
+				{
+					m_CurrentDirectory /= path.filename();
+				}
+			}
+
+			ImGui::TextWrapped(filenameString.c_str());
+			ImGui::NextColumn();
 		}
+
+		ImGui::Columns(1);
+
+		// Optional settings for thumbnail size and padding
+		{
+			ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32, 256);
+			ImGui::SliderFloat("Padding", &padding, 0, 32);
+		}
+
+		ImGui::End();
 	}
 
-	ImGui::End();
 }

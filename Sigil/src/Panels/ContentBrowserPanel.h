@@ -2,14 +2,24 @@
 
 #include <filesystem>
 
-class ContentBrowserPanel
+#include "Pressure/Renderer/Texture.h"
+
+namespace Pressure
 {
-public:
-	ContentBrowserPanel(const std::filesystem::path& assetsPath);
+	
+	class ContentBrowserPanel
+	{
+	public:
+		ContentBrowserPanel(const std::filesystem::path& assetsPath);
 
-	void OnImGuiRender();
+		void OnImGuiRender();
 
-private:
-	std::filesystem::path m_CurrentDirectory;
-	const std::filesystem::path m_InitialWorkingDirectory;
-};
+	private:
+		std::filesystem::path m_CurrentDirectory;
+		const std::filesystem::path m_InitialWorkingDirectory;
+
+		Ref<Texture2D> m_DirectoryIcon;
+		Ref<Texture2D> m_FileIcon;
+	};
+
+}
