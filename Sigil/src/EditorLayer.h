@@ -13,21 +13,24 @@ namespace Pressure
 	{
 	public:
 		EditorLayer();
-		virtual ~EditorLayer() = default;
+		~EditorLayer() override = default;
 
-		virtual void OnAttach() override;
-		virtual void OnDetach() override;
+		void OnAttach() override;
+		void OnDetach() override;
 
 		void OnUpdate(Timestep ts) override;
 		void OnEvent(Event& e) override;
-		virtual void OnImGuiRender() override;
+		void OnImGuiRender() override;
+
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		void NewScene();
 		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+
 	private:
 		OrthographicCameraController m_CameraController;
 
