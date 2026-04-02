@@ -9,6 +9,8 @@
 namespace Pressure
 {
 
+	extern const std::filesystem::path gs_AssetsPath;
+
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
@@ -367,6 +369,20 @@ namespace Pressure
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component) 
 		{
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+
+			ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				{
+					const wchar_t* path = static_cast<const wchar_t*>(payload->Data);
+					std::filesystem::path texturePath = std::filesystem::path(gs_AssetsPath) / path;
+					component.Texture = Texture2D::Create(texturePath.string());
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);
 		});
 	}
 

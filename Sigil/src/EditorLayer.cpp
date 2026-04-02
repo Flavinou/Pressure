@@ -16,7 +16,7 @@ namespace Pressure
 {
 
 	// TODO: Once we have projects, change this
-	static const std::filesystem::path gs_AssetsPath = "assets";
+	extern const std::filesystem::path gs_AssetsPath = "assets";
 
     EditorLayer::EditorLayer()
         : Layer("EditorLayer")
