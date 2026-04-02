@@ -475,12 +475,24 @@ namespace Pressure
 
 	void EditorLayer::OpenScene(const std::filesystem::path& path)
 	{
-		m_ActiveScene = CreateRef<Scene>();
+		if (path.extension().string() != ".prs")
+		{
+			PRS_CORE_ERROR("Could not load scene '{0}' - not a \".prs\" scene file", path.filename().string());
+			return;
+		}
+
+		Ref<Scene> newScene = CreateRef<Scene>();
+		SceneSerializer serializer(newScene);
+
+		if (!serializer.Deserialize(path.string()))
+		{
+			PRS_CORE_ERROR("Could not load scene '{0}' - deserialization failed", path.filename().string());
+			return;
+		}
+
+		m_ActiveScene = newScene;
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Deserialize(path.string());
 	}
 
 	void EditorLayer::SaveSceneAs()

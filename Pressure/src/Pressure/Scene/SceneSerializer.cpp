@@ -116,7 +116,17 @@ namespace Pressure
 	{
 		try 
 		{
-			YAML::Node rootNode = YAML::LoadFile(filePath);
+			YAML::Node rootNode;
+
+			try
+			{
+				rootNode = YAML::LoadFile(filePath);
+			}
+			catch (YAML::ParserException& e)
+			{
+				PRS_CORE_ERROR("An error occurred while parsing file '{0}'... Error: {1} at line {2}, column {3}", filePath, e.msg, e.mark.line, e.mark.column);
+				return false;
+			}
 
 			if (!rootNode["Scene"])
 			{

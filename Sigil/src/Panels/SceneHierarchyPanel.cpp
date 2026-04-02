@@ -377,12 +377,17 @@ namespace Pressure
 				{
 					const wchar_t* path = static_cast<const wchar_t*>(payload->Data);
 					std::filesystem::path texturePath = std::filesystem::path(gs_AssetsPath) / path;
-					component.Texture = Texture2D::Create(texturePath.string());
+					Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
+					if (texture->IsLoaded())
+						component.Texture = texture;
+					else
+						PRS_WARN("Failed to load texture {0}!", texturePath.filename().string());
 				}
+
 				ImGui::EndDragDropTarget();
 			}
 
-			ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);
+			ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.1f, 100.0f);
 		});
 	}
 
