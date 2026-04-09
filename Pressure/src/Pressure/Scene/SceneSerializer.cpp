@@ -197,7 +197,7 @@ namespace Pressure
 
 			for (auto entityNode : entitiesNode)
 			{
-				uint64_t uuid = entityNode["Entity"].as<uint64_t>(); // TODO
+				uint64_t uuid = entityNode["Entity"].as<uint64_t>();
 
 				std::string name;
 				auto tagComponentNode = entityNode["TagComponent"];
@@ -208,7 +208,7 @@ namespace Pressure
 
 				PRS_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
-				Entity deserializedEntity = m_Scene->CreateEntity(name);
+				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
 
 				auto transformComponentNode = entityNode["TransformComponent"];
 				if (transformComponentNode)
@@ -287,9 +287,11 @@ namespace Pressure
 
 	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
+		PRS_CORE_ASSERT(entity.HasComponent<IDComponent>());
+
 		out << YAML::BeginMap; // Entity node
 		out << YAML::Key << "Entity";
-		out << YAML::Value << "12837192831273"; // TODO: Entity ID goes here
+		out << YAML::Value << entity.GetUUID();
 
 		if (entity.HasComponent<TagComponent>())
 		{

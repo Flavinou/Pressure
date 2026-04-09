@@ -1,10 +1,11 @@
 #include "prspch.h"
 #include "Pressure/Scene/Scene.h"
 
-#include "Components.h"
-#include "Entity.h"
 #include "Pressure/Physics/Physics2D.h"
 #include "Pressure/Renderer/Renderer2D.h"
+#include "Pressure/Scene/Components.h"
+#include "Pressure/Scene/Entity.h"
+#include "Pressure/Scene/ScriptableEntity.h"
 
 #include <box2d/box2d.h>
 #include <glm/glm.hpp>
@@ -37,15 +38,21 @@ namespace Pressure
 
     Entity Scene::CreateEntity(const std::string& name/* = std::string()*/)
     {
-        Entity entity = { m_Registry.create(), this };
-        entity.AddComponent<TransformComponent>();
-        auto& tag = entity.AddComponent<TagComponent>();
-        tag.Tag = name.empty() ? "Entity" : name;
-
-        return entity;
+        return CreateEntityWithUUID(UUID(), name);
     }
 
-	void Scene::DestroyEntity(Entity entity)
+    Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name/* = std::string()*/)
+    {
+		Entity entity = { m_Registry.create(), this };
+		entity.AddComponent<IDComponent>(uuid);
+		entity.AddComponent<TransformComponent>();
+		auto& tag = entity.AddComponent<TagComponent>();
+		tag.Tag = name.empty() ? "Entity" : name;
+  
+		return entity;
+    }
+
+    void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
 	}
@@ -208,7 +215,6 @@ namespace Pressure
         }
     }
 
-
     Entity Scene::GetPrimaryCameraEntity()
     {
 		auto view = m_Registry.view<CameraComponent>();
@@ -225,7 +231,12 @@ namespace Pressure
     template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
-		static_assert(false, "Unknown component!");
+		// static_assert(false, "Unknown component!");
+	}
+
+	template<>
+	void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
+	{
 	}
 
 	template<>

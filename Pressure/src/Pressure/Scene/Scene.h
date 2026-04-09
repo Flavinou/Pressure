@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Pressure/Core/Timestep.h"
+#include "Pressure/Core/UUID.h"
 #include "Pressure/Renderer/EditorCamera.h"
 
 #include <entt.hpp>
@@ -20,6 +21,7 @@ namespace Pressure
         ~Scene();
 
         Entity CreateEntity(const std::string& name = std::string());
+        Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();

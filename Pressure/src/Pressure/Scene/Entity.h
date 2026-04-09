@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Scene.h"
+#include "Pressure/Core/UUID.h"
+#include "Pressure/Scene/Components.h"
+#include "Pressure/Scene/Scene.h"
 
 #include <entt.hpp>
 
@@ -30,7 +32,7 @@ namespace Pressure
         }
 
         template<typename T>
-        bool HasComponent()
+        bool HasComponent() const
         {
             return m_Scene->m_Registry.any_of<T>(m_EntityHandle);
         }
@@ -46,12 +48,14 @@ namespace Pressure
 		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
 		operator entt::entity() const { return m_EntityHandle; }
 
+		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+
 		bool operator ==(const Entity& other) const 
 		{ 
 			return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene;
 		}
 
-		bool operator !=(const Entity& other)
+		bool operator !=(const Entity& other) const
 		{
 			return !(*this == other);
 		}

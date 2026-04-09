@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Pressure/Scene/SceneCamera.h"
-#include "ScriptableEntity.h"
+#include "Pressure/Core/UUID.h"
 #include "Pressure/Renderer/Texture.h"
+#include "Pressure/Scene/SceneCamera.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,6 +12,17 @@
 
 namespace Pressure
 {
+	class ScriptableEntity;
+
+	struct RuntimeBodyImpl;
+
+	struct IDComponent
+	{
+		UUID ID;
+
+		IDComponent() = default;
+		IDComponent(const IDComponent&) = default;
+	};
 
     struct TagComponent
     {
@@ -84,8 +95,6 @@ namespace Pressure
     };
 
 	// Physics
-
-	struct RuntimeBodyImpl;
 
 	struct RigidBody2DComponent
 	{
