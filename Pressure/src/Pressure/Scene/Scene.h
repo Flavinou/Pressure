@@ -10,6 +10,9 @@ namespace Pressure
 
     class Entity;
 
+	// Forward declaration of Box2D world id struct
+	struct PhysicsWorldImpl;
+
     class Scene
     {
     public:
@@ -18,6 +21,9 @@ namespace Pressure
 
         Entity CreateEntity(const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
+
+		void OnRuntimeStart();
+		void OnRuntimeStop();
 
 		void OnUpdateRuntime(Timestep ts);
         void OnUpdateEditor(Timestep ts, EditorCamera& camera);
@@ -31,6 +37,8 @@ namespace Pressure
         entt::registry m_Registry;
 
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+
+		PhysicsWorldImpl* m_PhysicsImpl;
 
         friend class Entity;
 		friend class SceneHierarchyPanel;

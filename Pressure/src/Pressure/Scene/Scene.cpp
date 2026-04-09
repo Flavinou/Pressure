@@ -3,19 +3,36 @@
 
 #include "Components.h"
 #include "Entity.h"
+#include "Pressure/Physics/Physics2D.h"
 #include "Pressure/Renderer/Renderer2D.h"
 
+#include <box2d/box2d.h>
 #include <glm/glm.hpp>
 
 namespace Pressure
 {
 
+	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType type)
+	{
+		switch (type)
+		{
+			case RigidBody2DComponent::BodyType::Static:    return b2_staticBody;
+			case RigidBody2DComponent::BodyType::Dynamic:   return b2_dynamicBody;
+			case RigidBody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
+		}
+
+		PRS_CORE_ASSERT(false, "Unknown RigidBody2DComponent::BodyType!");
+		return b2_staticBody;
+	}
+
     Scene::Scene()
+		: m_PhysicsImpl(new PhysicsWorldImpl())
     {
     }
 
     Scene::~Scene()
     {
+		delete m_PhysicsImpl;
     }
 
     Entity Scene::CreateEntity(const std::string& name/* = std::string()*/)
@@ -33,9 +50,61 @@ namespace Pressure
 		m_Registry.destroy(entity);
 	}
 
+	void Scene::OnRuntimeStart()
+	{
+		b2WorldDef worldDefinition = b2DefaultWorldDef();
+		worldDefinition.gravity = { 0.0f, -9.81f };
+		m_PhysicsImpl->WorldId = b2CreateWorld(&worldDefinition);
+
+		auto view = m_Registry.view<RigidBody2DComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.type = RigidBody2DTypeToBox2DBody(rb2d.Type);
+			bodyDef.position = { transform.Translation.x, transform.Translation.y };
+			bodyDef.rotation = b2MakeRot(transform.Rotation.z);
+
+			b2BodyId bodyId = b2CreateBody(m_PhysicsImpl->WorldId, &bodyDef);
+			b2Body_SetMotionLocks(bodyId, { rb2d.FixedRotation, rb2d.FixedRotation, rb2d.FixedRotation });
+
+			rb2d.RuntimeBody = new RuntimeBodyImpl();
+			rb2d.RuntimeBody->BodyId = bodyId;
+
+			if (entity.HasComponent<BoxCollider2DComponent>())
+			{
+				auto& collider = entity.GetComponent<BoxCollider2DComponent>();
+
+				b2Polygon box = b2MakeBox(collider.Size.x * transform.Scale.x * 0.5f, collider.Size.y * transform.Scale.y * 0.5f);
+				b2ShapeDef shapeDefinition = b2DefaultShapeDef();
+				shapeDefinition.density = collider.Density;
+				shapeDefinition.material.friction = collider.Friction;
+				shapeDefinition.material.restitution = collider.Restitution;
+
+				b2CreatePolygonShape(bodyId, &shapeDefinition, &box);
+			}
+		}
+	}
+
+	void Scene::OnRuntimeStop()
+	{
+		auto view = m_Registry.view<RigidBody2DComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			delete rb2d.RuntimeBody;
+		}
+
+    	b2DestroyWorld(m_PhysicsImpl->WorldId);
+	}
+
 	void Scene::OnUpdateRuntime(Timestep ts)
     {
-        // Update scripts
+        // Scripts
         {
             m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc) 
             {
@@ -49,6 +118,27 @@ namespace Pressure
 
 				nsc.Instance->OnUpdate(ts);
             });
+        }
+
+		// Physics
+        {
+	        constexpr int32_t subStepCount = 4;
+			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
+
+	        auto view = m_Registry.view<RigidBody2DComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+				b2BodyId body = rb2d.RuntimeBody->BodyId;
+				const auto position = b2Body_GetPosition(body);
+				transform.Translation.x = position.x;
+				transform.Translation.y = position.y;
+				b2Rot rot = b2Body_GetRotation(body);
+				transform.Rotation.z = std::atan2(rot.s, rot.c);
+			}
         }
 
         // Render 2D
@@ -79,7 +169,7 @@ namespace Pressure
             {
                 auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+                Renderer2D::DrawSprite(transform.GetTransform(), sprite, static_cast<int>(entity));
             }
 
             Renderer2D::EndScene();
@@ -162,6 +252,16 @@ namespace Pressure
 
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+	{
+	}
+	
+	template<>
+	void Scene::OnComponentAdded<RigidBody2DComponent>(Entity entity, RigidBody2DComponent& component)
+	{
+	}
+	
+	template<>
+	void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
 	{
 	}
 }

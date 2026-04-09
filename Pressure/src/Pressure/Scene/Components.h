@@ -1,14 +1,14 @@
 #pragma once
 
+#include "Pressure/Scene/SceneCamera.h"
+#include "ScriptableEntity.h"
+#include "Pressure/Renderer/Texture.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
-
-#include "Pressure/Scene/SceneCamera.h"
-#include "ScriptableEntity.h"
-#include "Pressure/Renderer/Texture.h"
 
 namespace Pressure
 {
@@ -82,5 +82,36 @@ namespace Pressure
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
         }
     };
+
+	// Physics
+
+	struct RuntimeBodyImpl;
+
+	struct RigidBody2DComponent
+	{
+		enum class BodyType { Static = 0, Dynamic, Kinematic };
+		BodyType Type = BodyType::Static;
+		bool FixedRotation = false;
+
+		// Storage for runtime
+		RuntimeBodyImpl* RuntimeBody;
+
+		RigidBody2DComponent() = default;
+		RigidBody2DComponent(const RigidBody2DComponent&) = default;
+	};
+
+	struct BoxCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		glm::vec2 Size = { 1.0f, 1.0f };
+
+		// TODO: Move to a separate "PhysicsMaterial2D" component and reference it from here
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
 
 }

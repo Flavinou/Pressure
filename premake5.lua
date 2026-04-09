@@ -26,6 +26,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "extern/premake"
+	include "Pressure/extern/box2d"
 	include "Pressure/extern/GLFW"
 	include "Pressure/extern/Glad"
 	include "Pressure/extern/imgui"

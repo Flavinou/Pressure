@@ -12,12 +12,34 @@
 namespace YAML {
 
 	template<>
+	struct convert<glm::vec2> {
+		static Node encode(const glm::vec2& rhs) {
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs) {
+			if (!node.IsSequence() || node.size() != 2) {
+				return false;
+			}
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<glm::vec3> {
 		static Node encode(const glm::vec3& rhs) {
 			Node node;
 			node.push_back(rhs.x);
 			node.push_back(rhs.y);
 			node.push_back(rhs.z);
+			node.SetStyle(EmitterStyle::Flow);
 			return node;
 		}
 
@@ -41,6 +63,7 @@ namespace YAML {
 			node.push_back(rhs.y);
 			node.push_back(rhs.z);
 			node.push_back(rhs.w);
+			node.SetStyle(EmitterStyle::Flow);
 			return node;
 		}
 
@@ -62,9 +85,11 @@ namespace YAML {
 namespace Pressure
 {
 
-	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
-		: m_Scene(scene)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
 	{
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
+		return out;
 	}
 
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
@@ -81,22 +106,50 @@ namespace Pressure
 		return out;
 	}
 
-	void SceneSerializer::Serialize(const std::string& filePath)
+	static std::string RigidBody2DBodyTypeToString(RigidBody2DComponent::BodyType bodyType)
 	{
-		PRS_CORE_TRACE("Sserializing active scene...");
+		switch (bodyType)
+		{
+		case RigidBody2DComponent::BodyType::Static:    return "Static";
+		case RigidBody2DComponent::BodyType::Dynamic:   return "Dynamic";
+		case RigidBody2DComponent::BodyType::Kinematic: return "Kinematic";
+		}
+
+		PRS_CORE_ASSERT(false, "Unknown body type");
+		return {};
+	}
+
+	static RigidBody2DComponent::BodyType RigidBody2DBodyTypeFromString(const std::string& bodyTypeString)
+	{
+		if (bodyTypeString == "Static")    return RigidBody2DComponent::BodyType::Static;
+		if (bodyTypeString == "Dynamic")   return RigidBody2DComponent::BodyType::Dynamic;
+		if (bodyTypeString == "Kinematic") return RigidBody2DComponent::BodyType::Kinematic;
+
+		PRS_CORE_ASSERT(false, "Unknown body type");
+		return RigidBody2DComponent::BodyType::Static;
+	}
+
+	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
+		: m_Scene(scene)
+	{
+	}
+
+	void SceneSerializer::Serialize(const std::string& filePath)
+	{		
+		PRS_CORE_TRACE("Serializing active scene...");
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.view<entt::entity>().each([&](auto entityID)
-			{
-				Entity entity = { entityID, m_Scene.get() };
-				if (!entity)
-					return;
+		{
+			Entity entity = { entityID, m_Scene.get() };
+			if (!entity)
+				return;
 
-				SerializeEntity(out, entity);
-			});
+			SerializeEntity(out, entity);
+		});
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
@@ -193,6 +246,25 @@ namespace Pressure
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponentNode["Color"].as<glm::vec4>();
 				}
+
+				auto rigidBody2DComponent = entityNode["RigidBody2DComponent"];
+				if (rigidBody2DComponent)
+				{
+					auto& rb2d = deserializedEntity.AddComponent<RigidBody2DComponent>();
+					rb2d.Type = RigidBody2DBodyTypeFromString(rigidBody2DComponent["BodyType"].as<std::string>());
+					rb2d.FixedRotation = rigidBody2DComponent["FixedRotation"].as<bool>();
+				}
+
+				auto boxCollider2DComponent = entityNode["BoxCollider2DComponent"];
+				if (boxCollider2DComponent)
+				{
+					auto& bc2d = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+					bc2d.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+					bc2d.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+					bc2d.Density = boxCollider2DComponent["Density"].as<float>();
+					bc2d.Friction = boxCollider2DComponent["Friction"].as<float>();
+					bc2d.Restitution = boxCollider2DComponent["Restitution"].as<float>();
+				}
 			}
 
 			PRS_CORE_TRACE("Deserializing scene '{0}' done.", sceneName);
@@ -279,6 +351,33 @@ namespace Pressure
 			out << YAML::Key << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
 
 			out << YAML::EndMap; // CameraComponent node
+		}
+
+		if (entity.HasComponent<RigidBody2DComponent>())
+		{
+			out << YAML::Key << "RigidBody2DComponent";
+			out << YAML::BeginMap; // RigidBody2DComponent node
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			out << YAML::Key << "BodyType" << YAML::Value << RigidBody2DBodyTypeToString(rb2d.Type);
+			out << YAML::Key << "FixedRotation" << YAML::Value << rb2d.FixedRotation;
+
+			out << YAML::EndMap; // RigidBody2DComponent node
+		}
+
+		if (entity.HasComponent<BoxCollider2DComponent>())
+		{
+			out << YAML::Key << "BoxCollider2DComponent";
+			out << YAML::BeginMap; // BoxCollider2DComponent node
+
+			auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+			out << YAML::Key << "Offset" << YAML::Value << bc2d.Offset;
+			out << YAML::Key << "Size" << YAML::Value << bc2d.Size;
+			out << YAML::Key << "Density" << YAML::Value << bc2d.Density;
+			out << YAML::Key << "Friction" << YAML::Value << bc2d.Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << bc2d.Restitution;
+
+			out << YAML::EndMap; // BoxCollider2DComponent node
 		}
 
 		out << YAML::EndMap; // Entity node

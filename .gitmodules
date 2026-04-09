@@ -20,3 +20,6 @@
 [submodule "Pressure/extern/ImGuizmo"]
 	path = Pressure/extern/ImGuizmo
 	url = https://github.com/Flavinou/ImGuizmo.git
+[submodule "Pressure/extern/box2d"]
+	path = Pressure/extern/box2d
+	url = https://github.com/Flavinou/box2d.git

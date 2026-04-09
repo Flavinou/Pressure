@@ -34,6 +34,7 @@ project "Pressure"
     {
         "src",
         "extern/spdlog/include",
+		"%{IncludeDir.Box2D}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
@@ -47,6 +48,7 @@ project "Pressure"
 
     links
     {
+		"Box2D",
         "GLFW",
         "Glad",
         "ImGui",
