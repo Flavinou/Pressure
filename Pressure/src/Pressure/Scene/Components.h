@@ -112,7 +112,7 @@ namespace Pressure
 	struct BoxCollider2DComponent
 	{
 		glm::vec2 Offset = { 0.0f, 0.0f };
-		glm::vec2 Size = { 1.0f, 1.0f };
+		glm::vec2 Size = { 0.5f, 0.5f };
 
 		// TODO: Move to a separate "PhysicsMaterial2D" component and reference it from here
 		float Density = 1.0f;

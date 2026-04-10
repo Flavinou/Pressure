@@ -13,17 +13,44 @@
 namespace Pressure
 {
 
-	static b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType type)
+	namespace
 	{
-		switch (type)
+		b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType type)
 		{
+			switch (type)
+			{
 			case RigidBody2DComponent::BodyType::Static:    return b2_staticBody;
 			case RigidBody2DComponent::BodyType::Dynamic:   return b2_dynamicBody;
 			case RigidBody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
+			}
+
+			PRS_CORE_ASSERT(false, "Unknown RigidBody2DComponent::BodyType!");
+			return b2_staticBody;
 		}
 
-		PRS_CORE_ASSERT(false, "Unknown RigidBody2DComponent::BodyType!");
-		return b2_staticBody;
+		template<typename Component>
+		void CopyComponent(entt::registry& src, entt::registry& dst, const std::unordered_map<UUID, entt::entity>& entityMap)
+		{
+			auto view = src.view<Component>();
+			for (auto e : view)
+			{
+				UUID uuid = src.get<IDComponent>(e).ID;
+				PRS_CORE_ASSERT(entityMap.find(uuid) != entityMap.end(), "Entity not found in entity map");
+				entt::entity dstEntityID = entityMap.at(uuid);
+				Component& component = src.get<Component>(e);
+
+				dst.emplace_or_replace<Component>(dstEntityID, component);
+			}
+		}
+
+		template<typename Component>
+		void CopyComponentIfExists(Entity dst, Entity src)
+		{
+			if (src.HasComponent<Component>())
+			{
+				dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+			}
+		}
 	}
 
     Scene::Scene()
@@ -50,6 +77,19 @@ namespace Pressure
 		tag.Tag = name.empty() ? "Entity" : name;
   
 		return entity;
+    }
+
+    void Scene::DuplicateEntity(Entity entity)
+    {
+		std::string name = entity.GetName();
+		Entity newEntity = CreateEntity(name);
+
+		CopyComponentIfExists<TransformComponent>(newEntity, entity);
+		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<CameraComponent>(newEntity, entity);
+		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
+		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
+		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
     }
 
     void Scene::DestroyEntity(Entity entity)
@@ -85,7 +125,7 @@ namespace Pressure
 			{
 				auto& collider = entity.GetComponent<BoxCollider2DComponent>();
 
-				b2Polygon box = b2MakeBox(collider.Size.x * transform.Scale.x * 0.5f, collider.Size.y * transform.Scale.y * 0.5f);
+				b2Polygon box = b2MakeBox(collider.Size.x * transform.Scale.x, collider.Size.y * transform.Scale.y);
 				b2ShapeDef shapeDefinition = b2DefaultShapeDef();
 				shapeDefinition.density = collider.Density;
 				shapeDefinition.material.friction = collider.Friction;
@@ -226,6 +266,37 @@ namespace Pressure
 		}
 
 		return {};
+    }
+
+    Ref<Scene> Scene::Copy(Ref<Scene> other)
+    {
+		Ref<Scene> newScene = CreateRef<Scene>();
+
+		newScene->m_ViewportWidth = other->m_ViewportWidth;
+		newScene->m_ViewportHeight = other->m_ViewportHeight;
+
+		auto& srcSceneRegistry = other->m_Registry;
+		auto& dstSceneRegistry = newScene->m_Registry;
+		std::unordered_map<UUID, entt::entity> entityMap;
+
+		// Copy entities
+		auto view = other->m_Registry.view<IDComponent>();
+		for (auto e : view)
+		{
+			auto [uuid, tag] = srcSceneRegistry.get<IDComponent, TagComponent>(e);
+			Entity newEntity = newScene->CreateEntityWithUUID(uuid.ID, tag.Tag);
+			entityMap[uuid.ID] = static_cast<entt::entity>(newEntity);
+		}
+
+		// Copy components (except IDComponent and TagComponent which are already copied)
+		CopyComponent<TransformComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<CameraComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<SpriteRendererComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<NativeScriptComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<RigidBody2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<BoxCollider2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+
+		return newScene;
     }
 
     template<typename T>
