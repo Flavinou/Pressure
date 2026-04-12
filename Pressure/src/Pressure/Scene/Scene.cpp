@@ -86,6 +86,7 @@ namespace Pressure
 
 		CopyComponentIfExists<TransformComponent>(newEntity, entity);
 		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
+		CopyComponentIfExists<CircleRendererComponent>(newEntity, entity);
 		CopyComponentIfExists<CameraComponent>(newEntity, entity);
 		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
@@ -211,13 +212,27 @@ namespace Pressure
         {
             Renderer2D::BeginScene(*mainCamera, mainCameraTransform);
 
-            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-            for (auto entity : group)
-            {
-                auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			// Draw sprites
+			{
+				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (auto entity : group)
+				{
+					auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-                Renderer2D::DrawSprite(transform.GetTransform(), sprite, static_cast<int>(entity));
-            }
+					Renderer2D::DrawSprite(transform.GetTransform(), sprite, static_cast<int>(entity));
+				}
+			}
+
+			// Draw circles
+			{
+				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+				for (auto entity : view)
+				{
+					auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+
+					Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, static_cast<int>(entity));
+				}
+			}
 
             Renderer2D::EndScene();
         }
@@ -227,12 +242,26 @@ namespace Pressure
 	{
 		Renderer2D::BeginScene(camera);
 
-		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-		for (auto entity : group)
+		// Draw sprites
 		{
-			auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto entity : group)
+			{
+				auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-			Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			}
+		}
+
+		// Draw circles
+		{
+			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto entity : view)
+			{
+				auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+
+				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+			}
 		}
 
 		Renderer2D::EndScene();
@@ -283,15 +312,17 @@ namespace Pressure
 		auto view = other->m_Registry.view<IDComponent>();
 		for (auto e : view)
 		{
-			auto [uuid, tag] = srcSceneRegistry.get<IDComponent, TagComponent>(e);
-			Entity newEntity = newScene->CreateEntityWithUUID(uuid.ID, tag.Tag);
-			entityMap[uuid.ID] = static_cast<entt::entity>(newEntity);
+			UUID uuid = srcSceneRegistry.get<IDComponent>(e).ID;
+			const auto& name = srcSceneRegistry.get<TagComponent>(e).Tag;
+			Entity newEntity = newScene->CreateEntityWithUUID(uuid, name);
+			entityMap[uuid] = static_cast<entt::entity>(newEntity);
 		}
 
 		// Copy components (except IDComponent and TagComponent which are already copied)
 		CopyComponent<TransformComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<CameraComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<SpriteRendererComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<CircleRendererComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<NativeScriptComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<RigidBody2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<BoxCollider2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
@@ -329,6 +360,11 @@ namespace Pressure
 
 	template<>
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component)
 	{
 	}
 

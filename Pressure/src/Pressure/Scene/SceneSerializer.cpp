@@ -247,6 +247,15 @@ namespace Pressure
 					src.Color = spriteRendererComponentNode["Color"].as<glm::vec4>();
 				}
 
+				auto circleRendererComponentNode = entityNode["CircleRendererComponent"];
+				if (circleRendererComponentNode)
+				{
+					auto& crc = deserializedEntity.AddComponent<CircleRendererComponent>();
+					crc.Color = circleRendererComponentNode["Color"].as<glm::vec4>();
+					crc.Thickness = circleRendererComponentNode["Thickness"].as<float>();
+					crc.Fade = circleRendererComponentNode["Fade"].as<float>();
+				}
+
 				auto rigidBody2DComponent = entityNode["RigidBody2DComponent"];
 				if (rigidBody2DComponent)
 				{
@@ -326,6 +335,19 @@ namespace Pressure
 			out << YAML::Key << "Color" << YAML::Value << src.Color;
 
 			out << YAML::EndMap; // SpriteRendererComponent node
+		}
+
+		if (entity.HasComponent<CircleRendererComponent>())
+		{
+			out << YAML::Key << "CircleRendererComponent";
+			out << YAML::BeginMap; // CircleRendererComponent node
+
+			auto& crc = entity.GetComponent<CircleRendererComponent>();
+			out << YAML::Key << "Color" << YAML::Value << crc.Color;
+			out << YAML::Key << "Thickness" << YAML::Value << crc.Thickness;
+			out << YAML::Key << "Fade" << YAML::Value << crc.Fade;
+
+			out << YAML::EndMap; // CircleRendererComponent node
 		}
 
 		if (entity.HasComponent<CameraComponent>())

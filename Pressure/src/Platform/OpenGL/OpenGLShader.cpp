@@ -111,7 +111,7 @@ namespace Pressure
 		// ex : assets/shaders/{SHADER_NAME}.glsl
 		auto lastSlash = filePath.find_last_of("/\\");
 		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		auto lastDot = filePath.rfind(".");
+		auto lastDot = filePath.rfind('.');
 		auto count = lastDot == std::string::npos ? filePath.size() - lastSlash : lastDot - lastSlash;
 		m_Name = filePath.substr(lastSlash, count);
 	}
@@ -187,7 +187,7 @@ namespace Pressure
 			PRS_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 
 			pos = source.find(typeToken, nextLinePos);
-			shaderSources[Utils::ShaderTypeFromString(type)] = source.substr(nextLinePos, pos - (nextLinePos == std::string::npos ? source.size() - 1 : nextLinePos));
+			shaderSources[Utils::ShaderTypeFromString(type)] = pos == std::string::npos ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
 
 		return shaderSources;
@@ -198,6 +198,7 @@ namespace Pressure
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_4);
+		options.SetTargetSpirv(shaderc_spirv_version_1_0); // Had problems with "discard" keyword in Circle shader
 		const bool optimize = true;
 		if (optimize)
 		{
@@ -287,7 +288,15 @@ namespace Pressure
 			else
 			{
 				spirv_cross::CompilerGLSL glslCompiler(spirv);
-				m_OpenGLSourceCode[stage] = glslCompiler.compile();
+				try
+				{
+					m_OpenGLSourceCode[stage] = glslCompiler.compile();
+				}
+				catch (const spirv_cross::CompilerError& error)
+				{
+					PRS_CORE_ERROR("SPIR-V to GLSL compilation error: {0}", error.what());
+					PRS_CORE_ASSERT(false);
+				}
 				auto& source = m_OpenGLSourceCode[stage];
 
 				shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(source, Utils::GLShaderStageToShaderC(stage), m_FilePath.c_str());
@@ -411,6 +420,13 @@ namespace Pressure
 		PRS_PROFILE_FUNCTION();
 
 		UploadUniformFloat(name, value);
+	}
+
+	void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
+	{
+		PRS_PROFILE_FUNCTION();
+
+		UploadUniformFloat2(name, value);
 	}
 
 	void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
