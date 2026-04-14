@@ -91,6 +91,7 @@ namespace Pressure
 		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
 		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
 		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
+		CopyComponentIfExists<CircleCollider2DComponent>(newEntity, entity);
     }
 
     void Scene::DestroyEntity(Entity entity)
@@ -133,6 +134,22 @@ namespace Pressure
 				shapeDefinition.material.restitution = collider.Restitution;
 
 				b2CreatePolygonShape(bodyId, &shapeDefinition, &box);
+			}
+			
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& collider = entity.GetComponent<CircleCollider2DComponent>();
+
+				b2Circle circle;
+				circle.center = { collider.Offset.x, collider.Offset.y };
+				circle.radius = collider.Radius;
+
+				b2ShapeDef shapeDefinition = b2DefaultShapeDef();
+				shapeDefinition.density = collider.Density;
+				shapeDefinition.material.friction = collider.Friction;
+				shapeDefinition.material.restitution = collider.Restitution;
+
+				b2CreateCircleShape(bodyId, &shapeDefinition, &circle);
 			}
 		}
 	}
@@ -326,6 +343,7 @@ namespace Pressure
 		CopyComponent<NativeScriptComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<RigidBody2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 		CopyComponent<BoxCollider2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent<CircleCollider2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
 
 		return newScene;
     }
@@ -380,6 +398,11 @@ namespace Pressure
 	
 	template<>
 	void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
+	{
+	}
+	
+	template<>
+	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component)
 	{
 	}
 }

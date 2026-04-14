@@ -296,7 +296,7 @@ namespace Pressure
 
 			if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
 			{
-				if (ImGui::MenuItem("RigidBody 2D"))
+				if (ImGui::MenuItem("Rigid Body 2D"))
 				{
 					m_SelectionContext.AddComponent<RigidBody2DComponent>();
 					ImGui::CloseCurrentPopup();
@@ -305,9 +305,18 @@ namespace Pressure
 
 			if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
 			{
-				if (ImGui::MenuItem("BoxCollider 2D"))
+				if (ImGui::MenuItem("Box Collider 2D"))
 				{
 					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
+			{
+				if (ImGui::MenuItem("Circle Collider 2D"))
+				{
+					m_SelectionContext.AddComponent<CircleCollider2DComponent>();
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -420,11 +429,11 @@ namespace Pressure
 		});
 
 		DrawComponent<CircleRendererComponent>("Circle Renderer", entity, [](auto& component)
-			{
-				ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
-				ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.0f, 1.0f);
-				ImGui::DragFloat("Fade", &component.Fade, 0.00025f, 0.0f, 1.0f);
-			});
+		{
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+			ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.0f, 1.0f);
+			ImGui::DragFloat("Fade", &component.Fade, 0.00025f, 0.0f, 1.0f);
+		});
 
 		DrawComponent<RigidBody2DComponent>("RigidBody 2D", entity, [](auto& component)
 		{
@@ -459,6 +468,15 @@ namespace Pressure
 		{
 			ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
 			ImGui::DragFloat2("Size", glm::value_ptr(component.Size));
+			ImGui::DragFloat("Density", &component.Density, 0.1f, 0.0f, 1.0f);
+			ImGui::DragFloat("Friction", &component.Friction, 0.1f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution", &component.Restitution, 0.1f, 0.0f, 1.0f);
+		});
+
+		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](auto& component)
+		{
+			ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+			ImGui::DragFloat("Radius", &component.Radius);
 			ImGui::DragFloat("Density", &component.Density, 0.1f, 0.0f, 1.0f);
 			ImGui::DragFloat("Friction", &component.Friction, 0.1f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution", &component.Restitution, 0.1f, 0.0f, 1.0f);
