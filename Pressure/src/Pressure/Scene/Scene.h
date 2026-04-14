@@ -34,6 +34,12 @@ namespace Pressure
 
 		Entity GetPrimaryCameraEntity();
 
+		template<typename... Components>
+		auto GetAllEntitiesWith()
+		{
+			return m_Registry.view<Components...>();
+		}
+
         static Ref<Scene> Copy(Ref<Scene> other);
 
     private:

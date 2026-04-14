@@ -142,7 +142,7 @@ namespace Pressure
 
 				b2Circle circle;
 				circle.center = { collider.Offset.x, collider.Offset.y };
-				circle.radius = collider.Radius;
+				circle.radius = transform.Scale.x * collider.Radius;
 
 				b2ShapeDef shapeDefinition = b2DefaultShapeDef();
 				shapeDefinition.density = collider.Density;

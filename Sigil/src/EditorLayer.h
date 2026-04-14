@@ -26,6 +26,8 @@ namespace Pressure
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
+		void OnOverlayRender();
+
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
@@ -72,6 +74,8 @@ namespace Pressure
 		glm::vec2 m_ViewportBounds[2];
 
 		int m_GizmoType = -1;
+
+		bool m_ShowPhysicsColliders = false;
 
 		enum class SceneState
 		{
