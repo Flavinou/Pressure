@@ -101,6 +101,53 @@ namespace Pressure
 
 	void Scene::OnRuntimeStart()
 	{
+		OnPhysics2DStart();
+	}
+
+	void Scene::OnRuntimeStop()
+	{
+		OnPhysics2DStop();
+	}
+
+	void Scene::OnSimulationStart()
+	{
+		OnPhysics2DStart();
+	}
+
+	void Scene::OnSimulationStop()
+	{
+		OnPhysics2DStop();
+	}
+
+	void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
+	{
+		// Physics
+		{
+			constexpr int32_t subStepCount = 4;
+			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
+
+			auto view = m_Registry.view<RigidBody2DComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+				b2BodyId body = rb2d.RuntimeBody->BodyId;
+				const auto position = b2Body_GetPosition(body);
+				transform.Translation.x = position.x;
+				transform.Translation.y = position.y;
+				b2Rot rot = b2Body_GetRotation(body);
+				transform.Rotation.z = std::atan2(rot.s, rot.c);
+			}
+		}
+
+		// Render
+		RenderScene(camera);
+	}
+
+	void Scene::OnPhysics2DStart()
+	{
 		b2WorldDef worldDefinition = b2DefaultWorldDef();
 		worldDefinition.gravity = { 0.0f, -9.81f };
 		m_PhysicsImpl->WorldId = b2CreateWorld(&worldDefinition);
@@ -135,7 +182,7 @@ namespace Pressure
 
 				b2CreatePolygonShape(bodyId, &shapeDefinition, &box);
 			}
-			
+
 			if (entity.HasComponent<CircleCollider2DComponent>())
 			{
 				auto& collider = entity.GetComponent<CircleCollider2DComponent>();
@@ -154,7 +201,7 @@ namespace Pressure
 		}
 	}
 
-	void Scene::OnRuntimeStop()
+	void Scene::OnPhysics2DStop()
 	{
 		auto view = m_Registry.view<RigidBody2DComponent>();
 		for (auto e : view)
@@ -164,7 +211,36 @@ namespace Pressure
 			delete rb2d.RuntimeBody;
 		}
 
-    	b2DestroyWorld(m_PhysicsImpl->WorldId);
+		b2DestroyWorld(m_PhysicsImpl->WorldId);
+	}
+
+	void Scene::RenderScene(EditorCamera& camera)
+	{
+		Renderer2D::BeginScene(camera);
+
+		// Draw sprites
+		{
+			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto entity : group)
+			{
+				auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+
+				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			}
+		}
+
+		// Draw circles
+		{
+			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+			for (auto entity : view)
+			{
+				auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+
+				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+			}
+		}
+
+		Renderer2D::EndScene();
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -257,31 +333,7 @@ namespace Pressure
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{
-		Renderer2D::BeginScene(camera);
-
-		// Draw sprites
-		{
-			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (auto entity : group)
-			{
-				auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-
-				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-			}
-		}
-
-		// Draw circles
-		{
-			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
-			for (auto entity : view)
-			{
-				auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
-
-				Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
-			}
-		}
-
-		Renderer2D::EndScene();
+		RenderScene(camera);
 	}
 
     void Scene::OnViewportResize(uint32_t width, uint32_t height)

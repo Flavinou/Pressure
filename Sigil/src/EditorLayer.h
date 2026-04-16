@@ -39,6 +39,7 @@ namespace Pressure
 
 		void OnScenePlay();
 		void OnSceneStop();
+		void OnSceneSimulate();
 
 		void OnDuplicateEntity();
 
@@ -81,6 +82,7 @@ namespace Pressure
 		{
 			Edit = 0,
 			Play = 1,
+			Simulate = 2,
 		};
 		SceneState m_SceneState = SceneState::Edit;
 
@@ -89,7 +91,7 @@ namespace Pressure
 		ContentBrowserPanel m_ContentBrowserPanel;
 		
 		// Editor resources
-		Ref<Texture2D> m_IconPlay, m_IconStop;
+		Ref<Texture2D> m_IconPlay, m_IconStop, m_IconSimulate;
 	};
 
 }
