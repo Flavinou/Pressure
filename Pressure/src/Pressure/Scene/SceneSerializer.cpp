@@ -245,6 +245,16 @@ namespace Pressure
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponentNode["Color"].as<glm::vec4>();
+
+					if (spriteRendererComponentNode["TexturePath"])
+					{
+						src.Texture = Texture2D::Create(spriteRendererComponentNode["TexturePath"].as<std::string>());
+					}
+					
+					if (spriteRendererComponentNode["TilingFactor"])
+					{
+						src.TilingFactor = spriteRendererComponentNode["TilingFactor"].as<float>();
+					}
 				}
 
 				auto circleRendererComponentNode = entityNode["CircleRendererComponent"];
@@ -344,6 +354,10 @@ namespace Pressure
 
 			auto& src = entity.GetComponent<SpriteRendererComponent>();
 			out << YAML::Key << "Color" << YAML::Value << src.Color;
+			if (src.Texture)
+				out << YAML::Key << "TexturePath" << YAML::Value << src.Texture->GetPath();
+
+			out << YAML::Key << "TilingFactor" << YAML::Value << src.TilingFactor;
 
 			out << YAML::EndMap; // SpriteRendererComponent node
 		}
