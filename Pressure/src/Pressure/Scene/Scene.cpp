@@ -15,41 +15,43 @@ namespace Pressure
 
 	namespace
 	{
-		b2BodyType RigidBody2DTypeToBox2DBody(RigidBody2DComponent::BodyType type)
+		template<typename... Component>
+		void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& entityMap)
 		{
-			switch (type)
+			([&]
 			{
-			case RigidBody2DComponent::BodyType::Static:    return b2_staticBody;
-			case RigidBody2DComponent::BodyType::Dynamic:   return b2_dynamicBody;
-			case RigidBody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
-			}
-
-			PRS_CORE_ASSERT(false, "Unknown RigidBody2DComponent::BodyType!");
-			return b2_staticBody;
+				auto view = src.view<Component>();
+				for (auto srcEntity : view)
+				{
+					entt::entity dstEntityID = entityMap.at(src.get<IDComponent>(srcEntity).ID);
+					Component& component = src.get<Component>(srcEntity);
+					dst.emplace_or_replace<Component>(dstEntityID, component);
+				}
+			}(), ...);
 		}
 
-		template<typename Component>
-		void CopyComponent(entt::registry& src, entt::registry& dst, const std::unordered_map<UUID, entt::entity>& entityMap)
+		template<typename... Component>
+		void CopyComponent(ComponentGroup<Component...>, entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& entityMap)
 		{
-			auto view = src.view<Component>();
-			for (auto e : view)
-			{
-				UUID uuid = src.get<IDComponent>(e).ID;
-				PRS_CORE_ASSERT(entityMap.find(uuid) != entityMap.end(), "Entity not found in entity map");
-				entt::entity dstEntityID = entityMap.at(uuid);
-				Component& component = src.get<Component>(e);
-
-				dst.emplace_or_replace<Component>(dstEntityID, component);
-			}
+			CopyComponent<Component...>(dst, src, entityMap);
 		}
 
-		template<typename Component>
+		template<typename... Component>
 		void CopyComponentIfExists(Entity dst, Entity src)
 		{
-			if (src.HasComponent<Component>())
+			([&]
 			{
-				dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
-			}
+				if (src.HasComponent<Component>())
+				{
+					dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+				}
+			}(), ...);
+		}
+
+		template<typename... Component>
+		void CopyComponentIfExists(ComponentGroup<Component...>, Entity dst, Entity src)
+		{
+			CopyComponentIfExists<Component...>(dst, src);
 		}
 	}
 
@@ -84,14 +86,7 @@ namespace Pressure
 		std::string name = entity.GetName();
 		Entity newEntity = CreateEntity(name);
 
-		CopyComponentIfExists<TransformComponent>(newEntity, entity);
-		CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
-		CopyComponentIfExists<CircleRendererComponent>(newEntity, entity);
-		CopyComponentIfExists<CameraComponent>(newEntity, entity);
-		CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
-		CopyComponentIfExists<RigidBody2DComponent>(newEntity, entity);
-		CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
-		CopyComponentIfExists<CircleCollider2DComponent>(newEntity, entity);
+		CopyComponentIfExists(AllComponents{}, newEntity, entity);
     }
 
     void Scene::DestroyEntity(Entity entity)
@@ -160,7 +155,7 @@ namespace Pressure
 			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
 			b2BodyDef bodyDef = b2DefaultBodyDef();
-			bodyDef.type = RigidBody2DTypeToBox2DBody(rb2d.Type);
+			bodyDef.type = Utils::RigidBody2DTypeToBox2DBody(rb2d.Type);
 			bodyDef.position = { transform.Translation.x, transform.Translation.y };
 			bodyDef.rotation = b2MakeRot(transform.Rotation.z);
 
@@ -388,14 +383,7 @@ namespace Pressure
 		}
 
 		// Copy components (except IDComponent and TagComponent which are already copied)
-		CopyComponent<TransformComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<CameraComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<SpriteRendererComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<CircleRendererComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<NativeScriptComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<RigidBody2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<BoxCollider2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
-		CopyComponent<CircleCollider2DComponent>(srcSceneRegistry, dstSceneRegistry, entityMap);
+		CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, entityMap);
 
 		return newScene;
     }
