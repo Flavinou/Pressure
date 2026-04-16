@@ -177,7 +177,7 @@ namespace Pressure
 			}
 			catch (YAML::ParserException& e)
 			{
-				PRS_CORE_ERROR("An error occurred while parsing file '{0}'... Error: {1} at line {2}, column {3}", filePath, e.msg, e.mark.line, e.mark.column);
+				PRS_CORE_ERROR("An error occurred while parsing file '{0}'... Error: {1}", filePath, e.what());
 				return false;
 			}
 
