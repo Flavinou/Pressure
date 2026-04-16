@@ -30,10 +30,17 @@ namespace Pressure
 		}
 	};
 
+	struct ApplicationSpecification
+	{
+		std::string Name = "Pressure Application";
+		std::string WorkingDirectory;
+		ApplicationCommandLineArgs CommandLineArgs;
+	};
+
 	class Application
 	{
 	public:
-		Application(const std::string& name = "Pressure App", ApplicationCommandLineArgs args = {});
+		Application(ApplicationSpecification&& specification);
 		virtual ~Application();
 
 		void OnEvent(Event& e);
@@ -49,7 +56,7 @@ namespace Pressure
 
 		inline static Application& Get() { return *s_Instance; }
 
-		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
+		ApplicationSpecification GetSpecification() const { return m_Specification; }
 	public:
         // Statistics
         struct Statistics
@@ -66,7 +73,7 @@ namespace Pressure
 		bool OnWindowResize(WindowResizeEvent& e);
         static void ResetStats();
 	private:
-		ApplicationCommandLineArgs m_CommandLineArgs;
+		ApplicationSpecification m_Specification;
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;

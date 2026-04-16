@@ -47,7 +47,7 @@ namespace Pressure
 		m_SceneHierarchyPanel.SetContext(m_EditorScene);
 		m_ActiveScene = m_EditorScene;
 
-		const auto commandLineArgs = Application::Get().GetCommandLineArgs();
+		const auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
         if (commandLineArgs.Count > 1)
 		{
 			const std::string sceneFilePath = commandLineArgs[1];

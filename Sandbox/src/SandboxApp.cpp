@@ -1,29 +1,27 @@
 #include <Pressure.h>
 #include <Pressure/Core/EntryPoint.h>
 
-#include <imgui/imgui.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "Sandbox2D.h"
 
 class Sandbox : public Pressure::Application 
 {
 public:
-	Sandbox(Pressure::ApplicationCommandLineArgs args)
-		: Application("Sandbox", args)
+	explicit Sandbox(Pressure::ApplicationSpecification&& spec)
+		: Application(std::move(spec))
 	{
 		//PushLayer(new ExampleLayer());
 		PushLayer(new Sandbox2D());
 	}
 
-	~Sandbox()
-	{
-	}
+	~Sandbox() override = default;
 };
 
 Pressure::Application* Pressure::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new Sandbox(args);
+	ApplicationSpecification spec;
+	spec.Name = "Sandbox";
+	spec.WorkingDirectory = "../Sigil";
+	spec.CommandLineArgs = args;
+
+	return new Sandbox(std::move(spec));
 }

@@ -15,12 +15,21 @@ namespace Pressure
 
 	static Application::Statistics s_Stats;
 
-	Application::Application(const std::string& name, ApplicationCommandLineArgs args)
+	Application::Application(ApplicationSpecification&& specification)
+		: m_Specification(std::move(specification))
 	{
+		PRS_PROFILE_FUNCTION();
+
 		PRS_CORE_ASSERT(!s_Instance, "Application already exists !");
 		s_Instance = this;
 
-		m_Window = Window::Create(WindowProps(name));
+		// Set working directory here
+		if (!m_Specification.WorkingDirectory.empty())
+		{
+			std::filesystem::current_path(m_Specification.WorkingDirectory);
+		}
+
+		m_Window = Window::Create(WindowProps(m_Specification.Name));
 		m_Window->SetEventCallback(PRS_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
@@ -93,7 +102,7 @@ namespace Pressure
 
 			m_FrameId++;
 
-			float time = (float)glfwGetTime(); // Platform::GetTime
+			const float time = static_cast<float>(glfwGetTime()); // Platform::GetTime
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 

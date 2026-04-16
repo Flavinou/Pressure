@@ -9,20 +9,22 @@ namespace Pressure
 	class Sigil : public Application 
 	{
 	public:
-		Sigil(ApplicationCommandLineArgs args)
-			: Application("Sigil", args)
+		explicit Sigil(ApplicationSpecification&& spec)
+			: Application(std::move(spec))
 		{
 			PushLayer(new EditorLayer());
 		}
 
-		~Sigil()
-		{
-		}
+		~Sigil() override = default;
 	};
 
 	Application* CreateApplication(ApplicationCommandLineArgs args)
 	{
-		return new Sigil(args);
+		ApplicationSpecification spec;
+		spec.Name = "Sigil";
+		spec.CommandLineArgs = args;
+
+		return new Sigil(std::move(spec));
 	}
 
 }
