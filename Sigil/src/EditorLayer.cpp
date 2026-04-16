@@ -257,6 +257,11 @@ namespace Pressure
 					OpenScene();
 				}
 
+				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				{
+					SaveScene();
+				}
+
 				if (ImGui::MenuItem("Save Scene as...", "Ctrl+Shift+S"))
 				{
 					SaveSceneAs();
