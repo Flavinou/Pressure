@@ -31,9 +31,17 @@ group "Dependencies"
 	include "Pressure/extern/Glad"
 	include "Pressure/extern/imgui"
 	include "Pressure/extern/yaml-cpp"
-
 group ""
 
-include "Pressure"
-include "Sandbox"
-include "Sigil"
+group "Core"
+	include "Pressure"
+	include "Pressure-ScriptCore"
+group ""
+
+group "Tools"
+	include "Sigil"
+group ""
+
+group "Misc"
+	include "Sandbox"
+group ""

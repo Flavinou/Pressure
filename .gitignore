@@ -2,6 +2,7 @@
 **/bin/
 !extern/premake/bin
 bin-int/
+intermediates/
 
 # Pressure files
 *.log
@@ -14,6 +15,7 @@ bin-int/
 **.vcxproj.user 
 **.vcxproj
 **.filters
+**.csproj
 
 # Profiling files
 *.json

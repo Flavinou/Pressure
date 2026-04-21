@@ -3,6 +3,7 @@
 
 #include "Pressure/Core/Log.h"
 #include "Pressure/Renderer/Renderer.h"
+#include "Pressure/Scripting/ScriptEngine.h"
 
 #include "Pressure/Core/Input.h"
 
@@ -33,6 +34,7 @@ namespace Pressure
 		m_Window->SetEventCallback(PRS_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
+		ScriptEngine::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
@@ -42,6 +44,7 @@ namespace Pressure
 	{
 		PRS_PROFILE_FUNCTION();
 
+		ScriptEngine::Shutdown();
 		Renderer::Shutdown();
 	}
 

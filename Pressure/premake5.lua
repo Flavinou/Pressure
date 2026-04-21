@@ -41,6 +41,7 @@ project "Pressure"
         "%{IncludeDir.glm}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.mono}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.VulkanSDK}"
@@ -54,6 +55,7 @@ project "Pressure"
         "ImGui",
 		"yaml-cpp",
         "opengl32.lib",
+		"%{Library.mono}",
     }
 
 	filter "files:extern/ImGuizmo/**.cpp"
@@ -65,6 +67,14 @@ project "Pressure"
         defines
         {
         }
+
+		links
+		{
+			"%{Library.WinSock}",
+			"%{Library.WinMM}",
+			"%{Library.WinVersion}",
+			"%{Library.BCrypt}",
+		}
 
     filter "configurations:Debug"
         defines "PRS_DEBUG"
