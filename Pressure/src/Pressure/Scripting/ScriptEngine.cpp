@@ -1,8 +1,13 @@
 ﻿#include "prspch.h"
 #include "ScriptEngine.h"
 
+#include "Pressure/Scripting/ScriptGlue.h"
+
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+
+#include <glm/vec3.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Pressure
 {
@@ -13,14 +18,20 @@ namespace Pressure
 		MonoDomain* AppDomain = nullptr;
 
 		MonoAssembly* CoreAssembly = nullptr;
+		MonoImage* CoreAssemblyImage = nullptr;
+
+		ScriptClass EntityClass;
 	};
 
 	namespace
 	{
-
 		ScriptEngineData* s_Data = nullptr;
+	}
 
-		char* ReadBytes(const std::string& filePath, uint32_t* outSize)
+	namespace Utils
+	{
+
+		char* ReadBytes(const std::filesystem::path& filePath, uint32_t* outSize)
 		{
 			std::ifstream stream(filePath, std::ios::binary | std::ios::ate);
 			if (!stream)
@@ -48,12 +59,14 @@ namespace Pressure
 			return buffer;
 		}
 
-		MonoAssembly* LoadCSharpAssembly(const std::string& assemblyPath)
+		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
 		{
 			uint32_t fileSize = 0;
 			char* fileData = ReadBytes(assemblyPath, &fileSize);
 			if (!fileData)
 				return nullptr;
+
+			std::string pathString = assemblyPath.string();
 
 			MonoImageOpenStatus status;
 			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
@@ -61,35 +74,22 @@ namespace Pressure
 			{
 				const char* errorMessage = mono_image_strerror(status);
 				delete[] fileData;
-				PRS_CORE_ERROR("Failed to load assembly from '{}' - image open failed with status {}: {}", assemblyPath, status, errorMessage);
+				PRS_CORE_ERROR("Failed to load assembly from '{}' - image open failed with status {}: {}", pathString, status, errorMessage);
 				return nullptr;
 			}
 
-			MonoAssembly* assembly = mono_assembly_load_from_full(image, assemblyPath.c_str(), &status, 0);
+			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			if (status != MONO_IMAGE_OK)
 			{
 				const char* errorMessage = mono_image_strerror(status);
 				delete[] fileData;
-				PRS_CORE_ERROR("Failed to load assembly from '{}' - assembly load failed with status {}: {}", assemblyPath, status, errorMessage);
+				PRS_CORE_ERROR("Failed to load assembly from '{}' - assembly load failed with status {}: {}", pathString, status, errorMessage);
 				return nullptr;
 			}
 
 			mono_image_close(image);
 			delete[] fileData;
 			return assembly;
-		}
-
-		MonoClass* GetClassInAssembly(MonoAssembly* assembly, const std::string& namespaceName, const std::string& className)
-		{
-			MonoImage* image = mono_assembly_get_image(assembly);
-			MonoClass* monoClass = mono_class_from_name(image, namespaceName.c_str(), className.c_str());
-			if (monoClass == nullptr)
-			{
-				PRS_CORE_ERROR("Could not find class '{}' in namespace '{}'", className, namespaceName);
-				return nullptr;
-			}
-
-			return monoClass;
 		}
 
 		void PrintAssemblyTypes(MonoAssembly* assembly)
@@ -117,6 +117,31 @@ namespace Pressure
 		s_Data = new ScriptEngineData();
 
 		InitMono();
+		LoadAssembly("resources/scripts/Pressure-ScriptCore.dll");
+
+		ScriptGlue::RegisterFunctions();
+
+		s_Data->EntityClass = ScriptClass("Pressure", "Entity");
+
+		// Retrieve and instantiate class by name from core assembly
+		MonoObject* instance = s_Data->EntityClass.Instantiate();
+
+		// Call method
+		MonoMethod* printMessageFunc = s_Data->EntityClass.GetMethod("PrintMessage", 0);
+		s_Data->EntityClass.InvokeMethod(instance, printMessageFunc);
+
+		// Call a method with parameters
+		MonoMethod* printMessageWithParamFunc = s_Data->EntityClass.GetMethod("PrintInts", 2);
+		int value1 = 5;
+		int value2 = 10;
+		void* params[2] = { &value1, &value2 };
+		s_Data->EntityClass.InvokeMethod(instance, printMessageWithParamFunc, params);
+
+		// Call a method with a custom message
+		MonoString* customMessage = mono_string_new(s_Data->AppDomain, "Hello from C++!");
+		MonoMethod* printCustomMessageFunc = s_Data->EntityClass.GetMethod("PrintCustomMessage", 1);
+		void* stringParam = customMessage;
+		s_Data->EntityClass.InvokeMethod(instance, printCustomMessageFunc, &stringParam);
 	}
 
 	void ScriptEngine::Shutdown()
@@ -127,6 +152,23 @@ namespace Pressure
 		s_Data = nullptr;
 	}
 
+	void ScriptEngine::LoadAssembly(const std::filesystem::path& filePath)
+	{
+		s_Data->AppDomain = mono_domain_create_appdomain(const_cast<char*>("PressureScriptRuntime"), nullptr);
+		PRS_CORE_ASSERT(s_Data->AppDomain);
+		mono_domain_set(s_Data->AppDomain, true);
+
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filePath);
+		if (!s_Data->CoreAssembly)
+		{
+			PRS_CORE_ERROR("Failed to load core script assembly");
+			return;
+		}
+		// PrintAssemblyTypes(s_Data->CoreAssembly);
+
+		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+	}
+
 	void ScriptEngine::InitMono()
 	{
 		mono_set_assemblies_path("mono/lib");
@@ -135,42 +177,6 @@ namespace Pressure
 		PRS_CORE_ASSERT(rootDomain);
 
 		s_Data->RootDomain = rootDomain;
-
-		MonoDomain* appDomain = mono_domain_create_appdomain(const_cast<char*>("PressureScriptRuntime"), nullptr);
-		PRS_CORE_ASSERT(appDomain);
-
-		s_Data->AppDomain = appDomain;
-		mono_domain_set(s_Data->AppDomain, true);
-
-		s_Data->CoreAssembly = LoadCSharpAssembly("resources/scripts/Pressure-ScriptCore.dll");
-		if (!s_Data->CoreAssembly)
-		{
-			PRS_CORE_ERROR("Failed to load core script assembly");
-			return;
-		}
-		PrintAssemblyTypes(s_Data->CoreAssembly);
-
-		// Create an object
-		MonoClass* scriptCoreClass = GetClassInAssembly(s_Data->CoreAssembly, "Pressure", "Program");
-		MonoObject* instance = mono_object_new(s_Data->AppDomain, scriptCoreClass);
-		mono_runtime_object_init(instance);
-
-		// Call a method
-		MonoMethod* printMessageFunc = mono_class_get_method_from_name(scriptCoreClass, "PrintMessage", 0);
-		mono_runtime_invoke(printMessageFunc, instance, nullptr, nullptr);
-
-		// Call a method with parameters
-		MonoMethod* printMessageWithParamFunc = mono_class_get_method_from_name(scriptCoreClass, "PrintInts", 2);
-		int value1 = 5;
-		int value2 = 10;
-		void* params[2] = { &value1, &value2 };
-		mono_runtime_invoke(printMessageWithParamFunc, instance, params, nullptr);
-
-		// Call a method with a custom message
-		MonoString* customMessage = mono_string_new(s_Data->AppDomain, "Hello from C++!");
-		MonoMethod* printCustomMessageFunc = mono_class_get_method_from_name(scriptCoreClass, "PrintCustomMessage", 1);
-		void* stringParam = customMessage;
-		mono_runtime_invoke(printCustomMessageFunc, instance, &stringParam, nullptr);
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -185,6 +191,34 @@ namespace Pressure
 
 		delete s_Data;
 		s_Data = nullptr;
+	}
+
+	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
+	{
+		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
+		mono_runtime_object_init(instance);
+		return instance;
+	}
+
+	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
+		: m_ClassNamespace(classNamespace), m_ClassName(className)
+	{
+		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());
+	}
+
+	MonoObject* ScriptClass::Instantiate()
+	{
+		return ScriptEngine::InstantiateClass(m_MonoClass);
+	}
+
+	MonoMethod* ScriptClass::GetMethod(const std::string& name, int parameterCount)
+	{
+		return mono_class_get_method_from_name(m_MonoClass, name.c_str(), parameterCount);
+	}
+
+	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
+	{
+		return mono_runtime_invoke(method, instance, params, nullptr);
 	}
 
 }
