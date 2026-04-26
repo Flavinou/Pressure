@@ -31,6 +31,8 @@ Entities:
       Color: [1, 1, 1, 1]
       TexturePath: assets\textures\simulate_icon.png
       TilingFactor: 1
+    ScriptComponent:
+      ClassName: Sandbox.Player
     RigidBody2DComponent:
       BodyType: Dynamic
       FixedRotation: false
@@ -58,6 +60,8 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
+    ScriptComponent:
+      ClassName: Sandbox.Camera
   - Entity: 7428335820892437591
     TagComponent:
       Tag: Ground

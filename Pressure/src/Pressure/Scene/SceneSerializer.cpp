@@ -240,6 +240,13 @@ namespace Pressure
 					cc.FixedAspectRatio = cameraComponentNode["FixedAspectRatio"].as<bool>();
 				}
 
+				auto scriptComponentNode = entityNode["ScriptComponent"];
+				if (scriptComponentNode)
+				{
+					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
+					sc.ClassName = scriptComponentNode["ClassName"].as<std::string>();
+				}
+
 				auto spriteRendererComponentNode = entityNode["SpriteRendererComponent"];
 				if (spriteRendererComponentNode)
 				{
@@ -400,6 +407,18 @@ namespace Pressure
 			out << YAML::Key << "FixedAspectRatio" << YAML::Value << cameraComponent.FixedAspectRatio;
 
 			out << YAML::EndMap; // CameraComponent node
+		}
+
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			out << YAML::Key << "ScriptComponent";
+			out << YAML::BeginMap; // ScriptComponent node
+
+			auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+
+			out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
+
+			out << YAML::EndMap; // ScriptComponent node
 		}
 
 		if (entity.HasComponent<RigidBody2DComponent>())

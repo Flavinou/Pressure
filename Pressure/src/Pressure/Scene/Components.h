@@ -88,6 +88,14 @@ namespace Pressure
         CameraComponent(const CameraComponent&) = default;
     };
 
+	struct ScriptComponent
+	{
+		std::string ClassName;
+
+		ScriptComponent() = default;
+		ScriptComponent(const ScriptComponent&) = default;
+	};
+
     struct NativeScriptComponent
     {
         ScriptableEntity* Instance = nullptr;
@@ -154,6 +162,6 @@ namespace Pressure
 
 	using AllComponents = 
 		ComponentGroup<TransformComponent, SpriteRendererComponent, CircleRendererComponent,
-		CameraComponent, NativeScriptComponent, RigidBody2DComponent,
-		BoxCollider2DComponent, CircleCollider2DComponent>;
+		CameraComponent, ScriptComponent, NativeScriptComponent, 
+		RigidBody2DComponent, BoxCollider2DComponent, CircleCollider2DComponent>;
 }

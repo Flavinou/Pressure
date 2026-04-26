@@ -6,6 +6,7 @@
 #include "Pressure/Scene/Components.h"
 #include "Pressure/Scene/Entity.h"
 #include "Pressure/Scene/ScriptableEntity.h"
+#include "Pressure/Scripting/ScriptEngine.h"
 
 #include <box2d/box2d.h>
 #include <glm/glm.hpp>
@@ -77,8 +78,16 @@ namespace Pressure
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
+
+		m_EntityMap[uuid] = entity;
   
 		return entity;
+    }
+
+    Entity Scene::GetEntityByUUID(UUID uuid)
+    {
+		PRS_CORE_ASSERT(m_EntityMap.find(uuid) != m_EntityMap.end());
+		return { m_EntityMap[uuid], this };
     }
 
     void Scene::DuplicateEntity(Entity entity)
@@ -92,16 +101,32 @@ namespace Pressure
     void Scene::DestroyEntity(Entity entity)
 	{
 		m_Registry.destroy(entity);
+		m_EntityMap.erase(entity.GetUUID());
 	}
 
 	void Scene::OnRuntimeStart()
 	{
 		OnPhysics2DStart();
+
+		// Scripting
+		{
+			ScriptEngine::OnRuntimeStart(this);
+
+			// Instantiate all script entities
+			auto view = m_Registry.view<ScriptComponent>();
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				ScriptEngine::OnCreateEntity(entity);
+			}
+		}
 	}
 
 	void Scene::OnRuntimeStop()
 	{
 		OnPhysics2DStop();
+
+		ScriptEngine::OnRuntimeStop();
 	}
 
 	void Scene::OnSimulationStart()
@@ -121,19 +146,19 @@ namespace Pressure
 			constexpr int32_t subStepCount = 4;
 			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
 
-			auto view = m_Registry.view<RigidBody2DComponent>();
-			for (auto e : view)
+			const auto view = m_Registry.view<RigidBody2DComponent>();
+			for (const auto e : view)
 			{
 				Entity entity = { e, this };
 				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+				const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
-				b2BodyId body = rb2d.RuntimeBody->BodyId;
-				const auto position = b2Body_GetPosition(body);
-				transform.Translation.x = position.x;
-				transform.Translation.y = position.y;
-				b2Rot rot = b2Body_GetRotation(body);
-				transform.Rotation.z = std::atan2(rot.s, rot.c);
+				const b2BodyId body = rb2d.RuntimeBody->BodyId;
+				const auto [x, y] = b2Body_GetPosition(body);
+				transform.Translation.x = x;
+				transform.Translation.y = y;
+				const auto [c, s] = b2Body_GetRotation(body);
+				transform.Rotation.z = std::atan2(s, c);
 			}
 		}
 
@@ -242,7 +267,14 @@ namespace Pressure
     {
         // Scripts
         {
-            m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc) 
+			const auto view = m_Registry.view<ScriptComponent>();
+			for (const auto e : view)
+			{
+				const Entity entity = { e, this };
+				ScriptEngine::OnUpdateEntity(entity, ts);
+			}
+
+            m_Registry.view<NativeScriptComponent>().each([this, ts](auto entity, auto& nsc) 
             {
 				// TODO: Move to Scene::OnScenePlay and not check this every frame
                 if (!nsc.Instance)
@@ -261,29 +293,29 @@ namespace Pressure
 	        constexpr int32_t subStepCount = 4;
 			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
 
-	        auto view = m_Registry.view<RigidBody2DComponent>();
-			for (auto e : view)
+	        const auto view = m_Registry.view<RigidBody2DComponent>();
+			for (const auto e : view)
 			{
 				Entity entity = { e, this };
 				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+				const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
-				b2BodyId body = rb2d.RuntimeBody->BodyId;
-				const auto position = b2Body_GetPosition(body);
-				transform.Translation.x = position.x;
-				transform.Translation.y = position.y;
-				b2Rot rot = b2Body_GetRotation(body);
-				transform.Rotation.z = std::atan2(rot.s, rot.c);
+				const b2BodyId body = rb2d.RuntimeBody->BodyId;
+				const auto [x, y] = b2Body_GetPosition(body);
+				transform.Translation.x = x;
+				transform.Translation.y = y;
+				auto [c, s] = b2Body_GetRotation(body);
+				transform.Rotation.z = std::atan2(s, c);
 			}
         }
 
         // Render 2D
-        Camera* mainCamera = nullptr;
+        const Camera* mainCamera = nullptr;
         glm::mat4 mainCameraTransform;
 
         {
-            auto view = m_Registry.view<TransformComponent, CameraComponent>();
-            for (auto entity : view)
+            const auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            for (const auto entity : view)
             {
                 auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
@@ -302,7 +334,7 @@ namespace Pressure
 
 			// Draw sprites
 			{
-				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				const auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 				for (auto entity : group)
 				{
 					auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
@@ -313,7 +345,7 @@ namespace Pressure
 
 			// Draw circles
 			{
-				auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+				const auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
 				for (auto entity : view)
 				{
 					auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
@@ -414,6 +446,11 @@ namespace Pressure
 	{
 		if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
 			component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+	}
+
+	template<>
+	void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
+	{
 	}
 
 	template<>

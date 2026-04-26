@@ -22,6 +22,7 @@ namespace Pressure
 
         Entity CreateEntity(const std::string& name = std::string());
         Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
+		Entity GetEntityByUUID(UUID uuid);
 		void DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 
@@ -60,6 +61,8 @@ namespace Pressure
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		PhysicsWorldImpl* m_PhysicsImpl;
+
+		std::unordered_map<UUID, entt::entity> m_EntityMap;
 
         friend class Entity;
 		friend class SceneHierarchyPanel;

@@ -1,5 +1,7 @@
 #include "SceneHierarchyPanel.h"
+
 #include "Pressure/Scene/Components.h"
+#include "Pressure/Scripting/ScriptEngine.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -268,6 +270,7 @@ namespace Pressure
 		if (ImGui::BeginPopup("AddComponent"))
 		{
 			DisplayAddableComponent<CameraComponent>("Camera");
+			DisplayAddableComponent<ScriptComponent>("Script");
 			DisplayAddableComponent<SpriteRendererComponent>("Sprite Renderer");
 			DisplayAddableComponent<CircleRendererComponent>("Circle Renderer");
 			DisplayAddableComponent<RigidBody2DComponent>("Rigid Body 2D");
@@ -354,6 +357,29 @@ namespace Pressure
 				}
 
 				ImGui::Checkbox("Fixed Aspect Ratio", &component.FixedAspectRatio);
+			}
+		});
+
+		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+		{
+			bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
+
+			static char buffer[64];
+			strcpy_s(buffer, component.ClassName.c_str());
+
+			if (!scriptClassExists)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+			}
+
+			if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+			{
+				component.ClassName = buffer;
+			}
+
+			if (!scriptClassExists)
+			{
+				ImGui::PopStyleColor();
 			}
 		});
 

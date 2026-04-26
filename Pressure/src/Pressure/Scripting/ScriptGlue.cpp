@@ -1,8 +1,18 @@
 #include "prspch.h"
 #include "ScriptGlue.h"
+#include "ScriptEngine.h"
+
+#include "Pressure/Core/Input.h"
+#include "Pressure/Core/KeyCodes.h"
+#include "Pressure/Core/UUID.h"
+#include "Pressure/Physics/Physics2D.h"
+#include "Pressure/Scene/Scene.h"
 
 #include <glm/glm.hpp>
 #include <mono/metadata/object.h>
+#include <mono/metadata/reflection.h>
+
+#include <box2d/box2d.h>
 
 namespace Pressure
 {
@@ -12,34 +22,120 @@ namespace Pressure
 	namespace
 	{
 
-		void NativeLog(MonoString* message, int parameter)
-		{
-			char* messageStr = mono_string_to_utf8(message);
-			std::string str(messageStr);
-			mono_free(messageStr);
+		std::unordered_map<MonoType*, std::function<bool(Entity)>> s_EntityHasComponentFuncs;
 
-			PRS_CORE_TRACE("NativeLog: {} - {}", str, parameter);
+		bool Entity_HasComponent(const UUID entityId, MonoReflectionType* componentType)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			MonoType* managedType = mono_reflection_type_get_type(componentType);
+			PRS_CORE_ASSERT(s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
+
+			return s_EntityHasComponentFuncs.at(managedType)(entity);
 		}
 
-		void NativeLog_Vector3(glm::vec3* parameter, glm::vec3* result)
+		void TransformComponent_GetTranslation(const UUID entityId, glm::vec3* outTranslation)
 		{
-			PRS_CORE_TRACE("NativeLog: Vec3({}, {}, {})", parameter->x, parameter->y, parameter->z);
-			*result = glm::normalize(*parameter);
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			*outTranslation = entity.GetComponent<TransformComponent>().Translation;
 		}
 
-		float NativeLog_Vector3Dot(glm::vec3* parameter)
+		void TransformComponent_SetTranslation(const UUID entityId, const glm::vec3* translation)
 		{
-			PRS_CORE_TRACE("NativeLog: Vec3({}, {}, {})", parameter->x, parameter->y, parameter->z);
-			return glm::dot(*parameter, *parameter);
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			entity.GetComponent<TransformComponent>().Translation = *translation;
 		}
 
+		void RigidBody2DComponent_ApplyLinearImpulse(const UUID entityId, const glm::vec2* impulse, const glm::vec2* point, bool wake)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			b2Vec2 imp = { impulse->x, impulse->y };
+			b2Vec2 pt = { point->x, point->y };
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2Body_ApplyLinearImpulse(rb2d.RuntimeBody->BodyId, imp, pt, wake);
+		}
+
+		void RigidBody2DComponent_ApplyLinearImpulseToCenter(const UUID entityId, const glm::vec2* impulse, const bool wake)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			b2Vec2 imp = { impulse->x, impulse->y };
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2Body_ApplyLinearImpulseToCenter(rb2d.RuntimeBody->BodyId, imp, wake);
+		}
+
+		bool Input_IsKeyDown(const KeyCode keyCode)
+		{
+			return Input::IsKeyPressed(keyCode);
+		}
+
+	}
+
+	namespace
+	{
+
+		template<typename... Component>
+		void RegisterComponent()
+		{
+			([]
+			{
+				const std::string_view typeName = typeid(Component).name();
+				const size_t pos = typeName.find_last_of(':');
+				std::string_view structName = typeName.substr(pos + 1);
+				std::string managedTypeName = fmt::format("Pressure.{}", structName);
+
+				MonoType* managedType = mono_reflection_type_from_name(managedTypeName.data(), ScriptEngine::GetCoreAssemblyImage());
+				if (!managedType)
+				{
+					PRS_CORE_ERROR("Failed to get managed type for component: {}", typeName);
+					return;
+				}
+
+				s_EntityHasComponentFuncs[managedType] = [](const Entity entity) { return entity.HasComponent<Component>(); };
+			}(), ...);
+		}
+
+		template<typename... Component>
+		void RegisterComponent(ComponentGroup<Component...>)
+		{
+			RegisterComponent<Component...>();
+		}
+
+	}
+
+	void ScriptGlue::RegisterComponents()
+	{
+		RegisterComponent(AllComponents{});
 	}
 
 	void ScriptGlue::RegisterFunctions()
 	{
-		PRS_ADD_INTERNAL_CALL(NativeLog);
-		PRS_ADD_INTERNAL_CALL(NativeLog_Vector3);
-		PRS_ADD_INTERNAL_CALL(NativeLog_Vector3Dot);
-	}
+		PRS_ADD_INTERNAL_CALL(Entity_HasComponent);
 
+		PRS_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
+		PRS_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
+
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter);
+
+		PRS_ADD_INTERNAL_CALL(Input_IsKeyDown);
+	}
 }
