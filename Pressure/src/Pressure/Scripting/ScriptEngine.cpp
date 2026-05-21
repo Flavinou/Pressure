@@ -18,6 +18,9 @@ namespace Pressure
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
 
+		MonoAssembly* AppAssembly = nullptr;
+		MonoImage* AppAssemblyImage = nullptr;
+
 		ScriptClass EntityClass;
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
@@ -121,14 +124,15 @@ namespace Pressure
 		s_Data = new ScriptEngineData();
 
 		InitMono();
-		LoadAssembly("resources/scripts/Pressure-ScriptCore.dll");
 
-		LoadAssemblyClasses(s_Data->CoreAssembly);
+		LoadAssembly("resources/scripts/Pressure-ScriptCore.dll");
+		LoadAppAssembly("SandboxProject/Assets/Scripts/bin/Sandbox.dll");
+		LoadAssemblyClasses();
 
 		ScriptGlue::RegisterComponents();
 		ScriptGlue::RegisterFunctions();
 
-		s_Data->EntityClass = ScriptClass("Pressure", "Entity");
+		s_Data->EntityClass = ScriptClass("Pressure", "Entity", true);
 
 #if PRS_SCRIPT_ENGINE_EXAMPLE_SETUP
 		// Test consuming Mono API
@@ -193,22 +197,21 @@ namespace Pressure
 		return instance;
 	}
 
-	void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)
+	void ScriptEngine::LoadAssemblyClasses()
 	{
 		s_Data->EntityClasses.clear();
-
-		MonoImage* image = mono_assembly_get_image(assembly);
-		const MonoTableInfo* typeTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
-		uint32_t typeCount = mono_table_info_get_rows(typeTable);
-		MonoClass* entityClass = mono_class_from_name(image, "Pressure", "Entity");
+		
+		const MonoTableInfo* typeDefTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);
+		uint32_t typeCount = mono_table_info_get_rows(typeDefTable);
+		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Pressure", "Entity");
 
 		for (uint32_t i = 1; i < typeCount; i++)
 		{
 			uint32_t cols[MONO_TYPEDEF_SIZE];
-			mono_metadata_decode_row(typeTable, i, cols, MONO_TYPEDEF_SIZE);
+			mono_metadata_decode_row(typeDefTable, i, cols, MONO_TYPEDEF_SIZE);
 
-			const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
-			const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
+			const char* name = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 
 			std::string fullName;
 			if (strlen(nameSpace) != 0)
@@ -220,7 +223,7 @@ namespace Pressure
 				fullName = name;
 			}
 
-			MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);
+			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, name);
 			if (monoClass == entityClass)
 				continue;
 
@@ -263,6 +266,18 @@ namespace Pressure
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 	}
 
+	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filePath)
+	{
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(filePath);
+		if (!s_Data->AppAssembly)
+		{
+			PRS_CORE_ERROR("Failed to load app script assembly!");
+			return;
+		}
+
+		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+	}
+
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
 	{
 		s_Data->SceneContext = scene;
@@ -301,10 +316,10 @@ namespace Pressure
 		return s_Data->EntityClasses;
 	}
 
-	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
+	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore/* = false*/)
 		: m_ClassNamespace(classNamespace), m_ClassName(className)
 	{
-		m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());
+		m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());
 	}
 
 	MonoObject* ScriptClass::Instantiate()

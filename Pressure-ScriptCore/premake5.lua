@@ -3,8 +3,8 @@ project "Pressure-ScriptCore"
 	language "C#"
 	dotnetframework "4.7.2"
 
-	targetdir ("%{wks.location}/Sigil/resources/scripts")
-	objdir ("%{wks.location}/Sigil/resources/scripts/intermediates")
+	targetdir ("../Sigil/resources/scripts")
+	objdir ("../Sigil/resources/scripts/intermediates")
 
 	files 
 	{
