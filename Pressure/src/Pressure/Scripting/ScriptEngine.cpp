@@ -7,6 +7,15 @@
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 
+// Comes from tabledefs.h which is not shipped with the Mono runtime,
+// so we need to redefine it here
+enum : uint8_t
+{
+	MONO_FIELD_ATTRIBUTE_ACCESS_MASK = 0x0007,
+	MONO_FIELD_ATTRIBUTE_PRIVATE = 0x0001,
+	MONO_FIELD_ATTRIBUTE_PUBLIC = 0x0006
+};
+
 namespace Pressure
 {
 
@@ -33,6 +42,26 @@ namespace Pressure
 	namespace
 	{
 		ScriptEngineData* s_Data = nullptr;
+
+		std::unordered_map<std::string, ScriptFieldType> s_MonoTypeToScriptFieldTypeMap = {
+			{ "System.Single", ScriptFieldType::Float },
+			{ "System.Double", ScriptFieldType::Double },
+			{ "System.Boolean", ScriptFieldType::Bool },
+			{ "System.Char", ScriptFieldType::Char },
+			{ "System.Int16", ScriptFieldType::Short },
+			{ "System.Int32", ScriptFieldType::Int },
+			{ "System.Int64", ScriptFieldType::Long },
+			{ "System.Byte", ScriptFieldType::Byte },
+			{ "System.UInt16", ScriptFieldType::UShort },
+			{ "System.UInt32", ScriptFieldType::UInt },
+			{ "System.UInt64", ScriptFieldType::ULong },
+
+			{ "Pressure.Vector2", ScriptFieldType::Vector2 },
+			{ "Pressure.Vector3", ScriptFieldType::Vector3 },
+			{ "Pressure.Vector4", ScriptFieldType::Vector4 },
+
+			{ "Pressure.Entity", ScriptFieldType::Entity },
+		};
 	}
 
 	namespace Utils
@@ -115,6 +144,37 @@ namespace Pressure
 
 				PRS_CORE_TRACE(" - {}.{}", nameSpace, name);
 			}
+		}
+
+		ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
+		{
+			if (!monoType)
+				return ScriptFieldType::None;
+
+			const char* typeName = mono_type_get_name(monoType);
+			if (const auto it = s_MonoTypeToScriptFieldTypeMap.find(typeName); it != s_MonoTypeToScriptFieldTypeMap.end())
+				return it->second;
+
+			PRS_CORE_ERROR("Unsupported Mono type '{}' for script field", typeName);
+			return ScriptFieldType::None;
+		}
+
+		const char* ScriptFieldTypeToString(ScriptFieldType type)
+		{
+			// Keep only the type name without namespace for better readability
+			for (const auto& [first, second] : s_MonoTypeToScriptFieldTypeMap)
+			{
+				if (second != type)
+					continue;
+
+				const std::string& fullTypeName = first;
+				size_t lastDot = fullTypeName.find_last_of('.');
+				if (lastDot != std::string::npos)
+					return fullTypeName.c_str() + lastDot + 1; // Return substring after last dot
+
+				return fullTypeName.c_str();
+			}
+			return "<Unknown>";
 		}
 
 	}
@@ -211,19 +271,19 @@ namespace Pressure
 			mono_metadata_decode_row(typeDefTable, i, cols, MONO_TYPEDEF_SIZE);
 
 			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
-			const char* name = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
+			const char* className = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 
 			std::string fullName;
 			if (strlen(nameSpace) != 0)
 			{
-				fullName = fmt::format("{}.{}", nameSpace, name);
+				fullName = fmt::format("{}.{}", nameSpace, className);
 			}
 			else
 			{
-				fullName = name;
+				fullName = className;
 			}
 
-			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, name);
+			MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, className);
 			if (monoClass == entityClass)
 				continue;
 
@@ -231,7 +291,29 @@ namespace Pressure
 			if (!isEntity)
 				continue;
 
-			s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace, name);
+			Ref<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);
+			s_Data->EntityClasses[fullName] = scriptClass;
+
+			// This routine is an iterator for retrieving fields in a class
+			// You must pass a gpointer that points to zero and is treated as an opaque handle
+			// to iterate over all of the elements. When no more elements are available, it returns NULL and the handle is undefined.
+
+			int fieldCount = mono_class_num_fields(monoClass);
+			PRS_CORE_TRACE("Found {} fields in script class '{}'", fieldCount, fullName);
+			void* iterator = nullptr;
+			while (MonoClassField* field = mono_class_get_fields(monoClass, &iterator))
+			{
+				const char* fieldName = mono_field_get_name(field);
+				uint32_t flags = mono_field_get_flags(field) & MONO_FIELD_ATTRIBUTE_ACCESS_MASK;
+				if (flags & MONO_FIELD_ATTRIBUTE_PUBLIC)
+				{
+					MonoType* type = mono_field_get_type(field);
+					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);
+					PRS_CORE_WARN(" - {} ({})", fieldName, Utils::ScriptFieldTypeToString(fieldType));
+
+					scriptClass->m_Fields[fieldName] = { fieldName, fieldType, field };
+				}
+			}
 		}
 	}
 
@@ -243,6 +325,15 @@ namespace Pressure
 	Scene* ScriptEngine::GetSceneContext()
 	{
 		return s_Data->SceneContext;
+	}
+
+	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(const UUID entityId)
+	{
+		const auto it = s_Data->EntityInstances.find(entityId);
+		if (it == s_Data->EntityInstances.end())
+			return nullptr;
+
+		return it->second;
 	}
 
 	MonoImage* ScriptEngine::GetCoreAssemblyImage()
@@ -375,4 +466,47 @@ namespace Pressure
 		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
 	}
 
+	bool ScriptInstance::GetFieldValueInternal(const std::string& fieldName, void* outBuffer) const
+	{
+		const auto& fields = m_ScriptClass->GetFields();
+		const auto it = fields.find(fieldName);
+		if (it == fields.end())
+		{
+			PRS_CORE_ERROR("Field '{}' not found in script class '{}'", fieldName, m_ScriptClass->GetName());
+			return false;
+		}
+
+		const ScriptField& field = it->second;
+		if (!field.MonoClassField)
+		{
+			PRS_CORE_ERROR("Field '{}' is not a valid MonoClassField", fieldName);
+			return false;
+		}
+
+		// Get the field value from the Mono object
+		mono_field_get_value(m_Instance, field.MonoClassField, outBuffer);
+		return true;
+	}
+
+	bool ScriptInstance::SetFieldValueInternal(const std::string& fieldName, const void* value) const
+	{
+		const auto& fields = m_ScriptClass->GetFields();
+		const auto it = fields.find(fieldName);
+		if (it == fields.end())
+		{
+			PRS_CORE_ERROR("Field '{}' not found in script class '{}'", fieldName, m_ScriptClass->GetName());
+			return false;
+		}
+
+		const ScriptField& field = it->second;
+		if (!field.MonoClassField)
+		{
+			PRS_CORE_ERROR("Field '{}' is not a valid MonoClassField", fieldName);
+			return false;
+		}
+
+		// Set the field value on the Mono object
+		mono_field_set_value(m_Instance, field.MonoClassField, const_cast<void*>(value));
+		return true;
+	}
 }
