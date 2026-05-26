@@ -160,24 +160,6 @@ namespace Pressure
 			return ScriptFieldType::None;
 		}
 
-		const char* ScriptFieldTypeToString(ScriptFieldType type)
-		{
-			// Keep only the type name without namespace for better readability
-			for (const auto& [first, second] : s_MonoTypeToScriptFieldTypeMap)
-			{
-				if (second != type)
-					continue;
-
-				const std::string& fullTypeName = first;
-				size_t lastDot = fullTypeName.find_last_of('.');
-				if (lastDot != std::string::npos)
-					return fullTypeName.c_str() + lastDot + 1; // Return substring after last dot
-
-				return fullTypeName.c_str();
-			}
-			return "<Unknown>";
-		}
-
 	}
 	
 	void ScriptEngine::Init()

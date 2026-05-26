@@ -1,47 +1,43 @@
 Scene: Untitled
 Entities:
-  - Entity: 15016563109775790240
+  - Entity: 910413720230497812
     TagComponent:
-      Tag: Circle
+      Tag: Ground
     TransformComponent:
-      Translation: [2.7561464, -1.022543, 0]
-      Rotation: [0, 0, 0]
-      Scale: [4, 4, 1]
-    CircleRendererComponent:
-      Color: [0.9034749, 0.75347716, 0, 1]
-      Thickness: 0.125
-      Fade: 0.005
+      Translation: [-6.4534674, -1.3005793, 0]
+      Rotation: [0, 0, -0.40728384]
+      Scale: [16.206951, 0.7054023, 1]
+    SpriteRendererComponent:
+      Color: [0, 0.5752896, 0.48866296, 1]
+      TilingFactor: 1
     RigidBody2DComponent:
       BodyType: Static
-      FixedRotation: false
-    CircleCollider2DComponent:
-      Offset: [0, 0]
-      Radius: 0.5
-      Density: 1
-      Friction: 0.5
-      Restitution: 0
-  - Entity: 2373607665596732255
-    TagComponent:
-      Tag: Square
-    TransformComponent:
-      Translation: [-3.5156147, 2.4710293, -0.00079345703]
-      Rotation: [0, 0, 0.6396259]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\simulate_icon.png
-      TilingFactor: 1
-    ScriptComponent:
-      ClassName: Sandbox.Player
-    RigidBody2DComponent:
-      BodyType: Dynamic
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]
       Size: [0.5, 0.5]
       Density: 1
-      Friction: 0.2
-      Restitution: 0.8
+      Friction: 0.5
+      Restitution: 0
+  - Entity: 7428335820892437591
+    TagComponent:
+      Tag: Ground
+    TransformComponent:
+      Translation: [2.7829065, -6.3894243, -5.793298e-05]
+      Rotation: [0, 0, 0.7328918]
+      Scale: [16.206944, 0.7054024, 1]
+    SpriteRendererComponent:
+      Color: [0, 0.5752896, 0.48866296, 1]
+      TilingFactor: 1
+    RigidBody2DComponent:
+      BodyType: Static
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
   - Entity: 18136046325827161314
     TagComponent:
       Tag: Camera
@@ -62,41 +58,51 @@ Entities:
       FixedAspectRatio: false
     ScriptComponent:
       ClassName: Sandbox.Camera
-  - Entity: 7428335820892437591
+      ScriptFields:
+        []
+  - Entity: 2373607665596732255
     TagComponent:
-      Tag: Ground
+      Tag: Square
     TransformComponent:
-      Translation: [2.7829065, -6.3894243, -5.793298e-05]
-      Rotation: [0, 0, 0.7328918]
-      Scale: [16.206944, 0.7054024, 1]
+      Translation: [-3.5156147, 2.4710293, -0.00079345703]
+      Rotation: [0, 0, 0.6396259]
+      Scale: [1, 1, 1]
     SpriteRendererComponent:
-      Color: [0, 0.5752896, 0.48866296, 1]
+      Color: [1, 1, 1, 1]
+      TexturePath: assets\textures\simulate_icon.png
       TilingFactor: 1
+    ScriptComponent:
+      ClassName: Sandbox.Player
+      ScriptFields:
+        - Name: Speed
+          Type: Float
+          Data: 5
     RigidBody2DComponent:
-      BodyType: Static
+      BodyType: Dynamic
       FixedRotation: false
     BoxCollider2DComponent:
       Offset: [0, 0]
       Size: [0.5, 0.5]
       Density: 1
-      Friction: 0.5
-      Restitution: 0
-  - Entity: 910413720230497812
+      Friction: 0.2
+      Restitution: 0.8
+  - Entity: 15016563109775790240
     TagComponent:
-      Tag: Ground
+      Tag: Circle
     TransformComponent:
-      Translation: [-6.4534674, -1.3005793, 0]
-      Rotation: [0, 0, -0.40728384]
-      Scale: [16.206951, 0.7054023, 1]
-    SpriteRendererComponent:
-      Color: [0, 0.5752896, 0.48866296, 1]
-      TilingFactor: 1
+      Translation: [2.7561464, -1.022543, 0]
+      Rotation: [0, 0, 0]
+      Scale: [4, 4, 1]
+    CircleRendererComponent:
+      Color: [0.9034749, 0.75347716, 0, 1]
+      Thickness: 0.125
+      Fade: 0.005
     RigidBody2DComponent:
       BodyType: Static
       FixedRotation: false
-    BoxCollider2DComponent:
+    CircleCollider2DComponent:
       Offset: [0, 0]
-      Size: [0.5, 0.5]
+      Radius: 0.5
       Density: 1
       Friction: 0.5
       Restitution: 0

@@ -66,7 +66,7 @@ namespace Pressure
 
 	private:
 		ScriptField m_Field{};
-		std::byte m_Buffer[8]{};
+		std::byte m_Buffer[16]{};
 
 		friend class ScriptEngine;
 		friend class ScriptInstance;
@@ -140,7 +140,7 @@ namespace Pressure
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
 
-		inline static std::byte s_FieldValueBuffer[8];
+		inline static std::byte s_FieldValueBuffer[16];
 
 		friend class ScriptEngine;
 		friend class ScriptFieldInstance;
@@ -180,5 +180,57 @@ namespace Pressure
 		friend class ScriptClass;
 		friend class ScriptGlue;
 	};
+
+	namespace Utils
+	{
+		inline const char* ScriptFieldTypeToString(const ScriptFieldType type)
+		{
+			switch (type)
+			{
+				case ScriptFieldType::None:		return "None";
+				case ScriptFieldType::Float:	return "Float";
+				case ScriptFieldType::Double:	return "Double";
+				case ScriptFieldType::Bool:		return "Bool";
+				case ScriptFieldType::Char:		return "Char";
+				case ScriptFieldType::Byte:		return "Byte";
+				case ScriptFieldType::Short:	return "Short";
+				case ScriptFieldType::Int:		return "Int";
+				case ScriptFieldType::Long:		return "Long";
+				case ScriptFieldType::UByte:	return "UByte";
+				case ScriptFieldType::UShort:	return "UShort";
+				case ScriptFieldType::UInt:		return "UInt";
+				case ScriptFieldType::ULong:	return "ULong";
+				case ScriptFieldType::Vector2:	return "Vector2";
+				case ScriptFieldType::Vector3:	return "Vector3";
+				case ScriptFieldType::Vector4:	return "Vector4";
+				case ScriptFieldType::Entity:	return "Entity";
+				default:						return "<Unknown>";
+			}
+		}
+
+		inline ScriptFieldType ScriptFieldTypeFromString(const std::string_view fieldType)
+		{
+			if (fieldType == "None")		return ScriptFieldType::None;
+			if (fieldType == "Float")		return ScriptFieldType::Float;
+			if (fieldType == "Double")		return ScriptFieldType::Double;
+			if (fieldType == "Bool")		return ScriptFieldType::Bool;
+			if (fieldType == "Char")		return ScriptFieldType::Char;
+			if (fieldType == "Byte")		return ScriptFieldType::Byte;
+			if (fieldType == "Short")		return ScriptFieldType::Short;
+			if (fieldType == "Int")			return ScriptFieldType::Int;
+			if (fieldType == "Long")		return ScriptFieldType::Long;
+			if (fieldType == "UByte")		return ScriptFieldType::UByte;
+			if (fieldType == "UShort")		return ScriptFieldType::UShort;
+			if (fieldType == "UInt")		return ScriptFieldType::UInt;
+			if (fieldType == "ULong")		return ScriptFieldType::ULong;
+			if (fieldType == "Vector2")		return ScriptFieldType::Vector2;
+			if (fieldType == "Vector3")		return ScriptFieldType::Vector3;
+			if (fieldType == "Vector4")		return ScriptFieldType::Vector4;
+			if (fieldType == "Entity")		return ScriptFieldType::Entity;
+
+			PRS_CORE_ASSERT(false, "Unknown ScriptFieldType");
+			return ScriptFieldType::None;
+		}
+	}
 
 }
