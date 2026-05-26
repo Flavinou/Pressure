@@ -34,6 +34,7 @@ namespace Pressure
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
+		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
 		// Runtime
 		Scene* SceneContext = nullptr;
@@ -388,8 +389,23 @@ namespace Pressure
 			return;
 		}
 
+		UUID entityId = entity.GetUUID();
 		Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
-		s_Data->EntityInstances[entity.GetUUID()] = instance;
+		s_Data->EntityInstances[entityId] = instance;
+
+		// Copy field values
+		if (s_Data->EntityScriptFields.find(entityId) != s_Data->EntityScriptFields.end())
+		{
+			const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields[entityId];
+			for (const auto& [fieldName, fieldInstance] : fieldMap)
+			{
+				if (!instance->SetFieldValueInternal(fieldName, fieldInstance.m_Buffer))
+				{
+					PRS_CORE_ERROR("Failed to set field '{}' for entity '{}'", fieldName, entity.GetName());
+				}
+			}
+		}
+
 		instance->InvokeOnCreate();
 	}
 
@@ -402,9 +418,28 @@ namespace Pressure
 		instance->InvokeOnUpdate(ts);
 	}
 
+	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
+	{
+		const auto it = s_Data->EntityClasses.find(name);
+		if (it != s_Data->EntityClasses.end())
+		{
+			return it->second;
+		}
+
+		return nullptr;
+	}
+
 	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
 	{
 		return s_Data->EntityClasses;
+	}
+
+	ScriptFieldMap& ScriptEngine::GetScriptFieldMap(Entity entity)
+	{
+		PRS_CORE_ASSERT(entity);
+
+		UUID entityId = entity.GetUUID();
+		return s_Data->EntityScriptFields[entityId];
 	}
 
 	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore/* = false*/)

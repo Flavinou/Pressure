@@ -39,6 +39,41 @@ namespace Pressure
 		MonoClassField* MonoClassField { nullptr };
 	};
 
+	// ScriptField + data storage
+	class ScriptFieldInstance
+	{
+	public:
+		ScriptFieldInstance()
+		{
+			memset(m_Buffer, 0, sizeof(m_Buffer));
+		}
+
+		template<typename T>
+		T GetValue()
+		{
+			static_assert(sizeof(T) <= sizeof(m_Buffer), "Type is too large to fit in buffer");
+			return *reinterpret_cast<T*>(m_Buffer);
+		}
+
+		template<typename T>
+		void SetValue(T value)
+		{
+			static_assert(sizeof(T) <= sizeof(m_Buffer), "Type is too large to fit in buffer");
+			memcpy(m_Buffer, &value, sizeof(T));
+		}
+
+		void SetField(const ScriptField& field) { m_Field = field; }
+
+	private:
+		ScriptField m_Field{};
+		std::byte m_Buffer[8]{};
+
+		friend class ScriptEngine;
+		friend class ScriptInstance;
+	};
+
+	using ScriptFieldMap = std::unordered_map<std::string, ScriptFieldInstance>;
+
 	class ScriptClass
 	{
 	public:
@@ -76,6 +111,7 @@ namespace Pressure
 		template<typename T>
 		T GetFieldValue(const std::string& fieldName) const
 		{
+			static_assert(sizeof(T) <= sizeof(s_FieldValueBuffer), "Type is too large to fit in buffer");
 			if (!GetFieldValueInternal(fieldName, s_FieldValueBuffer))
 			{
 				return T();
@@ -85,8 +121,10 @@ namespace Pressure
 		}
 
 		template<typename T>
-		void SetFieldValue(const std::string& fieldName, const T& value)
+		void SetFieldValue(const std::string& fieldName, T& value)
 		{
+			static_assert(sizeof(T) <= sizeof(s_FieldValueBuffer), "Type is too large to fit in buffer");
+
 			SetFieldValueInternal(fieldName, &value);
 		}
 
@@ -103,6 +141,9 @@ namespace Pressure
 		MonoMethod* m_OnUpdateMethod = nullptr;
 
 		inline static std::byte s_FieldValueBuffer[8];
+
+		friend class ScriptEngine;
+		friend class ScriptFieldInstance;
 	};
 
 	class ScriptEngine
@@ -111,7 +152,9 @@ namespace Pressure
 		static void Init();
 		static void Shutdown();
 
+		static Ref<ScriptClass> GetEntityClass(const std::string& name);
 		static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();
+		static ScriptFieldMap& GetScriptFieldMap(Entity entity);
 		static bool EntityClassExists(const std::string& fullClassName);
 		static Scene* GetSceneContext();
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityId);

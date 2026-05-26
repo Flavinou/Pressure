@@ -256,7 +256,7 @@ namespace Pressure
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
 
 			char buffer[256] = {};
-			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
 			if (ImGui::InputText("##Tag", buffer, sizeof(buffer)))
 			{
 				tag = std::string(buffer);
@@ -364,12 +364,12 @@ namespace Pressure
 			}
 		});
 
-		DrawComponent<ScriptComponent>("Script", entity, [entity](auto& component) mutable
+		DrawComponent<ScriptComponent>("Script", entity, [entity, scene = m_Context](auto& component) mutable
 		{
 			const bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
 
 			static char buffer[64];
-			strcpy_s(buffer, component.ClassName.c_str());
+			strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
 
 			if (!scriptClassExists)
 			{
@@ -382,33 +382,79 @@ namespace Pressure
 			}
 
 			// Fields
-			if (const Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID()))
+			if (scene->IsRunning())
 			{
-				const auto& fields = scriptInstance->GetScriptClass()->GetFields();
-				for (const auto& [fieldName, field] : fields)
+				if (const Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID()))
 				{
-					switch (field.Type)
+					const auto& fields = scriptInstance->GetScriptClass()->GetFields();
+					for (const auto& [fieldName, field] : fields)
 					{
+						switch (field.Type)
+						{
 						case ScriptFieldType::Float:
-						{
-							float value = scriptInstance->GetFieldValue<float>(fieldName);
-							if (ImGui::DragFloat(fieldName.c_str(), &value))
 							{
-								scriptInstance->SetFieldValue<float>(fieldName, value);
+								float value = scriptInstance->GetFieldValue<float>(fieldName);
+								if (ImGui::DragFloat(fieldName.c_str(), &value))
+								{
+									scriptInstance->SetFieldValue<float>(fieldName, value);
+								}
+								break;
 							}
-							break;
-						}
-						case ScriptFieldType::Vector3:
-						{
-							glm::vec3 value = scriptInstance->GetFieldValue<glm::vec3>(fieldName);
-							if (ImGui::DragFloat3(fieldName.c_str(), glm::value_ptr(value)))
-							{
-								scriptInstance->SetFieldValue<glm::vec3>(fieldName, value);
-							}
-							break;
-						}
 						default:
 							ImGui::Text("<Unsupported Type>");
+						}
+					}
+				}
+			}
+			else
+			{
+				if (scriptClassExists)
+				{
+					Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);
+					const auto& fields = entityClass->GetFields();
+
+					auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+					for (const auto& [fieldName, field] : fields)
+					{
+						// Field has been set in editor
+						if (entityFields.find(fieldName) != entityFields.end())
+						{
+							ScriptFieldInstance& fieldInstance = entityFields[fieldName];
+
+							switch (field.Type)
+							{
+							case ScriptFieldType::Float:
+								{
+									float value = fieldInstance.GetValue<float>();
+									if (ImGui::DragFloat(fieldName.c_str(), &value))
+									{
+										fieldInstance.SetValue<float>(value);
+									}
+									break;
+								}
+							default:
+								ImGui::Text("<Unsupported Type>");
+							}
+						}
+						else // Field has not been set in editor yet, force default value
+						{
+							switch (field.Type)
+							{
+								case ScriptFieldType::Float:
+									{
+										float data = 0.0f;
+										if (ImGui::DragFloat(fieldName.c_str(), &data))
+										{
+											ScriptFieldInstance& fieldInstance = entityFields[fieldName];
+											fieldInstance.SetField(field);
+											fieldInstance.SetValue<float>(data);
+										}
+										break;
+									}
+								default:
+									ImGui::Text("<Unsupported Type>");
+							}
+						}
 					}
 				}
 			}
