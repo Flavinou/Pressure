@@ -37,5 +37,23 @@ namespace Pressure
 			T component = new T { Entity = this };
 			return component;
 		}
+
+		public Entity FindEntityByName(string name)
+		{
+			ulong entityId = InternalCalls.Entity_FindEntityByName(name);
+			if (entityId == 0)
+				return null;
+
+			return new Entity(entityId);
+		}
+
+		public T As<T>() where T : Entity, new()
+		{
+			object scriptInstance = InternalCalls.GetScriptInstance(Id);
+			if (scriptInstance is T typedInstance)
+				return typedInstance;
+
+			return null;
+		}
 	}
 }

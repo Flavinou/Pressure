@@ -24,6 +24,11 @@ namespace Pressure
 
 		std::unordered_map<MonoType*, std::function<bool(Entity)>> s_EntityHasComponentFuncs;
 
+		MonoObject* GetScriptInstance(UUID entityId)
+		{
+			return ScriptEngine::GetManagedInstance(entityId);
+		}
+
 		bool Entity_HasComponent(const UUID entityId, MonoReflectionType* componentType)
 		{
 			Scene* scene = ScriptEngine::GetSceneContext();
@@ -35,6 +40,21 @@ namespace Pressure
 			PRS_CORE_ASSERT(s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
 
 			return s_EntityHasComponentFuncs.at(managedType)(entity);
+		}
+
+		uint64_t Entity_FindEntityByName(MonoString* name)
+		{
+			char* nameCStr = mono_string_to_utf8(name);
+
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->FindEntityByName(nameCStr);
+			mono_free(nameCStr);
+
+			if (!entity)
+				return 0;
+
+			return entity.GetUUID();
 		}
 
 		void TransformComponent_GetTranslation(const UUID entityId, glm::vec3* outTranslation)
@@ -128,7 +148,10 @@ namespace Pressure
 
 	void ScriptGlue::RegisterFunctions()
 	{
+		PRS_ADD_INTERNAL_CALL(GetScriptInstance);
+
 		PRS_ADD_INTERNAL_CALL(Entity_HasComponent);
+		PRS_ADD_INTERNAL_CALL(Entity_FindEntityByName);
 
 		PRS_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
 		PRS_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);

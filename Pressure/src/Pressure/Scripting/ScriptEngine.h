@@ -108,6 +108,8 @@ namespace Pressure
 
 		Ref<ScriptClass> GetScriptClass() const { return m_ScriptClass; }
 
+		MonoObject* GetManagedObject() const { return m_Instance; }
+
 		template<typename T>
 		T GetFieldValue(const std::string& fieldName) const
 		{
@@ -169,6 +171,8 @@ namespace Pressure
 		static void OnUpdateEntity(Entity entity, Timestep ts);
 
 		static MonoImage* GetCoreAssemblyImage();
+
+		static MonoObject* GetManagedInstance(UUID entityId);
 
 	private:
 		static void InitMono();

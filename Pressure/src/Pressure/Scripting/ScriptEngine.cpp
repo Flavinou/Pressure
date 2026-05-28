@@ -324,6 +324,12 @@ namespace Pressure
 		return s_Data->CoreAssemblyImage;
 	}
 
+	MonoObject* ScriptEngine::GetManagedInstance(UUID entityId)
+	{
+		PRS_CORE_ASSERT(s_Data->EntityInstances.find(entityId) != s_Data->EntityInstances.end());
+		return s_Data->EntityInstances[entityId]->GetManagedObject();
+	}
+
 	void ScriptEngine::LoadAssembly(const std::filesystem::path& filePath)
 	{
 		s_Data->AppDomain = mono_domain_create_appdomain(const_cast<char*>("PressureScriptRuntime"), nullptr);

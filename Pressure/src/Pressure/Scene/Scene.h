@@ -23,6 +23,7 @@ namespace Pressure
         Entity CreateEntity(const std::string& name = std::string());
         Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		Entity GetEntityByUUID(UUID uuid);
+		Entity FindEntityByName(std::string_view name);
 		void DuplicateEntity(Entity entity);
 		void DestroyEntity(Entity entity);
 

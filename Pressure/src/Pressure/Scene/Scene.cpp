@@ -90,6 +90,19 @@ namespace Pressure
 		return { m_EntityMap[uuid], this };
     }
 
+    Entity Scene::FindEntityByName(std::string_view name)
+    {
+		auto view = m_Registry.view<TagComponent>();
+		for (auto entity : view)
+		{
+			if (view.get<TagComponent>(entity).Tag == name)
+			{
+				return { entity, this };
+			}
+		}
+		return {};
+    }
+
     void Scene::DuplicateEntity(Entity entity)
     {
 		std::string name = entity.GetName();
@@ -367,8 +380,11 @@ namespace Pressure
 		RenderScene(camera);
 	}
 
-    void Scene::OnViewportResize(uint32_t width, uint32_t height)
+    void Scene::OnViewportResize(const uint32_t width, const uint32_t height)
     {
+		if (m_ViewportWidth == width && m_ViewportHeight == height)
+			return;
+
         m_ViewportWidth = width;
         m_ViewportHeight = height;
 
