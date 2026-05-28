@@ -30,6 +30,9 @@ namespace Pressure
 		MonoAssembly* AppAssembly = nullptr;
 		MonoImage* AppAssemblyImage = nullptr;
 
+		std::filesystem::path CoreAssemblyFilePath;
+		std::filesystem::path AppAssemblyFilePath;
+
 		ScriptClass EntityClass;
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
@@ -168,37 +171,15 @@ namespace Pressure
 
 		InitMono();
 
+		ScriptGlue::RegisterFunctions();
+
 		LoadAssembly("resources/scripts/Pressure-ScriptCore.dll");
 		LoadAppAssembly("SandboxProject/Assets/Scripts/bin/Sandbox.dll");
 		LoadAssemblyClasses();
 
 		ScriptGlue::RegisterComponents();
-		ScriptGlue::RegisterFunctions();
 
 		s_Data->EntityClass = ScriptClass("Pressure", "Entity", true);
-
-#if PRS_SCRIPT_ENGINE_EXAMPLE_SETUP
-		// Test consuming Mono API
-		// Retrieve and instantiate class by name from core assembly
-		MonoObject* instance = s_Data->EntityClass.Instantiate();
-
-		// Call method
-		MonoMethod* printMessageFunc = s_Data->EntityClass.GetMethod("PrintMessage", 0);
-		s_Data->EntityClass.InvokeMethod(instance, printMessageFunc);
-
-		// Call a method with parameters
-		MonoMethod* printMessageWithParamFunc = s_Data->EntityClass.GetMethod("PrintInts", 2);
-		int value1 = 5;
-		int value2 = 10;
-		void* params[2] = { &value1, &value2 };
-		s_Data->EntityClass.InvokeMethod(instance, printMessageWithParamFunc, params);
-
-		// Call a method with a custom message
-		MonoString* customMessage = mono_string_new(s_Data->AppDomain, "Hello from C++!");
-		MonoMethod* printCustomMessageFunc = s_Data->EntityClass.GetMethod("PrintCustomMessage", 1);
-		void* stringParam = customMessage;
-		s_Data->EntityClass.InvokeMethod(instance, printCustomMessageFunc, &stringParam);
-#endif
 	}
 
 	void ScriptEngine::Shutdown()
@@ -221,16 +202,13 @@ namespace Pressure
 
 	void ScriptEngine::ShutdownMono()
 	{
-		// mono_domain_unload(s_Data->AppDomain);
+		mono_domain_set(mono_get_root_domain(), false);
+
+		mono_domain_unload(s_Data->AppDomain);
 		s_Data->AppDomain = nullptr;
 
-		// mono_jit_cleanup(s_Data->RootDomain);
+		mono_jit_cleanup(s_Data->RootDomain);
 		s_Data->RootDomain = nullptr;
-
-		s_Data->CoreAssembly = nullptr;
-
-		delete s_Data;
-		s_Data = nullptr;
 	}
 
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
@@ -336,6 +314,7 @@ namespace Pressure
 		PRS_CORE_ASSERT(s_Data->AppDomain);
 		mono_domain_set(s_Data->AppDomain, true);
 
+		s_Data->CoreAssemblyFilePath = filePath;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filePath);
 		if (!s_Data->CoreAssembly)
 		{
@@ -348,6 +327,7 @@ namespace Pressure
 
 	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filePath)
 	{
+		s_Data->AppAssemblyFilePath = filePath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filePath);
 		if (!s_Data->AppAssembly)
 		{
@@ -356,6 +336,20 @@ namespace Pressure
 		}
 
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+	}
+
+	void ScriptEngine::ReloadAssembly()
+	{
+		mono_domain_set(mono_get_root_domain(), false);
+		mono_domain_unload(s_Data->AppDomain);
+
+		LoadAssembly(s_Data->CoreAssemblyFilePath);
+		LoadAppAssembly(s_Data->AppAssemblyFilePath);
+		LoadAssemblyClasses();
+
+		ScriptGlue::RegisterComponents();
+
+		s_Data->EntityClass = ScriptClass("Pressure", "Entity", true);
 	}
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)

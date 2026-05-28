@@ -8,6 +8,7 @@
 #include "Pressure/Core/Base.h"
 #include "Pressure/Math/Math.h"
 #include "Pressure/Scene/SceneSerializer.h"
+#include "Pressure/Scripting/ScriptEngine.h"
 #include "Pressure/Utils/PlatformUtils.h"
 
 #include "ImGuizmo.h"
@@ -215,9 +216,23 @@ namespace Pressure
 					SaveSceneAs();
 				}
 
-                if (ImGui::MenuItem("Exit")) Application::Get().Close();
+				if (ImGui::MenuItem("Exit"))
+				{
+					Application::Get().Close();
+				}
+
                 ImGui::EndMenu();
             }
+
+			if (ImGui::BeginMenu("Script"))
+			{
+				if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+				{
+					ScriptEngine::ReloadAssembly();
+;				}
+
+				ImGui::EndMenu();
+			}
 
             ImGui::EndMenuBar();
         }
@@ -407,9 +422,18 @@ namespace Pressure
 					m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::ROTATE;
 				break;
 			case Key::R:
-				if (!IMGUIZMO_NAMESPACE::IsUsing())
-					m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::SCALE;
-				break;
+				{
+					if (control)
+					{
+						ScriptEngine::ReloadAssembly();
+					}
+					else
+					{
+						if (!IMGUIZMO_NAMESPACE::IsUsing())
+							m_GizmoType = IMGUIZMO_NAMESPACE::OPERATION::SCALE;
+					}
+					break;
+				}
 			default: 
 				break;
 		}
