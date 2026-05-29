@@ -125,7 +125,7 @@ namespace Pressure
 				MonoType* managedType = mono_reflection_type_from_name(managedTypeName.data(), ScriptEngine::GetCoreAssemblyImage());
 				if (!managedType)
 				{
-					PRS_CORE_ERROR("Failed to get managed type for component: {}", typeName);
+					PRS_CORE_WARN("Failed to get managed type for component: {}", typeName);
 					return;
 				}
 

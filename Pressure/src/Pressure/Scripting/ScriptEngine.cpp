@@ -1,9 +1,11 @@
 ﻿#include "prspch.h"
 #include "ScriptEngine.h"
 
+#include "Pressure/Core/Application.h"
 #include "Pressure/Scene/Scene.h"
 #include "Pressure/Scripting/ScriptGlue.h"
 
+#include <FileWatch.h>
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 
@@ -39,6 +41,9 @@ namespace Pressure
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
 		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
+		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
+		bool AssemblyReloadingPending = false;
+
 		// Runtime
 		Scene* SceneContext = nullptr;
 	};
@@ -66,6 +71,21 @@ namespace Pressure
 
 			{ "Pressure.Entity", ScriptFieldType::Entity },
 		};
+
+		void OnAppAssemblyFileSystemEvent(const std::string& path, const filewatch::Event change_type)
+		{
+			if (!s_Data->AssemblyReloadingPending && change_type == filewatch::Event::modified)
+			{
+				PRS_CORE_INFO("App assembly file '{}' modified, scheduling assembly reload", path);
+				s_Data->AssemblyReloadingPending = true;
+
+				Application::Get().SubmitToMainThread([] 
+				{
+					s_Data->AppAssemblyFileWatcher.reset();
+					ScriptEngine::ReloadAssembly();
+				});
+			}
+		}
 	}
 
 	namespace Utils
@@ -336,6 +356,9 @@ namespace Pressure
 		}
 
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+
+		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filePath.string(), OnAppAssemblyFileSystemEvent);
+		s_Data->AssemblyReloadingPending = false;
 	}
 
 	void ScriptEngine::ReloadAssembly()

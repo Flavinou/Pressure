@@ -23,8 +23,9 @@ project "Sigil"
         "%{wks.location}/Pressure/extern/spdlog/include",
         "%{wks.location}/Pressure/src",
         "%{wks.location}/Pressure/extern",
-        "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.filewatch}",
         "%{IncludeDir.ImGuizmo}"
     }
 

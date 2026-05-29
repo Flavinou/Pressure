@@ -48,15 +48,15 @@ namespace Pressure
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 
-		inline Window& GetWindow() { return *m_Window; }
+		static Application& Get() { return *s_Instance; }
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+
+		Window& GetWindow() const { return *m_Window; }
+		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
 
 		void Close();
 
-		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
-
-		inline static Application& Get() { return *s_Instance; }
-
-		ApplicationSpecification GetSpecification() const { return m_Specification; }
+		void SubmitToMainThread(const std::function<void()>& function);
 	public:
         // Statistics
         struct Statistics
@@ -71,6 +71,9 @@ namespace Pressure
 		void Run();
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+
+		void ExecuteMainThreadQueue();
+
         static void ResetStats();
 	private:
 		ApplicationSpecification m_Specification;
@@ -82,6 +85,9 @@ namespace Pressure
 		Timestep m_Timestep;
 		float m_LastFrameTime = 0.0f;
 		uint32_t m_FrameId = 0;
+
+		std::vector<std::function<void()>> m_MainThreadQueue;
+		std::mutex m_MainThreadQueueMutex;
 	private:
 		static Application* s_Instance;
 		friend int ::main(int argc, char** argv);

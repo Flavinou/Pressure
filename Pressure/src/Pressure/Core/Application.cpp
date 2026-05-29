@@ -69,9 +69,15 @@ namespace Pressure
 		m_Running = false;
     }
 
+    void Application::SubmitToMainThread(const std::function<void()>& function)
+    {
+		std::scoped_lock lock(m_MainThreadQueueMutex);
+		m_MainThreadQueue.emplace_back(function);
+    }
+
     void Application::ResetStats()
     {
-        memset(&s_Stats, 0, sizeof(Application::Statistics));
+        memset(&s_Stats, 0, sizeof(Statistics));
     }
 
     Application::Statistics Application::GetStats()
@@ -116,6 +122,8 @@ namespace Pressure
 				s_Stats.FrameTime = timestep.GetMilliseconds();
 				s_Stats.FramesPerSecond = GetFramesPerSecond(timestep);
 			}
+
+			ExecuteMainThreadQueue();
 
 			if (!m_Minimized)
 			{
@@ -164,4 +172,13 @@ namespace Pressure
 		return false;
 	}
 
+	void Application::ExecuteMainThreadQueue()
+	{
+		std::scoped_lock lock(m_MainThreadQueueMutex);
+		for (auto& function : m_MainThreadQueue)
+		{
+			function();
+		}
+		m_MainThreadQueue.clear();
+	}
 }
