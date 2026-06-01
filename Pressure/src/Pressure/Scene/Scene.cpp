@@ -156,31 +156,9 @@ namespace Pressure
 		OnPhysics2DStop();
 	}
 
-	void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
+	void Scene::Step(int frames)
 	{
-		// Physics
-		{
-			constexpr int32_t subStepCount = 4;
-			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
-
-			const auto view = m_Registry.view<RigidBody2DComponent>();
-			for (const auto e : view)
-			{
-				Entity entity = { e, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-
-				const b2BodyId body = rb2d.RuntimeBody->BodyId;
-				const auto [x, y] = b2Body_GetPosition(body);
-				transform.Translation.x = x;
-				transform.Translation.y = y;
-				const auto [c, s] = b2Body_GetRotation(body);
-				transform.Rotation.z = std::atan2(s, c);
-			}
-		}
-
-		// Render
-		RenderScene(camera);
+		m_StepFrames = frames;
 	}
 
 	void Scene::OnPhysics2DStart()
@@ -282,8 +260,9 @@ namespace Pressure
 
 	void Scene::OnUpdateRuntime(Timestep ts)
     {
-        // Scripts
+        if (!m_IsPaused || m_StepFrames-- > 0)
         {
+			// C# Entity updates
 			const auto view = m_Registry.view<ScriptComponent>();
 			for (const auto e : view)
 			{
@@ -303,26 +282,26 @@ namespace Pressure
 
 				nsc.Instance->OnUpdate(ts);
             });
-        }
 
-		// Physics
-        {
-	        constexpr int32_t subStepCount = 4;
-			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
-
-	        const auto view = m_Registry.view<RigidBody2DComponent>();
-			for (const auto e : view)
+			// Physics
 			{
-				Entity entity = { e, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+				constexpr int32_t subStepCount = 4;
+				b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
 
-				const b2BodyId body = rb2d.RuntimeBody->BodyId;
-				const auto [x, y] = b2Body_GetPosition(body);
-				transform.Translation.x = x;
-				transform.Translation.y = y;
-				auto [c, s] = b2Body_GetRotation(body);
-				transform.Rotation.z = std::atan2(s, c);
+				const auto view = m_Registry.view<RigidBody2DComponent>();
+				for (const auto e : view)
+				{
+					Entity entity = { e, this };
+					auto& transform = entity.GetComponent<TransformComponent>();
+					const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+					const b2BodyId body = rb2d.RuntimeBody->BodyId;
+					const auto [x, y] = b2Body_GetPosition(body);
+					transform.Translation.x = x;
+					transform.Translation.y = y;
+					auto [c, s] = b2Body_GetRotation(body);
+					transform.Rotation.z = std::atan2(s, c);
+				}
 			}
         }
 
@@ -374,6 +353,35 @@ namespace Pressure
             Renderer2D::EndScene();
         }
     }
+
+
+	void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
+	{
+		if (!m_IsPaused || m_StepFrames-- > 0)
+		{
+			// Physics
+			constexpr int32_t subStepCount = 4;
+			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
+
+			const auto view = m_Registry.view<RigidBody2DComponent>();
+			for (const auto e : view)
+			{
+				Entity entity = { e, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+				const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+				const b2BodyId body = rb2d.RuntimeBody->BodyId;
+				const auto [x, y] = b2Body_GetPosition(body);
+				transform.Translation.x = x;
+				transform.Translation.y = y;
+				const auto [c, s] = b2Body_GetRotation(body);
+				transform.Rotation.z = std::atan2(s, c);
+			}
+		}
+
+		// Render
+		RenderScene(camera);
+	}
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{

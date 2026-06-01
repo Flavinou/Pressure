@@ -33,6 +33,8 @@ namespace Pressure
 		void OnSimulationStart();
 		void OnSimulationStop();
 
+		void Step(int frames = 1);
+
 		void OnUpdateRuntime(Timestep ts);
 		void OnUpdateSimulation(Timestep ts, EditorCamera& camera);
         void OnUpdateEditor(Timestep ts, EditorCamera& camera);
@@ -41,6 +43,9 @@ namespace Pressure
 		Entity GetPrimaryCameraEntity();
 
 		bool IsRunning() const { return m_IsRunning; }
+    	bool IsPaused() const { return m_IsPaused; }
+
+		void SetPaused(bool paused) { m_IsPaused = paused; }
 
 		template<typename... Components>
 		auto GetAllEntitiesWith()
@@ -62,6 +67,8 @@ namespace Pressure
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 		bool m_IsRunning = false;
+		bool m_IsPaused = false;
+		int m_StepFrames = 0;
 		PhysicsWorldImpl* m_PhysicsImpl;
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;

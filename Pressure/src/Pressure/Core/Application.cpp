@@ -164,7 +164,7 @@ namespace Pressure
 			return false;
 		}
 
-		PRS_CORE_TRACE("{0}, {1}", e.GetWidth(), e.GetHeight());
+		PRS_CORE_TRACE("Window resized: ({0}, {1})", e.GetWidth(), e.GetHeight());
 
 		m_Minimized = false;
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());

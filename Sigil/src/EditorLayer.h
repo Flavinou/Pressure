@@ -51,7 +51,6 @@ namespace Pressure
 		// Temporary
 		Ref<VertexArray> m_SquareVA;
 		Ref<Shader> m_FlatColorShader;
-		Ref<Texture2D> m_VoronoiTexture;
 
 		Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_EditorScene;
@@ -78,7 +77,7 @@ namespace Pressure
 
 		bool m_ShowPhysicsColliders = false;
 
-		enum class SceneState
+		enum class SceneState : uint8_t
 		{
 			Edit = 0,
 			Play = 1,
@@ -91,7 +90,7 @@ namespace Pressure
 		ContentBrowserPanel m_ContentBrowserPanel;
 		
 		// Editor resources
-		Ref<Texture2D> m_IconPlay, m_IconStop, m_IconSimulate;
+		Ref<Texture2D> m_IconPlay, m_IconStep, m_IconPause, m_IconResume, m_IconStop, m_IconSimulate;
 	};
 
 }
