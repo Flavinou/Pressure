@@ -8,6 +8,8 @@
 #include <FileWatch.h>
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/mono-debug.h>
+#include <mono/metadata/threads.h>
 
 // Comes from tabledefs.h which is not shipped with the Mono runtime,
 // so we need to redefine it here
@@ -43,6 +45,8 @@ namespace Pressure
 
 		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
 		bool AssemblyReloadingPending = false;
+
+		bool EnableDebugging = true;
 
 		// Runtime
 		Scene* SceneContext = nullptr;
@@ -119,7 +123,7 @@ namespace Pressure
 			return buffer;
 		}
 
-		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)
+		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)
 		{
 			uint32_t fileSize = 0;
 			char* fileData = ReadBytes(assemblyPath, &fileSize);
@@ -136,6 +140,21 @@ namespace Pressure
 				delete[] fileData;
 				PRS_CORE_ERROR("Failed to load assembly from '{}' - image open failed with status {}: {}", pathString, status, errorMessage);
 				return nullptr;
+			}
+
+			if (loadPDB)
+			{
+				std::filesystem::path pdbPath = assemblyPath;
+				pdbPath.replace_extension(".pdb");
+
+				if (std::filesystem::exists(pdbPath))
+				{
+					uint32_t pdbFileSize = 0;
+					char* pdbFileData = ReadBytes(pdbPath, &pdbFileSize);
+					mono_debug_open_image_from_memory(image, reinterpret_cast<const mono_byte*>(pdbFileData), pdbFileSize);
+					PRS_CORE_INFO("Loaded PDB file '{}'", pdbPath);
+					delete[] pdbFileData;
+				}
 			}
 
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
@@ -214,10 +233,28 @@ namespace Pressure
 	{
 		mono_set_assemblies_path("mono/lib");
 
+		if (s_Data->EnableDebugging)
+		{
+			const char* argv[2] = 
+			{
+				"--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=MonoDebugger.log",
+				"--soft-breakpoints"
+			};
+
+			mono_jit_parse_options(2, const_cast<char**>(argv));
+			mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+		}
+
 		MonoDomain* rootDomain = mono_jit_init("PressureJITRuntime");
 		PRS_CORE_ASSERT(rootDomain);
-
 		s_Data->RootDomain = rootDomain;
+
+		if (s_Data->EnableDebugging)
+		{
+			mono_debug_domain_create(s_Data->RootDomain);
+		}
+
+		mono_thread_set_main(mono_thread_current());
 	}
 
 	void ScriptEngine::ShutdownMono()
@@ -335,7 +372,7 @@ namespace Pressure
 		mono_domain_set(s_Data->AppDomain, true);
 
 		s_Data->CoreAssemblyFilePath = filePath;
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filePath);
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filePath, s_Data->EnableDebugging);
 		if (!s_Data->CoreAssembly)
 		{
 			PRS_CORE_ERROR("Failed to load core script assembly");
@@ -348,7 +385,7 @@ namespace Pressure
 	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filePath)
 	{
 		s_Data->AppAssemblyFilePath = filePath;
-		s_Data->AppAssembly = Utils::LoadMonoAssembly(filePath);
+		s_Data->AppAssembly = Utils::LoadMonoAssembly(filePath, s_Data->EnableDebugging);
 		if (!s_Data->AppAssembly)
 		{
 			PRS_CORE_ERROR("Failed to load app script assembly!");
@@ -465,7 +502,8 @@ namespace Pressure
 
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
 	{
-		return mono_runtime_invoke(method, instance, params, nullptr);
+		MonoObject* exception = nullptr;
+		return mono_runtime_invoke(method, instance, params, &exception);
 	}
 
 	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
