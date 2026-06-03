@@ -231,7 +231,7 @@ namespace Pressure
 				if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
 				{
 					ScriptEngine::ReloadAssembly();
-;				}
+				}
 
 				ImGui::EndMenu();
 			}
@@ -440,7 +440,7 @@ namespace Pressure
 				break;
 		}
 
-		return true;
+		return false;
 	}
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)

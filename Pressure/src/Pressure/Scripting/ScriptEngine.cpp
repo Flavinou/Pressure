@@ -2,6 +2,8 @@
 #include "ScriptEngine.h"
 
 #include "Pressure/Core/Application.h"
+#include "Pressure/Core/Buffer.h"
+#include "Pressure/Core/FileSystem.h"
 #include "Pressure/Scene/Scene.h"
 #include "Pressure/Scripting/ScriptGlue.h"
 
@@ -95,49 +97,19 @@ namespace Pressure
 	namespace Utils
 	{
 
-		char* ReadBytes(const std::filesystem::path& filePath, uint32_t* outSize)
-		{
-			std::ifstream stream(filePath, std::ios::binary | std::ios::ate);
-			if (!stream)
-			{
-				PRS_CORE_ERROR("Could not open file '{}'", filePath);
-				return nullptr;
-			}
-
-			std::streampos end = stream.tellg();
-			stream.seekg(0, std::ios::beg);
-			uint32_t size = static_cast<uint32_t>(end - stream.tellg());
-
-			if (size == 0)
-			{
-				PRS_CORE_ERROR("File '{}' is empty", filePath);
-				return nullptr;
-			}
-
-			char* buffer = new char[size];
-			stream.read(buffer, size);
-			stream.close();
-
-			if (outSize)
-				*outSize = size;
-			return buffer;
-		}
-
 		MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)
 		{
-			uint32_t fileSize = 0;
-			char* fileData = ReadBytes(assemblyPath, &fileSize);
+			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
 			if (!fileData)
 				return nullptr;
 
 			std::string pathString = assemblyPath.string();
 
 			MonoImageOpenStatus status;
-			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
+			MonoImage* image = mono_image_open_from_data_full(fileData.As<char>(), fileData.Size(), 1, &status, 0);
 			if (status != MONO_IMAGE_OK)
 			{
 				const char* errorMessage = mono_image_strerror(status);
-				delete[] fileData;
 				PRS_CORE_ERROR("Failed to load assembly from '{}' - image open failed with status {}: {}", pathString, status, errorMessage);
 				return nullptr;
 			}
@@ -149,11 +121,9 @@ namespace Pressure
 
 				if (std::filesystem::exists(pdbPath))
 				{
-					uint32_t pdbFileSize = 0;
-					char* pdbFileData = ReadBytes(pdbPath, &pdbFileSize);
-					mono_debug_open_image_from_memory(image, reinterpret_cast<const mono_byte*>(pdbFileData), pdbFileSize);
+					ScopedBuffer pdbFileData = FileSystem::ReadFileBinary(pdbPath);
+					mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), pdbFileData.Size());
 					PRS_CORE_INFO("Loaded PDB file '{}'", pdbPath);
-					delete[] pdbFileData;
 				}
 			}
 
@@ -161,13 +131,11 @@ namespace Pressure
 			if (status != MONO_IMAGE_OK)
 			{
 				const char* errorMessage = mono_image_strerror(status);
-				delete[] fileData;
 				PRS_CORE_ERROR("Failed to load assembly from '{}' - assembly load failed with status {}: {}", pathString, status, errorMessage);
 				return nullptr;
 			}
 
 			mono_image_close(image);
-			delete[] fileData;
 			return assembly;
 		}
 
@@ -212,8 +180,20 @@ namespace Pressure
 
 		ScriptGlue::RegisterFunctions();
 
-		LoadAssembly("resources/scripts/Pressure-ScriptCore.dll");
-		LoadAppAssembly("SandboxProject/Assets/Scripts/bin/Sandbox.dll");
+		bool status = LoadAssembly("resources/scripts/Pressure-ScriptCore.dll");
+		if (!status)
+		{
+			PRS_CORE_ERROR("Failed to load core script assembly.");
+			return;
+		}
+
+		status = LoadAppAssembly("SandboxProject/Assets/Scripts/bin/Sandbox.dll");
+		if (!status)
+		{
+			PRS_CORE_ERROR("Failed to load app script assembly.");
+			return;
+		}
+
 		LoadAssemblyClasses();
 
 		ScriptGlue::RegisterComponents();
@@ -365,7 +345,7 @@ namespace Pressure
 		return s_Data->EntityInstances[entityId]->GetManagedObject();
 	}
 
-	void ScriptEngine::LoadAssembly(const std::filesystem::path& filePath)
+	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filePath)
 	{
 		s_Data->AppDomain = mono_domain_create_appdomain(const_cast<char*>("PressureScriptRuntime"), nullptr);
 		PRS_CORE_ASSERT(s_Data->AppDomain);
@@ -376,26 +356,30 @@ namespace Pressure
 		if (!s_Data->CoreAssembly)
 		{
 			PRS_CORE_ERROR("Failed to load core script assembly");
-			return;
+			return false;
 		}
 
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		
+		return true;
 	}
 
-	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filePath)
+	bool ScriptEngine::LoadAppAssembly(const std::filesystem::path& filePath)
 	{
 		s_Data->AppAssemblyFilePath = filePath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filePath, s_Data->EnableDebugging);
 		if (!s_Data->AppAssembly)
 		{
 			PRS_CORE_ERROR("Failed to load app script assembly!");
-			return;
+			return false;
 		}
 
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 
 		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filePath.string(), OnAppAssemblyFileSystemEvent);
 		s_Data->AssemblyReloadingPending = false;
+
+		return true;
 	}
 
 	void ScriptEngine::ReloadAssembly()
@@ -403,8 +387,20 @@ namespace Pressure
 		mono_domain_set(mono_get_root_domain(), false);
 		mono_domain_unload(s_Data->AppDomain);
 
-		LoadAssembly(s_Data->CoreAssemblyFilePath);
-		LoadAppAssembly(s_Data->AppAssemblyFilePath);
+		bool status = LoadAssembly(s_Data->CoreAssemblyFilePath);
+		if (!status)
+		{
+			PRS_CORE_ERROR("Failed to reload core script assembly!");
+			return;
+		}
+
+		status = LoadAppAssembly(s_Data->AppAssemblyFilePath);
+		if (!status)
+		{
+			PRS_CORE_ERROR("Failed to reload app script assembly!");
+			return;
+		}
+
 		LoadAssemblyClasses();
 
 		ScriptGlue::RegisterComponents();
@@ -454,10 +450,15 @@ namespace Pressure
 	void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
 	{
 		UUID entityUUID = entity.GetUUID();
-		PRS_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
-
-		Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-		instance->InvokeOnUpdate(ts);
+		if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())
+		{
+			Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+			instance->InvokeOnUpdate(ts);
+		}
+		else
+		{
+			PRS_CORE_ERROR("Script instance for entity '{}' not found", entityUUID);
+		}
 	}
 
 	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)

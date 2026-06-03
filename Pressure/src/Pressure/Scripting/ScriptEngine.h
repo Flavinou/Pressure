@@ -161,8 +161,8 @@ namespace Pressure
 		static Scene* GetSceneContext();
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityId);
 
-		static void LoadAssembly(const std::filesystem::path& filePath);
-		static void LoadAppAssembly(const std::filesystem::path& filePath);
+		[[nodiscard]] static bool LoadAssembly(const std::filesystem::path& filePath);
+		[[nodiscard]] static bool LoadAppAssembly(const std::filesystem::path& filePath);
 
 		static void ReloadAssembly();
 
