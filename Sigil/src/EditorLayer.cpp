@@ -52,8 +52,12 @@ namespace Pressure
 		}
 		else
 		{
-			// TODO: Prompt the user to open a project or create a new one
-			NewProject();
+			// If no project is opened, close the editor
+			// TODO: We should probably show a new project window instead of just closing the editor
+			if (!OpenProject())
+			{
+				Application::Get().Close();
+			}
 		}
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
@@ -200,17 +204,24 @@ namespace Pressure
                 // which we can't undo at the moment without finer window depth/z control.
                 //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-				if (ImGui::MenuItem("New", "Ctrl+N"))
+				if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
+				{
+					OpenProject();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
 				{
 					NewScene();
 				}
-
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
+            	
+            	if (ImGui::MenuItem("Open Scene...", "Ctrl+Shift+O"))
 				{
 					OpenScene();
 				}
 
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 				{
 					SaveScene();
 				}
@@ -219,6 +230,8 @@ namespace Pressure
 				{
 					SaveSceneAs();
 				}
+
+				ImGui::Separator();
 
 				if (ImGui::MenuItem("Exit"))
 				{
@@ -391,7 +404,12 @@ namespace Pressure
 			case Key::O: 
 			{
 				if (control)
-					OpenScene();
+				{
+					if (shift)
+						OpenScene();
+					else
+						OpenProject();
+				}
 				break;
 			}
 			case Key::S:
@@ -523,6 +541,19 @@ namespace Pressure
 	void EditorLayer::NewProject()
 	{
 		Project::New();
+	}
+
+	bool EditorLayer::OpenProject()
+	{
+		std::string filePath = FileDialogs::OpenFile({
+			{ "Pressure Project files", "*.prsproj" },
+			{ "All files", "*.*" }
+			});
+		if (filePath.empty())
+			return false;
+
+		OpenProject(filePath);
+		return true;
 	}
 
 	void EditorLayer::OpenProject(const std::filesystem::path& path)

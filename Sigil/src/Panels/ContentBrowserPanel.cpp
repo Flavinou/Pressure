@@ -2,6 +2,7 @@
 #include "ContentBrowserPanel.h"
 
 #include "Pressure/Project/Project.h"
+#include "Pressure/UI/UI.h"
 
 #include <imgui/imgui.h>
 
@@ -48,21 +49,22 @@ namespace Pressure
 
 			ImGui::PushID(filenameString.c_str());
 			Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			ImGui::ImageButton(reinterpret_cast<ImTextureID>(icon->GetRendererID())
-				, { thumbnailSize, thumbnailSize }
-				, { 0, 1 }
-			, { 1, 0 });
 
-			if (ImGui::BeginDragDropSource())
 			{
-				std::filesystem::path relativePath(path);
-				const wchar_t* itemPath = relativePath.c_str();
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
-				ImGui::EndDragDropSource();
-			}
+				UI::ScopedStyleColor buttonColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+				ImGui::ImageButton(reinterpret_cast<ImTextureID>(icon->GetRendererID())
+					, { thumbnailSize, thumbnailSize }
+					, { 0, 1 }
+				, { 1, 0 });
 
-			ImGui::PopStyleColor();
+				if (ImGui::BeginDragDropSource())
+				{
+					const std::filesystem::path& relativePath = path;
+					const wchar_t* itemPath = relativePath.c_str();
+					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+					ImGui::EndDragDropSource();
+				}
+			}
 
 			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{

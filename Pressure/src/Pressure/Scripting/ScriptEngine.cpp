@@ -48,7 +48,11 @@ namespace Pressure
 		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
 		bool AssemblyReloadingPending = false;
 
+#ifdef PRS_DEBUG
 		bool EnableDebugging = true;
+#else
+		bool EnableDebugging = false;
+#endif
 
 		// Runtime
 		Scene* SceneContext = nullptr;
