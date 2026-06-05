@@ -21,6 +21,8 @@
 #include "Pressure/Scene/Scene.h"
 #include "Pressure/Scene/ScriptableEntity.h"
 
+#include "Pressure/Project/Project.h"
+
 // -------- RENDERING ---------
 #include "Pressure/Renderer/Renderer.h"
 #include "Pressure/Renderer/Renderer2D.h"

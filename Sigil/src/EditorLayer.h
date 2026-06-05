@@ -28,6 +28,10 @@ namespace Pressure
 
 		void OnOverlayRender();
 
+		void NewProject();
+		void OpenProject(const std::filesystem::path& path);
+		void SaveProject();
+
 		void NewScene();
 		void OpenScene();
 		void OpenScene(const std::filesystem::path& path);
@@ -86,8 +90,8 @@ namespace Pressure
 		SceneState m_SceneState = SceneState::Edit;
 
 		// Panels
-		SceneHierarchyPanel m_SceneHierarchyPanel{};
-		ContentBrowserPanel m_ContentBrowserPanel;
+		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
 		
 		// Editor resources
 		Ref<Texture2D> m_IconPlay, m_IconStep, m_IconPause, m_IconResume, m_IconStop, m_IconSimulate;

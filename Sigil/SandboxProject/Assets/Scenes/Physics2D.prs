@@ -29,7 +29,7 @@ Entities:
       Scale: [1, 1, 1]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
-      TexturePath: assets\textures\simulate_icon.png
+      TexturePath: Textures\simulate_icon.png
       TilingFactor: 1
     ScriptComponent:
       ClassName: Sandbox.Player

@@ -1,14 +1,16 @@
 ﻿#include "prspch.h"
 #include "ContentBrowserPanel.h"
 
+#include "Pressure/Project/Project.h"
+
 #include <imgui/imgui.h>
 
 namespace Pressure
 {
 	
-	ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& assetsPath)
-		: m_CurrentDirectory(assetsPath)
-		, m_InitialWorkingDirectory(assetsPath)
+	ContentBrowserPanel::ContentBrowserPanel()
+		: m_BaseDirectory(Project::GetAssetDirectory())
+		, m_CurrentDirectory(m_BaseDirectory)
 	{
 		m_DirectoryIcon = Texture2D::Create("resources/icons/folder_icon.png");
 		m_FileIcon = Texture2D::Create("resources/icons/file_icon.png");
@@ -18,7 +20,7 @@ namespace Pressure
 	{
 		ImGui::Begin("Content Browser");
 
-		if (m_CurrentDirectory != std::filesystem::path(m_InitialWorkingDirectory))
+		if (m_CurrentDirectory != std::filesystem::path(m_BaseDirectory))
 		{
 			if (ImGui::Button(".."))
 			{
@@ -42,8 +44,7 @@ namespace Pressure
 		for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
 		{
 			const auto& path = directoryEntry.path();
-			auto relativePath = std::filesystem::relative(path, m_InitialWorkingDirectory);
-			std::string filenameString = relativePath.filename().string();
+			std::string filenameString = path.filename().string();
 
 			ImGui::PushID(filenameString.c_str());
 			Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
@@ -55,6 +56,7 @@ namespace Pressure
 
 			if (ImGui::BeginDragDropSource())
 			{
+				std::filesystem::path relativePath(path);
 				const wchar_t* itemPath = relativePath.c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
 				ImGui::EndDragDropSource();

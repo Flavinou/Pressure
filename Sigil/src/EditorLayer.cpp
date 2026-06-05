@@ -16,14 +16,11 @@
 namespace Pressure
 {
 
-	// TODO: Once we have projects, change this
-	extern const std::filesystem::path gs_AssetsPath = "assets";
-
     EditorLayer::EditorLayer()
         : Layer("EditorLayer")
 		, m_CameraController(1280.0f / 720.0f)
 		, m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
-		, m_ContentBrowserPanel(gs_AssetsPath)
+		, m_SceneHierarchyPanel(CreateScope<SceneHierarchyPanel>())
     {
     }
 
@@ -50,8 +47,13 @@ namespace Pressure
 		const auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
         if (commandLineArgs.Count > 1)
 		{
-			const std::string sceneFilePath = commandLineArgs[1];
-			OpenScene(sceneFilePath);
+			const auto projectFilePath = commandLineArgs[1];
+			OpenProject(projectFilePath);
+		}
+		else
+		{
+			// TODO: Prompt the user to open a project or create a new one
+			NewProject();
 		}
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
@@ -239,8 +241,8 @@ namespace Pressure
             ImGui::EndMenuBar();
         }
 
-		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ContentBrowserPanel.OnImGuiRender();
+		m_SceneHierarchyPanel->OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
         ImGui::Begin("Stats");
 
@@ -294,13 +296,13 @@ namespace Pressure
 			{
 				const wchar_t* path = static_cast<const wchar_t*>(payload->Data);
 
-				OpenScene(std::filesystem::path(gs_AssetsPath) / path);
+				OpenScene(path);
 				ImGui::EndDragDropTarget();
 			}
 		}
 
 		// Gizmos
-		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 		if (selectedEntity && m_GizmoType != -1)
 		{
 			IMGUIZMO_NAMESPACE::SetOrthographic(false);
@@ -448,7 +450,7 @@ namespace Pressure
 		if (e.GetMouseButton() == Mouse::ButtonLeft)
 		{
 			if (m_ViewportHovered && !IMGUIZMO_NAMESPACE::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
-				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+				m_SceneHierarchyPanel->SetSelectedEntity(m_HoveredEntity);
 		}
 		return false;
 	}
@@ -508,7 +510,7 @@ namespace Pressure
 		}
 
 		// Outline selected entity
-		if (Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity())
+		if (Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity())
 		{
 			const auto& tc = selectedEntity.GetComponent<TransformComponent>();
 
@@ -518,10 +520,30 @@ namespace Pressure
 		Renderer2D::EndScene();
 	}
 
+	void EditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	void EditorLayer::OpenProject(const std::filesystem::path& path)
+	{
+		if (Project::Load(path))
+		{
+			auto startScenePath = Project::GetAssetRelativePath(Project::GetActive()->GetConfig().StartScene);
+			OpenScene(startScenePath);
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+		}
+	}
+
+	void EditorLayer::SaveProject()
+	{
+		// Project::SaveActive();
+	}
+
 	void EditorLayer::NewScene()
 	{
 		m_ActiveScene = CreateRef<Scene>();
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
 		m_EditorScenePath = std::filesystem::path();
 	}
@@ -559,7 +581,7 @@ namespace Pressure
 		}
 
 		m_EditorScene = newScene;
-		m_SceneHierarchyPanel.SetContext(m_EditorScene);
+		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 
 		m_ActiveScene = m_EditorScene;
 		m_EditorScenePath = path;
@@ -611,7 +633,7 @@ namespace Pressure
 
 		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnRuntimeStart();
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -629,7 +651,7 @@ namespace Pressure
 
 		m_SceneState = SceneState::Edit;
 		m_ActiveScene = m_EditorScene;
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneSimulate()
@@ -642,7 +664,7 @@ namespace Pressure
 		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnSimulationStart();
 
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnDuplicateEntity()
@@ -650,7 +672,7 @@ namespace Pressure
 		if (m_SceneState != SceneState::Edit)
 			return;
 
-		if (Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity())
+		if (Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity())
 		{
 			m_EditorScene->DuplicateEntity(selectedEntity);
 		}

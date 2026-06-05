@@ -138,8 +138,6 @@ namespace Pressure
 
 	}
 
-	extern const std::filesystem::path gs_AssetsPath;
-
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
@@ -470,12 +468,19 @@ namespace Pressure
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 
 			ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+
+			// Display texture path if texture is set
+			if (component.Texture)
+			{
+				ImGui::SameLine();
+				ImGui::Text("%s", component.Texture->GetPath().c_str());
+			}
 			if (ImGui::BeginDragDropTarget())
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 				{
 					const wchar_t* path = static_cast<const wchar_t*>(payload->Data);
-					std::filesystem::path texturePath = std::filesystem::path(gs_AssetsPath) / path;
+					const std::filesystem::path texturePath(path);
 					Ref<Texture2D> texture = Texture2D::Create(texturePath.string());
 					if (texture->IsLoaded())
 						component.Texture = texture;

@@ -4,6 +4,7 @@
 #include "Components.h"
 #include "Entity.h"
 #include "Pressure/Core/UUID.h"
+#include "Pressure/Project/Project.h"
 #include "Pressure/Scripting/ScriptEngine.h"
 
 #include <entt.hpp>
@@ -525,7 +526,9 @@ namespace Pressure
 
 					if (spriteRendererComponentNode["TexturePath"])
 					{
-						Texture = Texture2D::Create(spriteRendererComponentNode["TexturePath"].as<std::string>());
+						std::string texturePath = spriteRendererComponentNode["TexturePath"].as<std::string>();
+						auto path = Project::GetAssetRelativePath(texturePath);
+						Texture = Texture2D::Create(path.string());
 					}
 					
 					if (spriteRendererComponentNode["TilingFactor"])

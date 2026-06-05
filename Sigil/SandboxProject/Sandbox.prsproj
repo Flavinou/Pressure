@@ -1,0 +1,5 @@
+Project:
+  Name: Sandbox
+  StartScene: "Scenes/Physics2D.prs"
+  AssetDirectory: "Assets"
+  ScriptModulePath: "Scripts/bin/Sandbox.dll"
