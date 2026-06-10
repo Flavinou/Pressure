@@ -19,6 +19,8 @@ namespace Pressure
 		ProjectSerializer serializer(project);
 		if (serializer.Deserialize(path))
 		{
+			PRS_CORE_INFO("Project '{0}' loaded successfully from '{1}'", project->GetConfig().Name, path.string());
+
 			project->m_ProjectDirectory = path.parent_path();
 			ms_ActiveProject = project;
 			return ms_ActiveProject;

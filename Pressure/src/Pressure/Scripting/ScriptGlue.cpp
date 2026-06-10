@@ -102,6 +102,46 @@ namespace Pressure
 			b2Body_ApplyLinearImpulseToCenter(rb2d.RuntimeBody->BodyId, imp, wake);
 		}
 
+		void RigidBody2DComponent_GetLinearVelocity(const UUID entityId, glm::vec2* outVelocity)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2BodyId body = rb2d.RuntimeBody->BodyId;
+			b2Vec2 velocity = b2Body_GetLinearVelocity(body);
+			*outVelocity = { velocity.x, velocity.y };
+		}
+
+		RigidBody2DComponent::BodyType RigidBody2DComponent_GetBodyType(const UUID entityId)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2BodyId body = rb2d.RuntimeBody->BodyId;
+			b2BodyType type = b2Body_GetType(body);
+			
+			return Utils::RigidBody2DTypeFromBox2DBody(type);
+		}
+
+		void RigidBody2DComponent_SetBodyType(const UUID entityId, RigidBody2DComponent::BodyType type)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2BodyId body = rb2d.RuntimeBody->BodyId;
+			b2BodyType box2dType = Utils::RigidBody2DTypeToBox2DBody(type);
+			b2Body_SetType(body, box2dType);
+		}
+
 		bool Input_IsKeyDown(const KeyCode keyCode)
 		{
 			return Input::IsKeyPressed(keyCode);
@@ -159,6 +199,9 @@ namespace Pressure
 
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetLinearVelocity);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetBodyType);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetBodyType);
 
 		PRS_ADD_INTERNAL_CALL(Input_IsKeyDown);
 	}

@@ -78,12 +78,16 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::Begin("Settings");
 
     auto engineStats = Pressure::Application::GetStats();
-    ImGui::Text("Engine Stats:");
+    ImGui::Text("Engine Stats");
+	ImGui::Separator();
+
 	ImGui::Text("Frame time : %.2f ms (%.2f FPS)", engineStats.FrameTime, engineStats.FramesPerSecond);
 	ImGui::NewLine();
 
 	auto stats = Pressure::Renderer2D::GetStats();
-	ImGui::Text("Renderer2D Stats:");
+	ImGui::Text("Renderer2D Stats");
+	ImGui::Separator();
+
 	ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 	ImGui::Text("Quads: %d", stats.QuadCount);
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());

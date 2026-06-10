@@ -84,6 +84,13 @@ namespace Pressure {
 		dispatcher.Dispatch<MouseScrolledEvent>(PRS_BIND_EVENT_FN(EditorCamera::OnMouseScroll));
 	}
 
+	void EditorCamera::Focus(const glm::vec3& focusPoint)
+	{
+		m_FocalPoint = focusPoint;
+
+		UpdateView();
+	}
+
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)
 	{
 		float delta = e.GetYOffset() * 0.1f;

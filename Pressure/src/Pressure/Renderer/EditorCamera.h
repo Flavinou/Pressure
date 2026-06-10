@@ -18,6 +18,8 @@ namespace Pressure {
 		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
 
+		void Focus(const glm::vec3& focusPoint);
+
 		inline float GetDistance() const { return m_Distance; }
 		inline void SetDistance(float distance) { m_Distance = distance; }
 

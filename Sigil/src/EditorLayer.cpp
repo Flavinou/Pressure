@@ -259,19 +259,25 @@ namespace Pressure
 
         ImGui::Begin("Stats");
 
+#if SGL_HOVERED_ENTITY_DEBUG
 		std::string name = "None";
 		if (m_HoveredEntity)
 			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
 
 		ImGui::Text("Hovered Entity : %s", name.c_str());
+#endif
 
         auto engineStats = Application::GetStats();
-        ImGui::Text("Engine Stats:");
+        ImGui::Text("Engine Stats");
+		ImGui::Separator();
+
         ImGui::Text("Frame time : %.2f ms (%.2f FPS)", engineStats.FrameTime, engineStats.FramesPerSecond);
         ImGui::NewLine();
 
         auto stats = Renderer2D::GetStats();
-        ImGui::Text("Renderer2D Stats:");
+        ImGui::Text("Renderer2D Stats");
+		ImGui::Separator();
+
         ImGui::Text("Draw Calls: %d", stats.DrawCalls);
         ImGui::Text("Quads: %d", stats.QuadCount);
         ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
@@ -456,6 +462,29 @@ namespace Pressure
 					}
 					break;
 				}
+
+			// Utilities shortcuts
+		    case Key::F:
+				{
+					if (Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity())
+					{
+						m_EditorCamera.Focus(selectedEntity.GetComponent<TransformComponent>().Translation);
+					}
+					break;
+				}
+			case Key::Delete:
+				{
+					// If no ImGui widget is active (meaning no context / widget in focus), delete the selected entity
+					if (Application::Get().GetImGuiLayer()->GetActiveWidgetID() == 0)
+					{
+						if (const Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity())
+						{
+							m_SceneHierarchyPanel->SetSelectedEntity({});
+							m_ActiveScene->DestroyEntity(selectedEntity);
+						}
+					}
+					break;
+				}
 			default: 
 				break;
 		}
@@ -560,7 +589,15 @@ namespace Pressure
 	{
 		if (Project::Load(path))
 		{
-			auto startScenePath = Project::GetAssetRelativePath(Project::GetActive()->GetConfig().StartScene);
+			ScriptEngine::Init();
+
+			const auto project = Project::GetActive();
+
+			const std::string_view projectName = project->GetConfig().Name;
+			const std::string title = fmt::format("Sigil Editor - {}", projectName);
+			SetWindowTitle(title);
+
+			auto startScenePath = Project::GetAssetRelativePath(project->GetConfig().StartScene);
 			OpenScene(startScenePath);
 			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
 		}
@@ -705,7 +742,8 @@ namespace Pressure
 
 		if (Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity())
 		{
-			m_EditorScene->DuplicateEntity(selectedEntity);
+			Entity newEntity = m_EditorScene->DuplicateEntity(selectedEntity);
+			m_SceneHierarchyPanel->SetSelectedEntity(newEntity);
 		}
 	}
 
@@ -795,4 +833,8 @@ namespace Pressure
 		ImGui::End();
 	}
 
+	void EditorLayer::SetWindowTitle(const std::string& title)
+	{
+		Application::Get().GetWindow().SetTitle(title);
+	}
 }

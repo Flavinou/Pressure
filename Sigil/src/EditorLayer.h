@@ -50,6 +50,8 @@ namespace Pressure
 
 		void UI_Toolbar();
 
+		void SetWindowTitle(const std::string& title);
+
 	private:
 		OrthographicCameraController m_CameraController;
 

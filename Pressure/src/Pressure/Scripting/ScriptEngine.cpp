@@ -4,6 +4,7 @@
 #include "Pressure/Core/Application.h"
 #include "Pressure/Core/Buffer.h"
 #include "Pressure/Core/FileSystem.h"
+#include "Pressure/Project/Project.h"
 #include "Pressure/Scene/Scene.h"
 #include "Pressure/Scripting/ScriptGlue.h"
 
@@ -191,7 +192,8 @@ namespace Pressure
 			return;
 		}
 
-		status = LoadAppAssembly("SandboxProject/Assets/Scripts/bin/Sandbox.dll");
+		auto scriptModulePath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
+		status = LoadAppAssembly(scriptModulePath);
 		if (!status)
 		{
 			PRS_CORE_ERROR("Failed to load app script assembly.");

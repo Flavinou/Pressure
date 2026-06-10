@@ -1,4 +1,6 @@
-﻿namespace Pressure
+﻿using System;
+
+namespace Pressure
 {
 	public struct Vector2
 	{
@@ -6,6 +8,10 @@
 		public float Y;
 
 		public static Vector2 Zero => new Vector2(0.0f);
+
+		public float Length => (float)Math.Sqrt(LengthSquared);
+
+		public float LengthSquared => X * X + Y * Y;
 
 		public static Vector2 operator +(Vector2 a, Vector2 b)
 		{

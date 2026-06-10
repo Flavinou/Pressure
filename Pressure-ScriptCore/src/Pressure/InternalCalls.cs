@@ -24,7 +24,16 @@ namespace Pressure
 		internal static extern void RigidBody2DComponent_ApplyLinearImpulse(ulong entityId, ref Vector2 impulse, ref Vector2 point, bool wake);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		internal static extern void RigidBody2DComponent_ApplyLinearImpulseToCenter(ulong entityId, ref Vector2 impulse, bool wake);
+		internal static extern void RigidBody2DComponent_ApplyLinearImpulseToCenter(ulong entityId, ref Vector2 impulse, bool wake);		
+		
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void RigidBody2DComponent_GetLinearVelocity(ulong entityId, out Vector2 linearVelocity);
+		
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern RigidBody2DComponent.BodyType RigidBody2DComponent_GetBodyType(ulong entityId);
+		
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void RigidBody2DComponent_SetBodyType(ulong entityId, RigidBody2DComponent.BodyType bodyType);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool Input_IsKeyDown(KeyCode keyCode);

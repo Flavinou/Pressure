@@ -103,18 +103,20 @@ namespace Pressure
 		return {};
     }
 
-    void Scene::DuplicateEntity(Entity entity)
+    Entity Scene::DuplicateEntity(Entity entity)
     {
+		// Copy name because we're going to modify component data structure
 		std::string name = entity.GetName();
 		Entity newEntity = CreateEntity(name);
 
 		CopyComponentIfExists(AllComponents{}, newEntity, entity);
+		return newEntity;
     }
 
     void Scene::DestroyEntity(Entity entity)
 	{
-		m_Registry.destroy(entity);
 		m_EntityMap.erase(entity.GetUUID());
+		m_Registry.destroy(entity);
 	}
 
 	void Scene::OnRuntimeStart()

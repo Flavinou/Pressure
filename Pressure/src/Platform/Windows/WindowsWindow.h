@@ -23,6 +23,7 @@ namespace Pressure
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
+		void SetTitle(const std::string& title) const override;
 
 		inline void* GetNativeWindow() const { return m_Window; }
 	private:
