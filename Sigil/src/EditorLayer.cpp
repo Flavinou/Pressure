@@ -17,6 +17,8 @@
 namespace Pressure
 {
 
+	static Scope<Font> s_Font;
+
     EditorLayer::EditorLayer()
         : Layer("EditorLayer")
 		, m_CameraController(1280.0f / 720.0f)
@@ -29,7 +31,7 @@ namespace Pressure
     {
         PRS_PROFILE_FUNCTION();
 
-		Font font("assets/fonts/roboto/Roboto-Regular.ttf");
+		s_Font = CreateScope<Font>("assets/fonts/roboto/Roboto-Regular.ttf");
 
         FrameBufferSpecification fbSpec;
 		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };
@@ -291,6 +293,14 @@ namespace Pressure
 
 		ImGui::Begin("Settings");
 		ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders); 
+
+		ImGui::Image(
+			reinterpret_cast<ImTextureID>(s_Font->GetAtlasTexture()->GetRendererID())
+			, {512, 512}
+			, {0, 1}
+			,{1, 0}
+		);
+
 		ImGui::End();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });

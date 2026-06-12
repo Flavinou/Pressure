@@ -165,7 +165,7 @@ namespace Pressure
 		s_Data.CircleVertexArray->SetIndexBuffer(quadIB); // Use quad index buffer, this is the same
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
-		s_Data.WhiteTexture = Texture2D::Create(1, 1);
+		s_Data.WhiteTexture = Texture2D::Create(TextureSpecification{ 1, 1, ImageFormat::RGBA8, false });
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 

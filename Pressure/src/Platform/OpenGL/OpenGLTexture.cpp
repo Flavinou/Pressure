@@ -6,16 +6,45 @@
 namespace Pressure
 {
 
-	OpenGLTexture2D::OpenGLTexture2D(const uint32_t width, const uint32_t height)
-		: m_Width(width), m_Height(height)
+	namespace
+	{
+		
+		GLenum ImageFormatToGLDataFormat(ImageFormat format)
+		{
+			switch (format)
+			{
+				case ImageFormat::RGB8: return GL_RGB;
+				case ImageFormat::RGBA8: return GL_RGBA;
+			}
+
+			PRS_CORE_ASSERT(false);
+			return 0;
+		}
+
+		GLenum ImageFormatToGLInternalFormat(ImageFormat format)
+		{
+			switch (format)
+			{
+				case ImageFormat::RGB8: return GL_RGB8;
+				case ImageFormat::RGBA8: return GL_RGBA8;
+			}
+
+			PRS_CORE_ASSERT(false);
+			return 0;
+		}
+
+	}
+
+	OpenGLTexture2D::OpenGLTexture2D(const TextureSpecification& specification)
+		: m_Specification(specification)
 	{
 		PRS_PROFILE_FUNCTION();
 
-		m_InternalFormat = GL_RGBA8;
-		m_DataFormat = GL_RGBA;
+		m_InternalFormat = ImageFormatToGLInternalFormat(m_Specification.Format);
+		m_DataFormat = ImageFormatToGLDataFormat(m_Specification.Format);
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Specification.Width, m_Specification.Height);
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -32,7 +61,7 @@ namespace Pressure
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
 
-		stbi_uc* data = nullptr;
+		stbi_uc* data;
 		{
 			PRS_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&)");
 			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
@@ -42,8 +71,8 @@ namespace Pressure
 		{
 			m_IsLoaded = true;
 			
-			m_Width = width;
-			m_Height = height;
+			m_Specification.Width = width;
+			m_Specification.Height = height;
 
 			// Support both RGB and RGBA
 			GLenum internalFormat = 0, dataFormat = 0;
@@ -64,7 +93,7 @@ namespace Pressure
 			PRS_CORE_ASSERT(internalFormat & dataFormat, "Format not supported !");
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Specification.Width, m_Specification.Height);
 
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -72,7 +101,11 @@ namespace Pressure
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, dataFormat, GL_UNSIGNED_BYTE, data);
+			if (m_Specification.GenerateMips)
+			{
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
 
 			stbi_image_free(data);
 		}
@@ -90,8 +123,12 @@ namespace Pressure
 		PRS_PROFILE_FUNCTION();
 
 		uint32_t bytesPerPixel = m_DataFormat == GL_RGBA ? 4 : 3;
-		PRS_CORE_ASSERT(size == m_Width * m_Height * bytesPerPixel, "Data must be entire texture !");
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+		PRS_CORE_ASSERT(size == m_Specification.Width * m_Specification.Height * bytesPerPixel, "Data must be entire texture !");
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+		if (m_Specification.GenerateMips)
+		{
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
 	}
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const
