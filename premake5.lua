@@ -30,6 +30,7 @@ group "Dependencies"
 	include "Pressure/extern/GLFW"
 	include "Pressure/extern/Glad"
 	include "Pressure/extern/imgui"
+	include "Pressure/extern/msdf-atlas-gen"
 	include "Pressure/extern/yaml-cpp"
 group ""
 

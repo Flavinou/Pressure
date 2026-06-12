@@ -7,6 +7,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Pressure/Core/Base.h"
 #include "Pressure/Math/Math.h"
+#include "Pressure/Renderer/Font.h"
 #include "Pressure/Scene/SceneSerializer.h"
 #include "Pressure/Scripting/ScriptEngine.h"
 #include "Pressure/Utils/PlatformUtils.h"
@@ -27,6 +28,8 @@ namespace Pressure
     void EditorLayer::OnAttach()
     {
         PRS_PROFILE_FUNCTION();
+
+		Font font("assets/fonts/roboto/Roboto-Regular.ttf");
 
         FrameBufferSpecification fbSpec;
 		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };

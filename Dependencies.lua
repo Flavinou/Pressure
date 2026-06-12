@@ -18,6 +18,8 @@ IncludeDir["mono"] = "%{wks.location}/Pressure/extern/mono/include"
 IncludeDir["shaderc"] = "%{wks.location}/Pressure/extern/shaderc/include"
 IncludeDir["SPIRV_Cross"] = "%{wks.location}/Pressure/extern/SPIRV-Cross"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
+IncludeDir["msdfgen"] = "%{wks.location}/Pressure/extern/msdf-atlas-gen/msdfgen"
+IncludeDir["msdf_atlas_gen"] = "%{wks.location}/Pressure/extern/msdf-atlas-gen/msdf-atlas-gen"
 
 LibraryDir = {}
 LibraryDir["mono"] = "%{wks.location}/Pressure/extern/mono/lib/%{cfg.buildcfg}"

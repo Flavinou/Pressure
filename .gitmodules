@@ -23,3 +23,6 @@
 [submodule "Pressure/extern/box2d"]
 	path = Pressure/extern/box2d
 	url = https://github.com/Flavinou/box2d.git
+[submodule "Pressure/extern/msdf-atlas-gen"]
+	path = Pressure/extern/msdf-atlas-gen
+	url = https://github.com/Flavinou/msdf-atlas-gen.git
