@@ -585,7 +585,7 @@ namespace Pressure
 	}
 
 	void Renderer2D::DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform,
-		const glm::vec4& color)
+		const TextParams& textParams, int entityID /* = -1 */)
 	{
 		const auto& fontGeometry = font->GetMSDFData().FontGeometry;
 		const auto& metrics = fontGeometry.getMetrics();
@@ -597,6 +597,8 @@ namespace Pressure
 		double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
 		double y = 0.0;
 
+		const float spaceGlyphAdvance = fontGeometry.getGlyph(' ')->getAdvance();
+
 		for (size_t i = 0; i < string.size(); ++i)
 		{
 			const char c = string[i];
@@ -607,9 +609,29 @@ namespace Pressure
 
 			if (c == '\n')
 			{
-				float lineHeightOffset = 0.0f;
 				x = 0.0;
-				y -= fsScale * metrics.lineHeight + lineHeightOffset;
+				y -= fsScale * metrics.lineHeight + textParams.LineSpacing;
+				continue;
+			}
+
+			if (c == ' ')
+			{
+				float advance = spaceGlyphAdvance;
+				if (i < string.size() - 1)
+				{
+					char next = string[i + 1];
+					double dAdvance;
+					fontGeometry.getAdvance(dAdvance, c, next);
+					advance = static_cast<float>(dAdvance);
+				}
+
+				x += fsScale * advance + textParams.Kerning;
+				continue;
+			}
+
+			if (c == '\t')
+			{
+				x += 4.0f * (fsScale * spaceGlyphAdvance * textParams.Kerning);
 				continue;
 			}
 
@@ -622,11 +644,6 @@ namespace Pressure
 			{
 				PRS_CORE_WARN("Glyph '?' not found in font");
 				return;
-			}
-
-			if (c == '\t')
-			{
-				glyph = fontGeometry.getGlyph(' ');
 			}
 
 			double al, ab, ar, at;
@@ -654,26 +671,26 @@ namespace Pressure
 			// Feed to the renderer data
 			s_Data.TextVertexBufferPtr->Position = transform * glm::vec4(quadMin, 0.0f, 1.0f);
 			s_Data.TextVertexBufferPtr->TexCoord = texCoordMin;
-			s_Data.TextVertexBufferPtr->Color = color;
-			s_Data.TextVertexBufferPtr->EntityID = -1; // TODO: entity ID for text rendering?
+			s_Data.TextVertexBufferPtr->Color = textParams.Color;
+			s_Data.TextVertexBufferPtr->EntityID = entityID;
 			s_Data.TextVertexBufferPtr++;
 
 			s_Data.TextVertexBufferPtr->Position = transform * glm::vec4(quadMax.x, quadMin.y, 0.0f, 1.0f);
 			s_Data.TextVertexBufferPtr->TexCoord = { texCoordMax.x, texCoordMin.y };
-			s_Data.TextVertexBufferPtr->Color = color;
-			s_Data.TextVertexBufferPtr->EntityID = -1; // TODO: entity ID for text rendering?
+			s_Data.TextVertexBufferPtr->Color = textParams.Color;
+			s_Data.TextVertexBufferPtr->EntityID = entityID;
 			s_Data.TextVertexBufferPtr++;
 
 			s_Data.TextVertexBufferPtr->Position = transform * glm::vec4(quadMax, 0.0f, 1.0f);
 			s_Data.TextVertexBufferPtr->TexCoord = texCoordMax;
-			s_Data.TextVertexBufferPtr->Color = color;
-			s_Data.TextVertexBufferPtr->EntityID = -1; // TODO: entity ID for text rendering?
+			s_Data.TextVertexBufferPtr->Color = textParams.Color;
+			s_Data.TextVertexBufferPtr->EntityID = entityID;
 			s_Data.TextVertexBufferPtr++;
 
 			s_Data.TextVertexBufferPtr->Position = transform * glm::vec4(quadMin.x, quadMax.y, 0.0f, 1.0f);
 			s_Data.TextVertexBufferPtr->TexCoord = { texCoordMin.x, texCoordMax.y };
-			s_Data.TextVertexBufferPtr->Color = color;
-			s_Data.TextVertexBufferPtr->EntityID = -1; // TODO: entity ID for text rendering?
+			s_Data.TextVertexBufferPtr->Color = textParams.Color;
+			s_Data.TextVertexBufferPtr->EntityID = entityID;
 			s_Data.TextVertexBufferPtr++;
 
 			s_Data.TextIndexCount += 6;
@@ -685,10 +702,15 @@ namespace Pressure
 				char next = string[i + 1];
 				fontGeometry.getAdvance(advance, c, next);
 
-				float kerningOffset = 0.0f;
-				x += fsScale * advance + kerningOffset;
+				x += fsScale * advance + textParams.Kerning;
 			}
 		}
+	}
+
+	void Renderer2D::DrawString(const std::string& string, const glm::mat4& transform, const TextComponent& component,
+		int entityID)
+	{
+		DrawString(string, component.FontAsset, transform, { component.Color, component.Kerning, component.LineSpacing }, entityID);
 	}
 
 	void Renderer2D::ResetStats()

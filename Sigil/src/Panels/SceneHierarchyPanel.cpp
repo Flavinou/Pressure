@@ -6,6 +6,8 @@
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
+
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Pressure
@@ -279,6 +281,7 @@ namespace Pressure
 			DisplayAddableComponent<RigidBody2DComponent>("Rigid Body 2D");
 			DisplayAddableComponent<BoxCollider2DComponent>("Box Collider 2D");
 			DisplayAddableComponent<CircleCollider2DComponent>("Circle Collider 2D");
+			DisplayAddableComponent<TextComponent>("Text Renderer");
 
 			ImGui::EndPopup();
 		}
@@ -540,6 +543,14 @@ namespace Pressure
 			ImGui::DragFloat("Density", &component.Density, 0.1f, 0.0f, 1.0f);
 			ImGui::DragFloat("Friction", &component.Friction, 0.1f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution", &component.Restitution, 0.1f, 0.0f, 1.0f);
+		});
+
+		DrawComponent<TextComponent>("Text Renderer", entity, [](auto& component)
+		{
+			ImGui::InputTextMultiline("Text String", &component.TextString);
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
+			ImGui::DragFloat("Kerning", &component.Kerning, 0.025f);
+			ImGui::DragFloat("Line Spacing", &component.LineSpacing, 0.025f);
 		});
 	}
 

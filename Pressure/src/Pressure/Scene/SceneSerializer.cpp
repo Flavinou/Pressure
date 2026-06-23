@@ -357,6 +357,22 @@ namespace Pressure
 				out << YAML::EndMap; // CircleCollider2DComponent node
 			}
 
+			if (entity.HasComponent<TextComponent>())
+			{
+				out << YAML::Key << "TextComponent";
+				out << YAML::BeginMap; // TextComponent node
+
+				auto& textComponent = entity.GetComponent<TextComponent>();
+				out << YAML::Key << "TextString" << YAML::Value << textComponent.TextString;
+				// TODO: Serialize font asset path
+				// out << YAML::Key << "FontAsset" << YAML::Value << textComponent.FontAsset;
+				out << YAML::Key << "Color" << YAML::Value << textComponent.Color;
+				out << YAML::Key << "Kerning" << YAML::Value << textComponent.Kerning;
+				out << YAML::Key << "LineSpacing" << YAML::Value << textComponent.LineSpacing;
+
+				out << YAML::EndMap; // TextComponent node
+			}
+
 			out << YAML::EndMap; // Entity node
 		}
 
@@ -570,6 +586,17 @@ namespace Pressure
 					Density = circleCollider2DComponent["Density"].as<float>();
 					Friction = circleCollider2DComponent["Friction"].as<float>();
 					Restitution = circleCollider2DComponent["Restitution"].as<float>();
+				}
+
+				if (auto textComponent = entityNode["TextComponent"])
+				{
+					auto& [TextString, FontAsset, Color, Kerning, LineSpacing] = deserializedEntity.AddComponent<TextComponent>();
+					TextString = textComponent["TextString"].as<std::string>();
+					// TODO: Deserialize font asset path
+					// FontAsset = textComponent["FontAsset"].as<UUID>();
+					Color = textComponent["Color"].as<glm::vec4>();
+					Kerning = textComponent["Kerning"].as<float>();
+					LineSpacing = textComponent["LineSpacing"].as<float>();
 				}
 			}
 
