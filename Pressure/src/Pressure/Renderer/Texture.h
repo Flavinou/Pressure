@@ -20,6 +20,7 @@ namespace Pressure
 		uint32_t Height = 1;
 		ImageFormat Format = ImageFormat::RGBA8;
 		bool GenerateMips = true;
+		bool Clamp = false;
 	};
 
 	class Texture

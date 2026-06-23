@@ -13,7 +13,10 @@ namespace Pressure
 		Font(const std::filesystem::path& fontPath);
 		virtual ~Font();
 
+		const MSDFData& GetMSDFData() const { return *m_Data; }
 		Ref<Texture2D> GetAtlasTexture() const { return m_AtlasTexture; }
+
+		static Ref<Font> GetDefault();
 
 	private:
 		Scope<MSDFData> m_Data;

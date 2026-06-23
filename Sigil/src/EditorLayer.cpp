@@ -17,7 +17,10 @@
 namespace Pressure
 {
 
-	static Scope<Font> s_Font;
+	namespace
+	{
+		Ref<Font> s_Font;
+	}
 
     EditorLayer::EditorLayer()
         : Layer("EditorLayer")
@@ -31,7 +34,7 @@ namespace Pressure
     {
         PRS_PROFILE_FUNCTION();
 
-		s_Font = CreateScope<Font>("assets/fonts/roboto/Roboto-Regular.ttf");
+		s_Font = Font::GetDefault();
 
         FrameBufferSpecification fbSpec;
 		fbSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RED_INTEGER, FrameBufferTextureFormat::Depth };

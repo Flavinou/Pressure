@@ -98,10 +98,12 @@ namespace Pressure
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			GLenum wrapMode = m_Specification.Clamp ? GL_CLAMP_TO_EDGE : GL_REPEAT;
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, wrapMode);
+			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, wrapMode);
 
 			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, dataFormat, GL_UNSIGNED_BYTE, data);
+			
 			if (m_Specification.GenerateMips)
 			{
 				glGenerateMipmap(GL_TEXTURE_2D);
@@ -124,7 +126,19 @@ namespace Pressure
 
 		uint32_t bytesPerPixel = m_DataFormat == GL_RGBA ? 4 : 3;
 		PRS_CORE_ASSERT(size == m_Specification.Width * m_Specification.Height * bytesPerPixel, "Data must be entire texture !");
+
+		if (m_DataFormat == GL_RGB)
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		}
+
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+
+		if (m_DataFormat == GL_RGB)
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+		}
+		
 		if (m_Specification.GenerateMips)
 		{
 			glGenerateMipmap(GL_TEXTURE_2D);

@@ -1,6 +1,7 @@
 ﻿#include "prspch.h"
 #include "Font.h"
 
+#include "Pressure/Renderer/MSDFData.h"
 #include "Pressure/Renderer/Texture.h"
 
 #include <msdf-atlas-gen.h>
@@ -8,19 +9,10 @@
 namespace Pressure
 {
 
-	struct MSDFData
-	{
-		std::vector<msdf_atlas::GlyphGeometry> Glyphs;
-		msdf_atlas::FontGeometry FontGeometry;
-	};
-
 	namespace
 	{
 		template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-		Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName
-			, float fontSize
-			, const std::vector<msdf_atlas::GlyphGeometry>& glyphs
-			, const msdf_atlas::FontGeometry& fontGeometry
+		Ref<Texture2D> CreateAndCacheAtlas(const std::vector<msdf_atlas::GlyphGeometry>& glyphs
 			, uint32_t width
 			, uint32_t height)
 		{
@@ -30,6 +22,7 @@ namespace Pressure
 
 			msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(width, height);
 			generator.setAttributes(attributes);
+			generator.setThreadCount(8);
 			generator.generate(glyphs.data(), static_cast<int>(glyphs.size()));
 
 			msdfgen::BitmapConstRef<T, N> bitmap = static_cast<msdfgen::BitmapConstRef<T, N>>(generator.atlasStorage());
@@ -39,6 +32,7 @@ namespace Pressure
 			spec.Height = bitmap.height;
 			spec.Format = ImageFormat::RGB8;
 			spec.GenerateMips = false;
+			spec.Clamp = true;
 
 			Ref<Texture2D> texture = Texture2D::Create(spec);
 			texture->SetData((void*)bitmap.pixels, bitmap.width * bitmap.height * 3);
@@ -93,27 +87,28 @@ namespace Pressure
 		PRS_CORE_INFO("Loaded {} glyphs from font (out of {})", glyphsLoaded, charset.size());
 
 		double emSize = 40.0;
-		msdf_atlas::TightAtlasPacker atlasPacker;
-		atlasPacker.setPixelRange(2.0);
-		atlasPacker.setMiterLimit(1.0);
-		atlasPacker.setInnerPixelPadding(0.0);
-		atlasPacker.setOuterPixelPadding(0.0);
-		atlasPacker.setInnerUnitPadding(0.0);
-		atlasPacker.setOuterUnitPadding(0.0);
-		atlasPacker.setScale(emSize);
-		const int remaining = atlasPacker.pack(m_Data->Glyphs.data(), static_cast<int>(m_Data->Glyphs.size()));
+		msdf_atlas::TightAtlasPacker packer;
+		packer.setScale(emSize);
+		packer.setPixelRange(4.0);
+		packer.setMiterLimit(1.0);
+		packer.setOuterPixelPadding(0.5);
+		const int remaining = packer.pack(m_Data->Glyphs.data(), static_cast<int>(m_Data->Glyphs.size()));
 		PRS_CORE_ASSERT(remaining == 0);
 
 		int width, height;
-		atlasPacker.getDimensions(width, height);
-		emSize = atlasPacker.getScale();
+		packer.getDimensions(width, height);
 
-		m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 3, msdf_atlas::msdfGenerator>(
-			"Test"
-			, static_cast<float>(emSize)
-			, m_Data->Glyphs
-			, m_Data->FontGeometry
-			, width, height
+		// MSDF || MTSDF
+		for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
+		{
+			constexpr double maxCornerAngle = 3.0;
+			glyph.edgeColoring(&msdfgen::edgeColoringByDistance, maxCornerAngle, 0);
+		}
+
+		m_AtlasTexture = CreateAndCacheAtlas<msdf_atlas::byte, float, 3, msdf_atlas::msdfGenerator>(
+			m_Data->Glyphs
+			, width
+			, height
 		);
 
 		// Cleanup
@@ -123,5 +118,16 @@ namespace Pressure
 
 	Font::~Font()
 	{
+	}
+
+	Ref<Font> Font::GetDefault()
+	{
+		static Ref<Font> DefaultFont;
+		if (!DefaultFont)
+		{
+			DefaultFont = CreateRef<Font>("assets/fonts/roboto/Roboto-Regular.ttf");
+		}
+
+		return DefaultFont;
 	}
 }
