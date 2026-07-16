@@ -32,6 +32,9 @@ namespace Pressure
 			return component;
         }
 
+		template<typename T>
+    	void OnComponentAddedOrReplaced(Entity src, T& srcComponent);
+
         template<typename T>
         T& GetComponent()
         {

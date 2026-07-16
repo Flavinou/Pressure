@@ -1,10 +1,141 @@
 #include "prspch.h"
 #include "Entity.h"
 
+#include "Pressure/Scripting/ScriptEngine.h"
+
 namespace Pressure
 {
     Entity::Entity(entt::entity handle, Scene* scene)
         : m_EntityHandle(handle), m_Scene(scene)
     {
     }
+
+#pragma region OnComponentAddedOrReplaced overloads
+
+	template<typename T>
+	void Entity::OnComponentAddedOrReplaced(Entity src, T& component)
+	{
+		// static_assert(false, "Unknown component!");
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<IDComponent>(Entity src, IDComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<TagComponent>(Entity src, TagComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<TransformComponent>(Entity src, TransformComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<CameraComponent>(Entity src, CameraComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<ScriptComponent>(Entity src, ScriptComponent& component)
+	{
+		// On entity duplication, field values must be copied from the source entity to the new entity, otherwise they will be reset to default values
+		const auto& srcComponent = src.GetComponent<ScriptComponent>();
+
+		Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(srcComponent.ClassName);
+		const auto& fields = entityClass->GetFields();
+
+		auto& srcEntityFields = ScriptEngine::GetScriptFieldMap(src);
+		auto& dstEntityFields = ScriptEngine::GetScriptFieldMap(*this);
+		for (const auto& [fieldName, field] : fields)
+		{
+			// Field has been set in editor
+			if (srcEntityFields.find(fieldName) != srcEntityFields.end())
+			{
+				ScriptFieldInstance& srcFieldInstance = srcEntityFields[fieldName];
+				ScriptFieldInstance& dstFieldInstance = dstEntityFields[fieldName];
+
+				switch (field.Type)
+				{
+				case ScriptFieldType::Float:
+					{
+						float srcValue = srcFieldInstance.GetValue<float>();
+						dstFieldInstance.SetValue<float>(srcValue);
+						break;
+					}
+				case ScriptFieldType::Int:
+					{
+						int srcValue = srcFieldInstance.GetValue<int>();
+						dstFieldInstance.SetValue<int>(srcValue);
+						break;
+					}
+				default:
+					break;
+				}
+			}
+			else // Field has not been set in editor yet, force default value
+			{
+				switch (field.Type)
+				{
+				case ScriptFieldType::Float:
+					{
+						float data = 0.0f;
+						ScriptFieldInstance& dstFieldInstance = dstEntityFields[fieldName];
+						dstFieldInstance.SetField(field);
+						dstFieldInstance.SetValue<float>(data);
+						break;
+					}
+				case ScriptFieldType::Int:
+					{
+						int data = 0;
+						ScriptFieldInstance& dstFieldInstance = dstEntityFields[fieldName];
+						dstFieldInstance.SetField(field);
+						dstFieldInstance.SetValue<int>(data);
+						break;
+					}
+				default:
+					break;
+				}
+			}
+		}
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<SpriteRendererComponent>(Entity src, SpriteRendererComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<CircleRendererComponent>(Entity src, CircleRendererComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<NativeScriptComponent>(Entity src, NativeScriptComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<RigidBody2DComponent>(Entity src, RigidBody2DComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<BoxCollider2DComponent>(Entity src, BoxCollider2DComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<CircleCollider2DComponent>(Entity src, CircleCollider2DComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<TextComponent>(Entity src, TextComponent& component)
+	{
+	}
+
+#pragma endregion
 }

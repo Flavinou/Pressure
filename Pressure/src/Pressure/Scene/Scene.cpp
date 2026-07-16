@@ -47,6 +47,7 @@ namespace Pressure
 				if (src.HasComponent<Component>())
 				{
 					dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());
+					dst.OnComponentAddedOrReplaced<Component>(src, dst.GetComponent<Component>());
 				}
 			}(), ...);
 		}
@@ -175,65 +176,22 @@ namespace Pressure
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
-			auto& transform = entity.GetComponent<TransformComponent>();
-			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-
-			b2BodyDef bodyDef = b2DefaultBodyDef();
-			bodyDef.type = Utils::RigidBody2DTypeToBox2DBody(rb2d.Type);
-			bodyDef.position = { transform.Translation.x, transform.Translation.y };
-			bodyDef.rotation = b2MakeRot(transform.Rotation.z);
-
-			b2BodyId bodyId = b2CreateBody(m_PhysicsImpl->WorldId, &bodyDef);
-			b2Body_SetMotionLocks(bodyId, { rb2d.FixedRotation, rb2d.FixedRotation, rb2d.FixedRotation });
-
-			rb2d.RuntimeBody = new RuntimeBodyImpl();
-			rb2d.RuntimeBody->BodyId = bodyId;
-
-			if (entity.HasComponent<BoxCollider2DComponent>())
-			{
-				auto& collider = entity.GetComponent<BoxCollider2DComponent>();
-
-				b2Polygon box = b2MakeOffsetBox(collider.Size.x * transform.Scale.x
-					, collider.Size.y * transform.Scale.y
-					, { collider.Offset.x, collider.Offset.y }
-					, b2Rot_identity);
-				b2ShapeDef shapeDefinition = b2DefaultShapeDef();
-				shapeDefinition.density = collider.Density;
-				shapeDefinition.material.friction = collider.Friction;
-				shapeDefinition.material.restitution = collider.Restitution;
-
-				b2CreatePolygonShape(bodyId, &shapeDefinition, &box);
-			}
-
-			if (entity.HasComponent<CircleCollider2DComponent>())
-			{
-				auto& collider = entity.GetComponent<CircleCollider2DComponent>();
-
-				b2Circle circle;
-				circle.center = { collider.Offset.x, collider.Offset.y };
-				circle.radius = transform.Scale.x * collider.Radius;
-
-				b2ShapeDef shapeDefinition = b2DefaultShapeDef();
-				shapeDefinition.density = collider.Density;
-				shapeDefinition.material.friction = collider.Friction;
-				shapeDefinition.material.restitution = collider.Restitution;
-
-				b2CreateCircleShape(bodyId, &shapeDefinition, &circle);
-			}
+			InstantiatePhysicsBody(entity);
 		}
 	}
 
 	void Scene::OnPhysics2DStop()
 	{
+		b2DestroyWorld(m_PhysicsImpl->WorldId);
+		m_PhysicsImpl = nullptr;
+
 		auto view = m_Registry.view<RigidBody2DComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
 			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-			delete rb2d.RuntimeBody;
+			rb2d.RuntimeBody = nullptr;
 		}
-
-		b2DestroyWorld(m_PhysicsImpl->WorldId);
 	}
 
 	void Scene::RenderScene(EditorCamera& camera)
@@ -274,6 +232,57 @@ namespace Pressure
 		}
 
 		Renderer2D::EndScene();
+	}
+
+	void Scene::InstantiatePhysicsBody(Entity entity) const
+	{
+		auto& transform = entity.GetComponent<TransformComponent>();
+		auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+		rb2d.RuntimeBody = nullptr;
+
+		b2BodyDef bodyDef = b2DefaultBodyDef();
+		bodyDef.type = Utils::RigidBody2DTypeToBox2DBody(rb2d.Type);
+		bodyDef.position = { transform.Translation.x, transform.Translation.y };
+		bodyDef.rotation = b2MakeRot(transform.Rotation.z);
+
+		b2BodyId bodyId = b2CreateBody(m_PhysicsImpl->WorldId, &bodyDef);
+		b2Body_SetMotionLocks(bodyId, { false, false, rb2d.FixedRotation });
+
+		rb2d.RuntimeBody = new RuntimeBodyImpl();
+		rb2d.RuntimeBody->BodyId = bodyId;
+
+		if (entity.HasComponent<BoxCollider2DComponent>())
+		{
+			auto& collider = entity.GetComponent<BoxCollider2DComponent>();
+
+			b2Polygon box = b2MakeOffsetBox(collider.Size.x * transform.Scale.x
+				, collider.Size.y * transform.Scale.y
+				, { collider.Offset.x, collider.Offset.y }
+			, b2Rot_identity);
+			b2ShapeDef shapeDefinition = b2DefaultShapeDef();
+			shapeDefinition.density = collider.Density;
+			shapeDefinition.material.friction = collider.Friction;
+			shapeDefinition.material.restitution = collider.Restitution;
+
+			b2CreatePolygonShape(bodyId, &shapeDefinition, &box);
+		}
+
+		if (entity.HasComponent<CircleCollider2DComponent>())
+		{
+			auto& collider = entity.GetComponent<CircleCollider2DComponent>();
+
+			b2Circle circle;
+			circle.center = { collider.Offset.x, collider.Offset.y };
+			circle.radius = transform.Scale.x * collider.Radius;
+
+			b2ShapeDef shapeDefinition = b2DefaultShapeDef();
+			shapeDefinition.density = collider.Density;
+			shapeDefinition.material.friction = collider.Friction;
+			shapeDefinition.material.restitution = collider.Restitution;
+
+			b2CreateCircleShape(bodyId, &shapeDefinition, &circle);
+		}
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -319,6 +328,8 @@ namespace Pressure
 					transform.Translation.y = y;
 					auto [c, s] = b2Body_GetRotation(body);
 					transform.Rotation.z = std::atan2(s, c);
+
+					b2Body_SetGravityScale(body, rb2d.GravityScale);
 				}
 			}
         }
@@ -405,6 +416,8 @@ namespace Pressure
 				transform.Translation.y = y;
 				const auto [c, s] = b2Body_GetRotation(body);
 				transform.Rotation.z = std::atan2(s, c);
+
+				b2Body_SetGravityScale(body, rb2d.GravityScale);
 			}
 		}
 
@@ -435,6 +448,15 @@ namespace Pressure
                 cameraComponent.Camera.SetViewportSize(width, height);
             }
         }
+    }
+
+    void Scene::OnCreateEntityRuntime(Entity entity) const
+    {
+		if (!m_IsRunning)
+			return;
+
+		InstantiatePhysicsBody(entity);
+		ScriptEngine::OnCreateEntity(entity);
     }
 
     Entity Scene::GetPrimaryCameraEntity()
@@ -477,6 +499,7 @@ namespace Pressure
 		return newScene;
     }
 
+#pragma region OnComponentAdded overloads
     template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
@@ -544,4 +567,5 @@ namespace Pressure
 	void Scene::OnComponentAdded<TextComponent>(Entity entity, TextComponent& component)
 	{
 	}
+#pragma endregion
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Pressure
+﻿namespace Pressure
 {
 	public struct Vector2
 	{
@@ -8,14 +6,20 @@ namespace Pressure
 		public float Y;
 
 		public static Vector2 Zero => new Vector2(0.0f);
+		public static Vector2 One => new Vector2(1.0f);
 
-		public float Length => (float)Math.Sqrt(LengthSquared);
+		public float Length => (float)System.Math.Sqrt(LengthSquared);
 
 		public float LengthSquared => X * X + Y * Y;
 
 		public static Vector2 operator +(Vector2 a, Vector2 b)
 		{
 			return new Vector2(a.X + b.X, a.Y + b.Y);
+		}
+
+		public static Vector2 operator -(Vector2 a, Vector2 b)
+		{
+			return new Vector2(a.X - b.X, a.Y - b.Y);
 		}
 
 		public static Vector2 operator *(Vector2 vector, float scalar)
@@ -33,6 +37,13 @@ namespace Pressure
 		{
 			X = x;
 			Y = y;
+		}
+		public Vector2 Normalized()
+		{
+			var length = Length;
+			return length == 0
+				? Zero
+				: new Vector2(X / length, Y / length);
 		}
 	}
 }

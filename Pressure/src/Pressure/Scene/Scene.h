@@ -40,6 +40,10 @@ namespace Pressure
         void OnUpdateEditor(Timestep ts, EditorCamera& camera);
         void OnViewportResize(uint32_t width, uint32_t height);
 
+		void OnCreateEntityRuntime(Entity entity) const;
+
+		void InstantiatePhysicsBody(Entity entity) const;
+
 		Entity GetPrimaryCameraEntity();
 
 		bool IsRunning() const { return m_IsRunning; }
@@ -63,6 +67,7 @@ namespace Pressure
 		void OnPhysics2DStop();
 
 		void RenderScene(EditorCamera& camera);
+
     private:
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
