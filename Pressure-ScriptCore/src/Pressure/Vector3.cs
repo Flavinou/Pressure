@@ -7,6 +7,11 @@
 		public float Z;
 
 		public static Vector3 Zero => new Vector3(0.0f);
+		public static Vector3 One => new Vector3(1.0f);
+
+		public float Length => (float)System.Math.Sqrt(LengthSquared);
+
+		public float LengthSquared => X * X + Y * Y;
 
 		public Vector2 XY
 		{
@@ -17,9 +22,15 @@
 				Y = value.Y;
 			}
 		}
+
 		public static Vector3 operator +(Vector3 a, Vector3 b)
 		{
 			return new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		}
+
+		public static Vector3 operator -(Vector3 a, Vector3 b)
+		{
+			return new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 		}
 
 		public static Vector3 operator *(Vector3 vector, float scalar)
@@ -46,6 +57,14 @@
 			X = xy.X;
 			Y = xy.Y;
 			Z = z;
+		}
+
+		public Vector3 Normalized()
+		{
+			var length = Length;
+			return length == 0 
+				? Zero 
+				: new Vector3(X / length, Y / length, Z / length);
 		}
 	}
 }

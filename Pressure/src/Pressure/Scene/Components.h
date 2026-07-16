@@ -121,6 +121,8 @@ namespace Pressure
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 
+		float GravityScale = 1.0f;
+
 		// Storage for runtime
 		RuntimeBodyImpl* RuntimeBody;
 

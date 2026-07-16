@@ -14,6 +14,7 @@ extern "C"
 	typedef struct _MonoAssembly MonoAssembly;
 	typedef struct _MonoImage MonoImage;
 	typedef struct _MonoClassField MonoClassField;
+	typedef struct _MonoString MonoString;
 }
 
 namespace Pressure
@@ -160,6 +161,8 @@ namespace Pressure
 		static bool EntityClassExists(const std::string& fullClassName);
 		static Scene* GetSceneContext();
 		static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityId);
+
+		static MonoString* NewString(const char* string);
 
 		[[nodiscard]] static bool LoadAssembly(const std::filesystem::path& filePath);
 		[[nodiscard]] static bool LoadAppAssembly(const std::filesystem::path& filePath);

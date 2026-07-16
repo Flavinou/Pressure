@@ -340,6 +340,12 @@ namespace Pressure
 		return it->second;
 	}
 
+	MonoString* ScriptEngine::NewString(const char* string)
+	{
+		MonoString* monoString = mono_string_new(s_Data->AppDomain, string);
+		return monoString;
+	}
+
 	MonoImage* ScriptEngine::GetCoreAssemblyImage()
 	{
 		return s_Data->CoreAssemblyImage;

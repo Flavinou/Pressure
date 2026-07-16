@@ -403,6 +403,15 @@ namespace Pressure
 								}
 								break;
 							}
+						case ScriptFieldType::Int:
+							{
+								int value = scriptInstance->GetFieldValue<int>(fieldName);
+								if (ImGui::DragInt(fieldName.c_str(), &value))
+								{
+									scriptInstance->SetFieldValue<int>(fieldName, value);
+								}
+								break;
+							}
 						default:
 							ImGui::Text("<Unsupported Type>");
 						}
@@ -435,11 +444,20 @@ namespace Pressure
 									}
 									break;
 								}
+							case ScriptFieldType::Int:
+								{
+									int value = fieldInstance.GetValue<int>();
+									if (ImGui::DragInt(fieldName.c_str(), &value))
+									{
+										fieldInstance.SetValue<int>(value);
+									}
+									break;
+								}
 							default:
 								ImGui::Text("<Unsupported Type>");
 							}
 						}
-						else // Field has not been set in editor yet, force default value
+						else // Field has not been set in editor yet
 						{
 							switch (field.Type)
 							{
@@ -451,6 +469,17 @@ namespace Pressure
 											ScriptFieldInstance& fieldInstance = entityFields[fieldName];
 											fieldInstance.SetField(field);
 											fieldInstance.SetValue<float>(data);
+										}
+										break;
+									}
+								case ScriptFieldType::Int:
+									{
+										int data = 0;
+										if (ImGui::DragInt(fieldName.c_str(), &data))
+										{
+											ScriptFieldInstance& fieldInstance = entityFields[fieldName];
+											fieldInstance.SetField(field);
+											fieldInstance.SetValue<int>(data);
 										}
 										break;
 									}
@@ -559,6 +588,8 @@ namespace Pressure
 			}
 
 			ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+
+			ImGui::DragFloat("Gravity Scale", &component.GravityScale, 0.1f, 0.0f, 10.0f);
 		});
 
 		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](auto& component)

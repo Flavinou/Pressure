@@ -40,6 +40,10 @@ namespace Pressure
         void OnUpdateEditor(Timestep ts, EditorCamera& camera);
         void OnViewportResize(uint32_t width, uint32_t height);
 
+		void OnCreateEntityRuntime(Entity entity) const;
+
+		void InstantiatePhysicsBody(Entity entity) const;
+
 		Entity GetPrimaryCameraEntity();
 
 		bool IsRunning() const { return m_IsRunning; }

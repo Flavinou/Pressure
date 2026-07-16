@@ -23,6 +23,33 @@ namespace Pressure
 			set => InternalCalls.TransformComponent_SetTranslation(Id, ref value);
 		}
 
+		public string Name
+		{
+			get
+			{
+				InternalCalls.Entity_GetName(Id, out string result);
+				return result;
+			}
+		}
+
+		public static Entity Create(string tag)
+		{
+			ulong id = InternalCalls.Entity_Create(tag);
+			return new Entity(id);
+		}
+
+		public static Entity Instantiate(string tag)
+		{
+			ulong id = InternalCalls.Entity_Duplicate(tag);
+			return new Entity(id);
+		}
+
+		public static Entity Instantiate(Entity other)
+		{
+			ulong id = InternalCalls.Entity_DuplicateById(other.Id);
+			return new Entity(id);
+		}
+
 		public bool HasComponent<T>() where T : Component, new()
 		{
 			Type componentType = typeof(T);

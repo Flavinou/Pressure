@@ -29,6 +29,15 @@ namespace Pressure
 			return ScriptEngine::GetManagedInstance(entityId);
 		}
 
+		void Entity_GetName(const UUID entityId, MonoString** outName)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+			*outName = ScriptEngine::NewString(entity.GetName().c_str());
+		}
+
 		bool Entity_HasComponent(const UUID entityId, MonoReflectionType* componentType)
 		{
 			Scene* scene = ScriptEngine::GetSceneContext();
@@ -57,6 +66,53 @@ namespace Pressure
 			return entity.GetUUID();
 		}
 
+		uint64_t Entity_Create(MonoString* tag)
+		{
+			char* tagCStr = mono_string_to_utf8(tag);
+
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->CreateEntity(tagCStr);
+			mono_free(tagCStr);
+
+			return entity.GetUUID();
+		}
+
+		uint64_t Entity_Duplicate(MonoString* tag)
+		{
+			char* tagCStr = mono_string_to_utf8(tag);
+
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity source = scene->FindEntityByName(tagCStr);
+			mono_free(tagCStr);
+
+			if (!source)
+				return 0;
+
+			static uint32_t copyCount = 0;
+			Entity entity = scene->DuplicateEntity(source);
+			const std::string copyName = source.GetName() + "_" + std::to_string(++copyCount);
+			entity.GetComponent<TagComponent>().Tag = copyName;
+			scene->OnCreateEntityRuntime(entity);
+			return entity.GetUUID();
+		}
+
+		uint64_t Entity_DuplicateById(uint64_t entityId)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity source = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(source);
+
+			static uint32_t copyCount = 0;
+			Entity entity = scene->DuplicateEntity(source);
+			const std::string copyName = source.GetName() + "_" + std::to_string(++copyCount);
+			entity.GetComponent<TagComponent>().Tag = copyName;
+			scene->OnCreateEntityRuntime(entity);
+			return entity.GetUUID();
+		}
+
 		void TransformComponent_GetTranslation(const UUID entityId, glm::vec3* outTranslation)
 		{
 			Scene* scene = ScriptEngine::GetSceneContext();
@@ -75,6 +131,38 @@ namespace Pressure
 			PRS_CORE_ASSERT(entity);
 
 			entity.GetComponent<TransformComponent>().Translation = *translation;
+
+			// Recreate the physics body if the entity has a RigidBody2DComponent
+			if (entity.HasComponent<RigidBody2DComponent>())
+			{
+				scene->InstantiatePhysicsBody(entity);
+			}
+		}
+
+		void RigidBody2DComponent_GetPosition(const UUID entityId, glm::vec2* outPosition)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2Transform transform = b2Body_GetTransform(rb2d.RuntimeBody->BodyId);
+			*outPosition = { transform.p.x, transform.p.y };
+		}
+
+		void RigidBody2DComponent_SetPosition(const UUID entityId, const glm::vec2* position)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			b2Vec2 pos = { position->x, position->y };
+			entity.GetComponent<TransformComponent>().Translation = { pos.x, pos.y, 0.0f };
+
+			// Recreate the physics body instead of expensive set transform
+			scene->InstantiatePhysicsBody(entity);
 		}
 
 		void RigidBody2DComponent_ApplyLinearImpulse(const UUID entityId, const glm::vec2* impulse, const glm::vec2* point, bool wake)
@@ -113,6 +201,30 @@ namespace Pressure
 			b2BodyId body = rb2d.RuntimeBody->BodyId;
 			b2Vec2 velocity = b2Body_GetLinearVelocity(body);
 			*outVelocity = { velocity.x, velocity.y };
+		}
+
+		float RigidBody2DComponent_GetGravityScale(const UUID entityId)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2BodyId body = rb2d.RuntimeBody->BodyId;
+			return b2Body_GetGravityScale(body);
+		}
+
+		void RigidBody2DComponent_SetGravityScale(const UUID entityId, float gravityScale)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+			b2BodyId body = rb2d.RuntimeBody->BodyId;
+			b2Body_SetGravityScale(body, gravityScale);
 		}
 
 		RigidBody2DComponent::BodyType RigidBody2DComponent_GetBodyType(const UUID entityId)
@@ -191,15 +303,23 @@ namespace Pressure
 	{
 		PRS_ADD_INTERNAL_CALL(GetScriptInstance);
 
+		PRS_ADD_INTERNAL_CALL(Entity_GetName);
 		PRS_ADD_INTERNAL_CALL(Entity_HasComponent);
 		PRS_ADD_INTERNAL_CALL(Entity_FindEntityByName);
+		PRS_ADD_INTERNAL_CALL(Entity_Create);
+		PRS_ADD_INTERNAL_CALL(Entity_Duplicate);
+		PRS_ADD_INTERNAL_CALL(Entity_DuplicateById);
 
 		PRS_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
 		PRS_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
 
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetPosition);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetPosition);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulse);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_ApplyLinearImpulseToCenter);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetLinearVelocity);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetGravityScale);
+		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetGravityScale);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetBodyType);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetBodyType);
 

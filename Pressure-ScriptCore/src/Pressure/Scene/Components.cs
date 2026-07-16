@@ -27,6 +27,16 @@
 			Kinematic,
 		}
 
+		public Vector2 Position
+		{
+			get
+			{
+				InternalCalls.RigidBody2DComponent_GetPosition(Entity.Id, out Vector2 result);
+				return result;
+			}
+			set => InternalCalls.RigidBody2DComponent_SetPosition(Entity.Id, ref value);
+		}
+
 		public Vector2 LinearVelocity
 		{
 			get
@@ -40,6 +50,12 @@
 		{
 			get => InternalCalls.RigidBody2DComponent_GetBodyType(Entity.Id);
 			set => InternalCalls.RigidBody2DComponent_SetBodyType(Entity.Id, value);
+		}
+
+		public float GravityScale
+		{
+			get => InternalCalls.RigidBody2DComponent_GetGravityScale(Entity.Id);
+			set => InternalCalls.RigidBody2DComponent_SetGravityScale(Entity.Id, value);
 		}
 
 		public void ApplyLinearImpulse(Vector2 impulse, Vector2 worldPosition, bool wake)
