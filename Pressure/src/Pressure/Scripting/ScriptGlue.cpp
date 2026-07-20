@@ -78,6 +78,16 @@ namespace Pressure
 			return entity.GetUUID();
 		}
 
+		void Entity_Destroy(uint64_t entityId)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			scene->DestroyEntity(entity);
+		}
+
 		uint64_t Entity_Duplicate(MonoString* tag)
 		{
 			char* tagCStr = mono_string_to_utf8(tag);
@@ -111,6 +121,33 @@ namespace Pressure
 			entity.GetComponent<TagComponent>().Tag = copyName;
 			scene->OnCreateEntityRuntime(entity);
 			return entity.GetUUID();
+		}
+
+		void Entity_SetEnabled(const UUID entityId, const bool enabled)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			if (enabled)
+			{
+				entity.RemoveComponent<DisabledComponent>();
+			}
+			else if (!entity.HasComponent<DisabledComponent>())
+			{
+				entity.AddComponent<DisabledComponent>();
+			}
+		}
+
+		bool Entity_IsEnabled(const UUID entityId)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			return !entity.HasComponent<DisabledComponent>();
 		}
 
 		void TransformComponent_GetTranslation(const UUID entityId, glm::vec3* outTranslation)
@@ -307,8 +344,11 @@ namespace Pressure
 		PRS_ADD_INTERNAL_CALL(Entity_HasComponent);
 		PRS_ADD_INTERNAL_CALL(Entity_FindEntityByName);
 		PRS_ADD_INTERNAL_CALL(Entity_Create);
+		PRS_ADD_INTERNAL_CALL(Entity_Destroy);
 		PRS_ADD_INTERNAL_CALL(Entity_Duplicate);
 		PRS_ADD_INTERNAL_CALL(Entity_DuplicateById);
+		PRS_ADD_INTERNAL_CALL(Entity_SetEnabled);
+		PRS_ADD_INTERNAL_CALL(Entity_IsEnabled);
 
 		PRS_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
 		PRS_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);

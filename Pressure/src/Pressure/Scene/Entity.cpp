@@ -1,6 +1,7 @@
 #include "prspch.h"
 #include "Entity.h"
 
+#include "Pressure/Scene/Components.h"
 #include "Pressure/Scripting/ScriptEngine.h"
 
 namespace Pressure
@@ -8,6 +9,33 @@ namespace Pressure
     Entity::Entity(entt::entity handle, Scene* scene)
         : m_EntityHandle(handle), m_Scene(scene)
     {
+    }
+
+    void Entity::SetEnabled(const bool enabled) const
+    {
+	    if (enabled && HasComponent<DisabledComponent>())
+	    {
+		    m_Scene->m_Registry.remove<DisabledComponent>(m_EntityHandle);
+	    }
+	    else if (!enabled && !HasComponent<DisabledComponent>())
+	    {
+		    m_Scene->m_Registry.emplace<DisabledComponent>(m_EntityHandle);
+	    }
+    }
+
+    bool Entity::IsEnabled() const
+    {
+	    return !HasComponent<DisabledComponent>();
+    }
+
+    UUID Entity::GetUUID()
+    {
+	    return GetComponent<IDComponent>().ID;
+    }
+
+    const std::string& Entity::GetName()
+    {
+	    return GetComponent<TagComponent>().Tag;
     }
 
 #pragma region OnComponentAddedOrReplaced overloads
@@ -134,6 +162,11 @@ namespace Pressure
 
 	template<>
 	void Entity::OnComponentAddedOrReplaced<TextComponent>(Entity src, TextComponent& component)
+	{
+	}
+
+	template<>
+	void Entity::OnComponentAddedOrReplaced<DisabledComponent>(Entity src, DisabledComponent& component)
 	{
 	}
 
