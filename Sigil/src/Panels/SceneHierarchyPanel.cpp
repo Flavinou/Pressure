@@ -267,6 +267,12 @@ namespace Pressure
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
 
+		bool isEntityEnabled = entity.IsEnabled();
+		if (ImGui::Checkbox("Enabled", &isEntityEnabled))
+		{
+			entity.SetEnabled(isEntityEnabled);
+		}
+
 		if (ImGui::Button("Add Component"))
 		{
 			ImGui::OpenPopup("AddComponent");

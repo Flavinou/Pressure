@@ -50,6 +50,11 @@ namespace Pressure
 			return new Entity(id);
 		}
 
+		public void Destroy()
+		{
+			InternalCalls.Entity_Destroy(Id);
+		}
+
 		public bool HasComponent<T>() where T : Component, new()
 		{
 			Type componentType = typeof(T);

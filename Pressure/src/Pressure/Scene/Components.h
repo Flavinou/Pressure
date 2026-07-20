@@ -167,6 +167,12 @@ namespace Pressure
 		float LineSpacing = 0.0f;
 	};
 
+	struct DisabledComponent
+	{
+		DisabledComponent() = default;
+		DisabledComponent(const DisabledComponent&) = default;
+	};
+
 	template<typename... Component>
 	struct ComponentGroup
 	{

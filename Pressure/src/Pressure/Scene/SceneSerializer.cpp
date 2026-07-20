@@ -374,6 +374,9 @@ namespace Pressure
 				out << YAML::EndMap; // TextComponent node
 			}
 
+			const auto isEnabled = entity.HasComponent<DisabledComponent>();
+			out << YAML::Key << "Enabled" << YAML::Value << !isEnabled;
+
 			out << YAML::EndMap; // Entity node
 		}
 
@@ -599,6 +602,14 @@ namespace Pressure
 					Color = textComponent["Color"].as<glm::vec4>();
 					Kerning = textComponent["Kerning"].as<float>();
 					LineSpacing = textComponent["LineSpacing"].as<float>();
+				}
+
+				if (entityNode["Enabled"])
+				{
+					if (const bool isEnabled = entityNode["Enabled"].as<bool>(); !isEnabled)
+					{
+						deserializedEntity.AddComponent<DisabledComponent>();
+					}
 				}
 			}
 

@@ -5,6 +5,7 @@
 #include "Pressure/Core/Buffer.h"
 #include "Pressure/Core/FileSystem.h"
 #include "Pressure/Project/Project.h"
+#include "Pressure/Scene/Components.h"
 #include "Pressure/Scene/Scene.h"
 #include "Pressure/Scripting/ScriptGlue.h"
 

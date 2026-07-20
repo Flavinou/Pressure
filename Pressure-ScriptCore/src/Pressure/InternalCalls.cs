@@ -19,6 +19,9 @@ namespace Pressure
 		internal static extern ulong Entity_Create(string tag);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Entity_Destroy(ulong entityId);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern ulong Entity_Duplicate(string tag);
 		
 		[MethodImpl(MethodImplOptions.InternalCall)]

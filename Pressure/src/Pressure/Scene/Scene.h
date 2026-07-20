@@ -25,6 +25,7 @@ namespace Pressure
 		Entity GetEntityByUUID(UUID uuid);
 		Entity FindEntityByName(std::string_view name);
 		Entity DuplicateEntity(Entity entity);
+
 		void DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();
@@ -68,6 +69,8 @@ namespace Pressure
 
 		void RenderScene(EditorCamera& camera);
 
+		void DestroyEntityImmediate(Entity entity);
+
     private:
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
@@ -77,6 +80,9 @@ namespace Pressure
 		PhysicsWorldImpl* m_PhysicsImpl;
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
+
+		// Runtime
+		std::vector<entt::entity> m_PendingDestroyEntities;
 
         friend class Entity;
 		friend class SceneHierarchyPanel;

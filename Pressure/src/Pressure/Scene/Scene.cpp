@@ -5,13 +5,11 @@
 #include "Pressure/Renderer/Renderer2D.h"
 #include "Pressure/Scene/Components.h"
 #include "Pressure/Scene/Entity.h"
-#include "Pressure/Scene/ScriptableEntity.h"
 #include "Pressure/Scripting/ScriptEngine.h"
+#include "Pressure/Scene/ScriptableEntity.h"
 
 #include <box2d/box2d.h>
 #include <glm/glm.hpp>
-
-#include "Pressure/Renderer/Font.h"
 
 namespace Pressure
 {
@@ -27,8 +25,15 @@ namespace Pressure
 				for (auto srcEntity : view)
 				{
 					entt::entity dstEntityID = entityMap.at(src.get<IDComponent>(srcEntity).ID);
-					Component& component = src.get<Component>(srcEntity);
-					dst.emplace_or_replace<Component>(dstEntityID, component);
+					if constexpr (std::is_empty_v<Component>)
+					{
+						dst.emplace_or_replace<Component>(dstEntityID);
+					}
+					else
+					{
+						Component& component = src.get<Component>(srcEntity);
+						dst.emplace_or_replace<Component>(dstEntityID, component);
+					}
 				}
 			}(), ...);
 		}
@@ -118,11 +123,22 @@ namespace Pressure
 
     void Scene::DestroyEntity(Entity entity)
 	{
-		m_EntityMap.erase(entity.GetUUID());
-		m_Registry.destroy(entity);
+		if (m_IsRunning)
+		{
+			m_PendingDestroyEntities.push_back(entity);
+			return;
+		}
+
+		DestroyEntityImmediate(entity);
 	}
 
-	void Scene::OnRuntimeStart()
+    void Scene::DestroyEntityImmediate(Entity entity)
+    {
+		m_EntityMap.erase(entity.GetUUID());
+		m_Registry.destroy(entity);
+    }
+
+    void Scene::OnRuntimeStart()
 	{
 		m_IsRunning = true;
 
@@ -133,7 +149,7 @@ namespace Pressure
 			ScriptEngine::OnRuntimeStart(this);
 
 			// Instantiate all script entities
-			auto view = m_Registry.view<ScriptComponent>();
+			auto view = m_Registry.view<ScriptComponent>(entt::exclude<DisabledComponent>);
 			for (auto e : view)
 			{
 				Entity entity = { e, this };
@@ -172,7 +188,7 @@ namespace Pressure
 		worldDefinition.gravity = { 0.0f, -9.81f };
 		m_PhysicsImpl->WorldId = b2CreateWorld(&worldDefinition);
 
-		auto view = m_Registry.view<RigidBody2DComponent>();
+		auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
@@ -185,7 +201,7 @@ namespace Pressure
 		b2DestroyWorld(m_PhysicsImpl->WorldId);
 		m_PhysicsImpl = nullptr;
 
-		auto view = m_Registry.view<RigidBody2DComponent>();
+		auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
@@ -200,7 +216,7 @@ namespace Pressure
 
 		// Draw sprites
 		{
-			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>, entt::exclude<DisabledComponent>);
 			for (auto entity : group)
 			{
 				auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
@@ -211,7 +227,7 @@ namespace Pressure
 
 		// Draw circles
 		{
-			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+			auto view = m_Registry.view<TransformComponent, CircleRendererComponent>(entt::exclude<DisabledComponent>);
 			for (auto entity : view)
 			{
 				auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
@@ -222,7 +238,7 @@ namespace Pressure
 
 		// Draw text
 		{
-			auto view = m_Registry.view<TransformComponent, TextComponent>();
+			auto view = m_Registry.view<TransformComponent, TextComponent>(entt::exclude<DisabledComponent>);
 			for (auto entity : view)
 			{
 				auto& [transform, text] = view.get<TransformComponent, TextComponent>(entity);
@@ -290,15 +306,24 @@ namespace Pressure
         if (!m_IsPaused || m_StepFrames-- > 0)
         {
 			// C# Entity updates
-			const auto view = m_Registry.view<ScriptComponent>();
-			for (const auto e : view)
+			const auto view = m_Registry.view<ScriptComponent>(entt::exclude<DisabledComponent>);
+			const std::vector scriptEntities(view.begin(), view.end());
+			for (const auto e : scriptEntities)
 			{
+				if (!m_Registry.valid(e))
+					continue;
+
 				const Entity entity = { e, this };
 				ScriptEngine::OnUpdateEntity(entity, ts);
 			}
 
-            m_Registry.view<NativeScriptComponent>().each([this, ts](auto entity, auto& nsc) 
+			const auto nscView = m_Registry.view<NativeScriptComponent>(entt::exclude<DisabledComponent>);
+			const std::vector nativeScriptEntities(nscView.begin(), nscView.end());
+            nscView.each([this, ts](auto entity, auto& nsc) 
             {
+				if (!m_Registry.valid(entity))
+					return;
+
 				// TODO: Move to Scene::OnScenePlay and not check this every frame
                 if (!nsc.Instance)
                 {
@@ -315,7 +340,7 @@ namespace Pressure
 				constexpr int32_t subStepCount = 4;
 				b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
 
-				const auto view = m_Registry.view<RigidBody2DComponent>();
+				const auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
 				for (const auto e : view)
 				{
 					Entity entity = { e, this };
@@ -332,6 +357,16 @@ namespace Pressure
 					b2Body_SetGravityScale(body, rb2d.GravityScale);
 				}
 			}
+
+			// Deferred entity destruction
+			for (const auto e : m_PendingDestroyEntities)
+			{
+				if (m_Registry.valid(e))
+				{
+					DestroyEntityImmediate({ e, this });
+				}
+			}
+			m_PendingDestroyEntities.clear();
         }
 
         // Render 2D
@@ -339,7 +374,7 @@ namespace Pressure
         glm::mat4 mainCameraTransform;
 
         {
-            const auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            const auto view = m_Registry.view<TransformComponent, CameraComponent>(entt::exclude<DisabledComponent>);
             for (const auto entity : view)
             {
                 auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
@@ -359,7 +394,7 @@ namespace Pressure
 
 			// Draw sprites
 			{
-				const auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				const auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>, entt::exclude<DisabledComponent>);
 				for (auto entity : group)
 				{
 					auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
@@ -370,7 +405,7 @@ namespace Pressure
 
 			// Draw circles
 			{
-				const auto view = m_Registry.view<TransformComponent, CircleRendererComponent>();
+				const auto view = m_Registry.view<TransformComponent, CircleRendererComponent>(entt::exclude<DisabledComponent>);
 				for (auto entity : view)
 				{
 					auto& [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
@@ -381,7 +416,7 @@ namespace Pressure
 
 			// Draw text
             {
-	            const auto view = m_Registry.view<TransformComponent, TextComponent>();
+	            const auto view = m_Registry.view<TransformComponent, TextComponent>(entt::exclude<DisabledComponent>);
             	for (auto entity : view)
             	{
             		auto& [transform, text] = view.get<TransformComponent, TextComponent>(entity);
@@ -403,7 +438,7 @@ namespace Pressure
 			constexpr int32_t subStepCount = 4;
 			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
 
-			const auto view = m_Registry.view<RigidBody2DComponent>();
+			const auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
 			for (const auto e : view)
 			{
 				Entity entity = { e, this };
@@ -496,6 +531,8 @@ namespace Pressure
 		// Copy components (except IDComponent and TagComponent which are already copied)
 		CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, entityMap);
 
+		CopyComponent<DisabledComponent>(dstSceneRegistry, srcSceneRegistry, entityMap);
+
 		return newScene;
     }
 
@@ -565,6 +602,11 @@ namespace Pressure
 
 	template<>
 	void Scene::OnComponentAdded<TextComponent>(Entity entity, TextComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<DisabledComponent>(Entity entity, DisabledComponent& component)
 	{
 	}
 #pragma endregion

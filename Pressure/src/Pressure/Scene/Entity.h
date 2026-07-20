@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Pressure/Core/UUID.h"
-#include "Pressure/Scene/Components.h"
 #include "Pressure/Scene/Scene.h"
 
 #include <entt.hpp>
@@ -19,9 +18,19 @@ namespace Pressure
         T& AddComponent(Args&&... args)
         {
             PRS_CORE_ASSERT(!HasComponent<T>(), "Entity already has component !");
-			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
-			m_Scene->OnComponentAdded<T>(*this, component);
-            return component;
+			m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			if constexpr (std::is_empty_v<T>)
+			{
+				static T s_EmptyComponent{};
+				m_Scene->OnComponentAdded<T>(*this, s_EmptyComponent);
+				return s_EmptyComponent;
+			}
+			else
+			{
+				T& component = m_Scene->m_Registry.get<T>(m_EntityHandle);
+				m_Scene->OnComponentAdded<T>(*this, component);
+				return component;
+			}
         }
 
 		template<typename T, typename... Args>
@@ -55,14 +64,18 @@ namespace Pressure
             m_Scene->m_Registry.remove<T>(m_EntityHandle);
         }
 
+		void SetEnabled(const bool enabled) const;
+
+        bool IsEnabled() const;
+
         operator bool() const { return m_EntityHandle != entt::null; }
 		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
 		operator entt::entity() const { return m_EntityHandle; }
 
-		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
-		const std::string& GetName() { return GetComponent<TagComponent>().Tag; }
+		UUID GetUUID();
+        const std::string& GetName();
 
-		bool operator ==(const Entity& other) const 
+        bool operator ==(const Entity& other) const 
 		{ 
 			return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene;
 		}
