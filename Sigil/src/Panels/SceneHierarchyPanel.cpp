@@ -208,7 +208,8 @@ namespace Pressure
 
 		ImGuiTreeNodeFlags node_flags = 
 			((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) 
-			| ImGuiTreeNodeFlags_OpenOnArrow;
+			| ImGuiTreeNodeFlags_OpenOnArrow
+			| ImGuiTreeNodeFlags_Leaf;
 		node_flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, node_flags, tag.c_str());
 		if (ImGui::IsItemClicked())
@@ -229,14 +230,6 @@ namespace Pressure
 
 		if (opened)
 		{
-			{
-				// TEST: Nested tree node
-				ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow;
-				bool opened = ImGui::TreeNodeEx((void*)9817239, node_flags, tag.c_str());
-				if (opened)
-					ImGui::TreePop();
-			}
-
 			ImGui::TreePop();
 		}
 

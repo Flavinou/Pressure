@@ -23,6 +23,16 @@ namespace Pressure
 			set => InternalCalls.TransformComponent_SetTranslation(Id, ref value);
 		}
 
+		public Vector3 Scale
+		{
+			get
+			{
+				InternalCalls.TransformComponent_GetScale(Id, out Vector3 result);
+				return result;
+			}
+			set => InternalCalls.TransformComponent_SetScale(Id, ref value);
+		}
+
 		public string Name
 		{
 			get
