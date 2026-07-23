@@ -176,6 +176,32 @@ namespace Pressure
 			}
 		}
 
+		void TransformComponent_GetScale(const UUID entityId, glm::vec3* outScale)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			*outScale = entity.GetComponent<TransformComponent>().Scale;
+		}
+
+		void TransformComponent_SetScale(const UUID entityId, const glm::vec3* scale)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			entity.GetComponent<TransformComponent>().Scale = *scale;
+
+			// Recreate the physics body if the entity has a RigidBody2DComponent
+			if (entity.HasComponent<RigidBody2DComponent>())
+			{
+				scene->InstantiatePhysicsBody(entity);
+			}
+		}
+
 		void RigidBody2DComponent_GetPosition(const UUID entityId, glm::vec2* outPosition)
 		{
 			Scene* scene = ScriptEngine::GetSceneContext();
@@ -352,6 +378,8 @@ namespace Pressure
 
 		PRS_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
 		PRS_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
+		PRS_ADD_INTERNAL_CALL(TransformComponent_GetScale);
+		PRS_ADD_INTERNAL_CALL(TransformComponent_SetScale);
 
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetPosition);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetPosition);

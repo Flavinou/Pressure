@@ -37,6 +37,13 @@ namespace Pressure
 		internal static extern bool TransformComponent_SetTranslation(ulong entityId, ref Vector3 translation);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool TransformComponent_GetScale(ulong entityId, out Vector3 scale);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool TransformComponent_SetScale(ulong entityId, ref Vector3 scale);
+
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void RigidBody2DComponent_GetPosition(ulong entityId, out Vector2 position);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
