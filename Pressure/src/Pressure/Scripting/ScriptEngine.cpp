@@ -319,6 +319,21 @@ namespace Pressure
 					scriptClass->m_Fields[fieldName] = { fieldName, fieldType, field };
 				}
 			}
+
+			// Populate default values by instantiating a temporary Mono object and reading
+			// each field after mono_runtime_object_init (which runs C# field initializers)
+			{
+				MonoObject* tempInstance = mono_object_new(s_Data->AppDomain, monoClass);
+				if (tempInstance)
+				{
+					mono_runtime_object_init(tempInstance);
+					for (auto& [fieldName, scriptField] : scriptClass->m_Fields)
+					{
+						if (scriptField.MonoClassField)
+							mono_field_get_value(tempInstance, scriptField.MonoClassField, scriptField.DefaultValue);
+					}
+				}
+			}
 		}
 	}
 
@@ -444,16 +459,25 @@ namespace Pressure
 		Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
 		s_Data->EntityInstances[entityId] = instance;
 
-		// Copy field values
-		if (s_Data->EntityScriptFields.find(entityId) != s_Data->EntityScriptFields.end())
+		// Priority: scene-serialized value > C# field initializer > CLR zero-init
+		// Use a non-const reference so we can write into buffers for fields not yet in the map
+		ScriptFieldMap& fieldMap = s_Data->EntityScriptFields[entityId];
+
+		for (const auto& [fieldName, field] : instance->GetScriptClass()->GetFields())
 		{
-			const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields[entityId];
-			for (const auto& [fieldName, fieldInstance] : fieldMap)
+			ScriptFieldInstance& fieldInstance = fieldMap[fieldName];
+
+			if (fieldInstance.IsExplicitlySet())
 			{
+				// Scene-serialized value takes highest priority — push it into the managed object
 				if (!instance->SetFieldValueInternal(fieldName, fieldInstance.m_Buffer))
-				{
 					PRS_CORE_ERROR("Failed to set field '{}' for entity '{}'", fieldName, entity.GetName());
-				}
+			}
+			else
+			{
+				// No scene override — read back what Mono initialized via the C# field initializer
+				// (e.g. `public float Value = 10.0f`) and cache it in the buffer without marking explicit
+				instance->GetFieldValueInternal(fieldName, fieldInstance.m_Buffer);
 			}
 		}
 
@@ -471,6 +495,19 @@ namespace Pressure
 		else
 		{
 			PRS_CORE_ERROR("Script instance for entity '{}' not found", entityUUID);
+		}
+	}
+
+	void ScriptEngine::OnCollision2D(Entity entity, Entity otherEntity)
+	{
+		if (s_Data->EntityInstances.find(entity.GetUUID()) != s_Data->EntityInstances.end())
+		{
+			Ref<ScriptInstance> instance = s_Data->EntityInstances[entity.GetUUID()];
+			instance->InvokeOnCollision2D(otherEntity);
+		}
+		else
+		{
+			PRS_CORE_ERROR("Script instance for entity '{}' not found", entity.GetUUID());
 		}
 	}
 
@@ -498,6 +535,18 @@ namespace Pressure
 		return s_Data->EntityScriptFields[entityId];
 	}
 
+	void ScriptEngine::CopyEntityScriptFields(Entity src, Entity dst)
+	{
+		UUID srcId = src.GetUUID();
+		UUID dstId = dst.GetUUID();
+
+		const auto it = s_Data->EntityScriptFields.find(srcId);
+		if (it == s_Data->EntityScriptFields.end())
+			return;
+
+		s_Data->EntityScriptFields[dstId] = it->second;
+	}
+
 	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore/* = false*/)
 		: m_ClassNamespace(classNamespace), m_ClassName(className)
 	{
@@ -517,23 +566,44 @@ namespace Pressure
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
 	{
 		MonoObject* exception = nullptr;
-		return mono_runtime_invoke(method, instance, params, &exception);
+		MonoObject* result = mono_runtime_invoke(method, instance, params, &exception);
+
+		if (exception)
+		{
+			MonoString* exceptionMessage = mono_object_to_string(exception, nullptr);
+			char* cStr = mono_string_to_utf8(exceptionMessage);
+			PRS_CORE_ERROR("Script exception occurred: {}", cStr);
+			mono_free(cStr);
+		}
+
+		return result;
 	}
 
 	ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
 		: m_ScriptClass(scriptClass)
 	{
-		m_Instance = scriptClass->Instantiate();
+		MonoObject* instance = scriptClass->Instantiate();
+		m_GCHandle = mono_gchandle_new(instance, false); // false = weak reference, tracked by garbage collector
 
 		m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
 		m_OnCreateMethod = scriptClass->GetMethod("OnCreate", 0);
 		m_OnUpdateMethod = scriptClass->GetMethod("OnUpdate", 1);
+		m_OnCollision2DMethod = scriptClass->GetMethod("OnCollision2D", 1);
 
 		// Call Entity constructor
 		{
 			UUID entityID = entity.GetUUID();
 			void* param = &entityID;
-			m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
+			m_ScriptClass->InvokeMethod(GetManagedObject(), m_Constructor, &param);
+		}
+	}
+
+	ScriptInstance::~ScriptInstance()
+	{
+		if (m_GCHandle)
+		{
+			mono_gchandle_free(m_GCHandle);
+			m_GCHandle = 0;
 		}
 	}
 
@@ -544,7 +614,7 @@ namespace Pressure
 			return;
 		}
 
-		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod);
+		m_ScriptClass->InvokeMethod(GetManagedObject(), m_OnCreateMethod);
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float ts) const
@@ -555,7 +625,35 @@ namespace Pressure
 		}
 
 		void* param = &ts;
-		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
+		m_ScriptClass->InvokeMethod(GetManagedObject(), m_OnUpdateMethod, &param);
+	}
+
+	void ScriptInstance::InvokeOnCollision2D(Entity otherEntity) const
+	{
+		if (!m_OnCollision2DMethod)
+		{
+			return;
+		}
+
+		// Construct a C# Entity instance to be manipulated in the script
+		MonoObject* entityInstance = s_Data->EntityClass.Instantiate();
+		uint32_t entityGCHandle = mono_gchandle_new(entityInstance, false);
+
+		UUID otherEntityId = otherEntity.GetUUID();
+		void* ctorParam = &otherEntityId;
+		MonoMethod* entityCtor = s_Data->EntityClass.GetMethod(".ctor", 1);
+		s_Data->EntityClass.InvokeMethod(mono_gchandle_get_target(entityGCHandle), entityCtor, &ctorParam);
+
+		MonoObject* target = mono_gchandle_get_target(entityGCHandle);
+		void* param = target;
+		m_ScriptClass->InvokeMethod(GetManagedObject(), m_OnCollision2DMethod, &param);
+
+		mono_gchandle_free(entityGCHandle);
+	}
+
+	MonoObject* ScriptInstance::GetManagedObject() const
+	{
+		return mono_gchandle_get_target(m_GCHandle);
 	}
 
 	bool ScriptInstance::GetFieldValueInternal(const std::string& fieldName, void* outBuffer) const
@@ -576,7 +674,7 @@ namespace Pressure
 		}
 
 		// Get the field value from the Mono object
-		mono_field_get_value(m_Instance, field.MonoClassField, outBuffer);
+		mono_field_get_value(GetManagedObject(), field.MonoClassField, outBuffer);
 		return true;
 	}
 
@@ -598,7 +696,7 @@ namespace Pressure
 		}
 
 		// Set the field value on the Mono object
-		mono_field_set_value(m_Instance, field.MonoClassField, const_cast<void*>(value));
+		mono_field_set_value(GetManagedObject(), field.MonoClassField, const_cast<void*>(value));
 		return true;
 	}
 }

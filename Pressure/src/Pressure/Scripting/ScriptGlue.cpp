@@ -104,6 +104,7 @@ namespace Pressure
 			Entity entity = scene->DuplicateEntity(source);
 			const std::string copyName = source.GetName() + "_" + std::to_string(++copyCount);
 			entity.GetComponent<TagComponent>().Tag = copyName;
+			ScriptEngine::CopyEntityScriptFields(source, entity);
 			scene->OnCreateEntityRuntime(entity);
 			return entity.GetUUID();
 		}
@@ -119,6 +120,7 @@ namespace Pressure
 			Entity entity = scene->DuplicateEntity(source);
 			const std::string copyName = source.GetName() + "_" + std::to_string(++copyCount);
 			entity.GetComponent<TagComponent>().Tag = copyName;
+			ScriptEngine::CopyEntityScriptFields(source, entity);
 			scene->OnCreateEntityRuntime(entity);
 			return entity.GetUUID();
 		}

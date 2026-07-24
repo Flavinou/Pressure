@@ -20,6 +20,8 @@ namespace Pressure
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void SetSelectedEntity(Entity entity);
 	private:
+		void OnEntityDestroyed(Entity entity);
+
 		template<typename Component>
 		void DisplayAddableComponent(const std::string& label);
 

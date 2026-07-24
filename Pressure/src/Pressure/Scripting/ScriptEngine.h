@@ -38,6 +38,10 @@ namespace Pressure
 		ScriptFieldType Type;
 
 		MonoClassField* MonoClassField { nullptr };
+
+		// Default value as defined by the C# field initializer (e.g. `public float Value = 10.0f`)
+		// Populated at assembly load time from a temporary Mono instance
+		std::byte DefaultValue[16]{};
 	};
 
 	// ScriptField + data storage
@@ -61,13 +65,16 @@ namespace Pressure
 		{
 			static_assert(sizeof(T) <= sizeof(m_Buffer), "Type is too large to fit in buffer");
 			memcpy(m_Buffer, &value, sizeof(T));
+			m_IsExplicitlySet = true;
 		}
 
 		void SetField(const ScriptField& field) { m_Field = field; }
+		bool IsExplicitlySet() const { return m_IsExplicitlySet; }
 
 	private:
 		ScriptField m_Field{};
 		std::byte m_Buffer[16]{};
+		bool m_IsExplicitlySet = false;
 
 		friend class ScriptEngine;
 		friend class ScriptInstance;
@@ -103,13 +110,15 @@ namespace Pressure
 	{
 	public:
 		ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity);
+		~ScriptInstance();
 
 		void InvokeOnCreate() const;
 		void InvokeOnUpdate(float ts) const;
+		void InvokeOnCollision2D(Entity otherEntity) const;
 
 		Ref<ScriptClass> GetScriptClass() const { return m_ScriptClass; }
 
-		MonoObject* GetManagedObject() const { return m_Instance; }
+		MonoObject* GetManagedObject() const;
 
 		template<typename T>
 		T GetFieldValue(const std::string& fieldName) const
@@ -138,10 +147,11 @@ namespace Pressure
 	private:
 		Ref<ScriptClass> m_ScriptClass;
 
-		MonoObject* m_Instance = nullptr;
+		uint32_t m_GCHandle = 0;
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
+		MonoMethod* m_OnCollision2DMethod = nullptr;
 
 		inline static std::byte s_FieldValueBuffer[16];
 
@@ -174,6 +184,12 @@ namespace Pressure
 
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity, Timestep ts);
+		static void OnCollision2D(Entity entity, Entity otherEntity);
+
+		// Copies the script field map from the source entity to the destination entity.
+		// Must be called before OnCreateEntity for the destination so that serialized
+		// field values are preserved when instantiating a template entity at runtime.
+		static void CopyEntityScriptFields(Entity src, Entity dst);
 
 		static MonoImage* GetCoreAssemblyImage();
 

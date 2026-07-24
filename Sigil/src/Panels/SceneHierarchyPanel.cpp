@@ -202,6 +202,14 @@ namespace Pressure
 		m_SelectionContext = entity;
 	}
 
+	void SceneHierarchyPanel::OnEntityDestroyed(Entity entity)
+	{
+		if (m_SelectionContext == entity)
+		{
+			m_SelectionContext = {};
+		}
+	}
+
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Tag;
@@ -236,10 +244,7 @@ namespace Pressure
 		if (entityDeleted)
 		{
 			m_Context->DestroyEntity(entity);
-			if (m_SelectionContext == entity)
-			{
-				m_SelectionContext = {};
-			}
+			OnEntityDestroyed(entity);
 		}
 	}
 
@@ -453,36 +458,36 @@ namespace Pressure
 								ImGui::Text("<Unsupported Type>");
 							}
 						}
-						else // Field has not been set in editor yet
+					else // Field has not been set in editor yet — display the C# field initializer default
+					{
+						switch (field.Type)
 						{
-							switch (field.Type)
-							{
-								case ScriptFieldType::Float:
+							case ScriptFieldType::Float:
+								{
+									float data = *reinterpret_cast<const float*>(field.DefaultValue);
+									if (ImGui::DragFloat(fieldName.c_str(), &data))
 									{
-										float data = 0.0f;
-										if (ImGui::DragFloat(fieldName.c_str(), &data))
-										{
-											ScriptFieldInstance& fieldInstance = entityFields[fieldName];
-											fieldInstance.SetField(field);
-											fieldInstance.SetValue<float>(data);
-										}
-										break;
+										ScriptFieldInstance& fieldInstance = entityFields[fieldName];
+										fieldInstance.SetField(field);
+										fieldInstance.SetValue<float>(data);
 									}
-								case ScriptFieldType::Int:
+									break;
+								}
+							case ScriptFieldType::Int:
+								{
+									int data = *reinterpret_cast<const int*>(field.DefaultValue);
+									if (ImGui::DragInt(fieldName.c_str(), &data))
 									{
-										int data = 0;
-										if (ImGui::DragInt(fieldName.c_str(), &data))
-										{
-											ScriptFieldInstance& fieldInstance = entityFields[fieldName];
-											fieldInstance.SetField(field);
-											fieldInstance.SetValue<int>(data);
-										}
-										break;
+										ScriptFieldInstance& fieldInstance = entityFields[fieldName];
+										fieldInstance.SetField(field);
+										fieldInstance.SetValue<int>(data);
 									}
-								default:
-									ImGui::Text("<Unsupported Type>");
-							}
+									break;
+								}
+							default:
+								ImGui::Text("<Unsupported Type>");
 						}
+					}
 					}
 				}
 			}
