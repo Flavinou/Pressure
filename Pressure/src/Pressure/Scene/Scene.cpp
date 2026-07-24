@@ -118,6 +118,10 @@ namespace Pressure
 		Entity newEntity = CreateEntity(name);
 
 		CopyComponentIfExists(AllComponents{}, newEntity, entity);
+
+		if (m_IsRunning && newEntity.HasComponent<RigidBody2DComponent>())
+			InstantiatePhysicsBody(newEntity);
+
 		return newEntity;
     }
 
@@ -199,6 +203,7 @@ namespace Pressure
 	void Scene::OnPhysics2DStop()
 	{
 		b2DestroyWorld(m_PhysicsImpl->WorldId);
+		m_PhysicsImpl->WorldId = b2_nullWorldId;
 		m_PhysicsImpl = nullptr;
 
 		auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
@@ -255,12 +260,18 @@ namespace Pressure
 		auto& transform = entity.GetComponent<TransformComponent>();
 		auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
-		rb2d.RuntimeBody = nullptr;
+		if (rb2d.RuntimeBody)
+		{
+			b2DestroyBody(rb2d.RuntimeBody->BodyId);
+			delete rb2d.RuntimeBody;
+			rb2d.RuntimeBody = nullptr;
+		}
 
 		b2BodyDef bodyDef = b2DefaultBodyDef();
 		bodyDef.type = Utils::RigidBody2DTypeToBox2DBody(rb2d.Type);
 		bodyDef.position = { transform.Translation.x, transform.Translation.y };
 		bodyDef.rotation = b2MakeRot(transform.Rotation.z);
+		bodyDef.userData = reinterpret_cast<void*>(static_cast<uint64_t>(entity.GetUUID()));
 
 		b2BodyId bodyId = b2CreateBody(m_PhysicsImpl->WorldId, &bodyDef);
 		b2Body_SetMotionLocks(bodyId, { false, false, rb2d.FixedRotation });
@@ -280,6 +291,8 @@ namespace Pressure
 			shapeDefinition.density = collider.Density;
 			shapeDefinition.material.friction = collider.Friction;
 			shapeDefinition.material.restitution = collider.Restitution;
+			shapeDefinition.enableContactEvents = true;
+			shapeDefinition.enableHitEvents = true;
 
 			b2CreatePolygonShape(bodyId, &shapeDefinition, &box);
 		}
@@ -296,6 +309,8 @@ namespace Pressure
 			shapeDefinition.density = collider.Density;
 			shapeDefinition.material.friction = collider.Friction;
 			shapeDefinition.material.restitution = collider.Restitution;
+			shapeDefinition.enableContactEvents = true;
+			shapeDefinition.enableHitEvents = true;
 
 			b2CreateCircleShape(bodyId, &shapeDefinition, &circle);
 		}
@@ -345,7 +360,7 @@ namespace Pressure
 				{
 					Entity entity = { e, this };
 					auto& transform = entity.GetComponent<TransformComponent>();
-					const auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+					auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
 					const b2BodyId body = rb2d.RuntimeBody->BodyId;
 					const auto [x, y] = b2Body_GetPosition(body);
@@ -355,6 +370,35 @@ namespace Pressure
 					transform.Rotation.z = std::atan2(s, c);
 
 					b2Body_SetGravityScale(body, rb2d.GravityScale);
+				}
+
+				// Collision detection forwarded to scripting
+				b2ContactEvents contactEvents = b2World_GetContactEvents(m_PhysicsImpl->WorldId);
+				for (int i = 0; i < contactEvents.hitCount; ++i)
+				{
+					b2ContactHitEvent hitEvent = contactEvents.hitEvents[i];
+					b2BodyId bodyA = b2Shape_GetBody(hitEvent.shapeIdA);
+					b2BodyId bodyB = b2Shape_GetBody(hitEvent.shapeIdB);
+					UUID uuidA = reinterpret_cast<uintptr_t>(b2Body_GetUserData(bodyA));
+					UUID uuidB = reinterpret_cast<uintptr_t>(b2Body_GetUserData(bodyB));
+
+					if (m_EntityMap.find(uuidA) == m_EntityMap.end() || m_EntityMap.find(uuidB) == m_EntityMap.end())
+						continue;
+
+					Entity entityA = GetEntityByUUID(uuidA);
+					Entity entityB = GetEntityByUUID(uuidB);
+					PRS_CORE_ASSERT(entityA && entityB);
+					PRS_CORE_ASSERT(entityA != entityB);
+
+					// Find the one that has a script component
+					if (entityA.HasComponent<ScriptComponent>())
+					{
+						ScriptEngine::OnCollision2D(entityA, entityB);
+					}
+					if (entityB.HasComponent<ScriptComponent>())
+					{
+						ScriptEngine::OnCollision2D(entityB, entityA);
+					}
 				}
 			}
 
@@ -490,7 +534,9 @@ namespace Pressure
 		if (!m_IsRunning)
 			return;
 
-		InstantiatePhysicsBody(entity);
+		if (entity.HasComponent<RigidBody2DComponent>())
+			InstantiatePhysicsBody(entity);
+
 		ScriptEngine::OnCreateEntity(entity);
     }
 

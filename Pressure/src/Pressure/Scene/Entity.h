@@ -68,8 +68,12 @@ namespace Pressure
 
         bool IsEnabled() const;
 
-        operator bool() const { return m_EntityHandle != entt::null; }
-		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
+        operator bool() const { 
+        	return m_EntityHandle != entt::null
+        		&& m_Scene != nullptr
+        		&& m_Scene->m_Registry.valid(m_EntityHandle); 
+        }
+		operator uint32_t() const { return static_cast<uint32_t>(m_EntityHandle); }
 		operator entt::entity() const { return m_EntityHandle; }
 
 		UUID GetUUID();
@@ -86,6 +90,6 @@ namespace Pressure
 		}
     private:
         entt::entity m_EntityHandle{ entt::null };
-        Scene* m_Scene = nullptr;
+        Scene* m_Scene{ nullptr };
     };
 }
