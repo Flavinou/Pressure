@@ -558,6 +558,7 @@ namespace Pressure
 			}
 
 			ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+			ImGui::Checkbox("Is Bullet", &component.IsBullet);
 
 			ImGui::DragFloat("Gravity Scale", &component.GravityScale, 0.1f, 0.0f, 10.0f);
 		});

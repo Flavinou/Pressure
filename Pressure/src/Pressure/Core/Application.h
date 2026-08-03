@@ -54,6 +54,23 @@ namespace Pressure
 		Window& GetWindow() const { return *m_Window; }
 		ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer; }
 
+		float GetSpeed() const { return m_TimeScale; }
+		void SetSpeed(const float value)
+		{
+			if (value < 0.0f)
+			{
+				PRS_CORE_WARN("Application::SetSpeed() - Speed cannot be negative. Value: {0}", value);
+			}
+			else if (value > 2.0f)
+			{
+				PRS_CORE_WARN("Application::SetSpeed() - Speed cannot be greater than 2. Value: {0}", value);
+			}
+			else
+			{
+				m_TimeScale = value;
+			}
+		}
+
 		void Close();
 
 		void SubmitToMainThread(const std::function<void()>& function);
@@ -82,8 +99,10 @@ namespace Pressure
 		bool m_Running = true;
 		bool m_Minimized = false;
 		LayerStack m_LayerStack;
+
 		Timestep m_Timestep;
 		float m_LastFrameTime = 0.0f;
+		float m_TimeScale = 1.0f;
 		uint32_t m_FrameId = 0;
 
 		std::vector<std::function<void()>> m_MainThreadQueue;

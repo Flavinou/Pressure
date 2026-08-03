@@ -323,6 +323,7 @@ namespace Pressure
 				auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 				out << YAML::Key << "BodyType" << YAML::Value << RigidBody2DBodyTypeToString(rb2d.Type);
 				out << YAML::Key << "FixedRotation" << YAML::Value << rb2d.FixedRotation;
+				out << YAML::Key << "IsBullet" << YAML::Value << rb2d.IsBullet;
 				out << YAML::Key << "GravityScale" << YAML::Value << rb2d.GravityScale;
 
 				out << YAML::EndMap; // RigidBody2DComponent node
@@ -567,9 +568,10 @@ namespace Pressure
 
 				if (auto rigidBody2DComponent = entityNode["RigidBody2DComponent"])
 				{
-					auto& [Type, FixedRotation, GravityScale, _] = deserializedEntity.AddComponent<RigidBody2DComponent>();
+					auto& [Type, FixedRotation, IsBullet, GravityScale, _] = deserializedEntity.AddComponent<RigidBody2DComponent>();
 					Type = Utils::RigidBody2DBodyTypeFromString(rigidBody2DComponent["BodyType"].as<std::string>());
 					FixedRotation = rigidBody2DComponent["FixedRotation"].as<bool>();
+					IsBullet = rigidBody2DComponent["IsBullet"].as<bool>();
 					GravityScale = rigidBody2DComponent["GravityScale"].as<float>();
 				}
 

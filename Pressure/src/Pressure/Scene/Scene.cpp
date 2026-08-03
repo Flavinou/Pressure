@@ -1,6 +1,7 @@
 #include "prspch.h"
 #include "Pressure/Scene/Scene.h"
 
+#include "Pressure/Core/Application.h"
 #include "Pressure/Physics/Physics2D.h"
 #include "Pressure/Renderer/Renderer2D.h"
 #include "Pressure/Scene/Components.h"
@@ -119,7 +120,7 @@ namespace Pressure
 
 		CopyComponentIfExists(AllComponents{}, newEntity, entity);
 
-		if (m_IsRunning && newEntity.HasComponent<RigidBody2DComponent>())
+		if (!m_IsRunning && newEntity.HasComponent<RigidBody2DComponent>())
 			InstantiatePhysicsBody(newEntity);
 
 		return newEntity;
@@ -152,8 +153,15 @@ namespace Pressure
 		{
 			ScriptEngine::OnRuntimeStart(this);
 
-			// Instantiate all script entities
+			// Register script entities
 			auto view = m_Registry.view<ScriptComponent>(entt::exclude<DisabledComponent>);
+			for (auto e : view)
+			{
+				Entity entity = { e, this };
+				ScriptEngine::OnRegisterEntity(entity);
+			}
+
+			// Instantiate script entities
 			for (auto e : view)
 			{
 				Entity entity = { e, this };
@@ -165,6 +173,8 @@ namespace Pressure
 	void Scene::OnRuntimeStop()
 	{
 		m_IsRunning = false;
+
+		Application::Get().SetSpeed(1.0f);
 
 		OnPhysics2DStop();
 
@@ -204,7 +214,8 @@ namespace Pressure
 	{
 		b2DestroyWorld(m_PhysicsImpl->WorldId);
 		m_PhysicsImpl->WorldId = b2_nullWorldId;
-		m_PhysicsImpl = nullptr;
+		delete m_PhysicsImpl;
+		m_PhysicsImpl = new PhysicsWorldImpl();
 
 		auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
 		for (auto e : view)
@@ -271,6 +282,7 @@ namespace Pressure
 		bodyDef.type = Utils::RigidBody2DTypeToBox2DBody(rb2d.Type);
 		bodyDef.position = { transform.Translation.x, transform.Translation.y };
 		bodyDef.rotation = b2MakeRot(transform.Rotation.z);
+		bodyDef.isBullet = rb2d.IsBullet;
 		bodyDef.userData = reinterpret_cast<void*>(static_cast<uint64_t>(entity.GetUUID()));
 
 		b2BodyId bodyId = b2CreateBody(m_PhysicsImpl->WorldId, &bodyDef);
@@ -537,7 +549,11 @@ namespace Pressure
 		if (entity.HasComponent<RigidBody2DComponent>())
 			InstantiatePhysicsBody(entity);
 
-		ScriptEngine::OnCreateEntity(entity);
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			ScriptEngine::OnRegisterEntity(entity);
+			ScriptEngine::OnCreateEntity(entity);
+		}
     }
 
     Entity Scene::GetPrimaryCameraEntity()
@@ -551,6 +567,45 @@ namespace Pressure
 		}
 
 		return {};
+    }
+
+    glm::vec3 Scene::ScreenToWorldPosition(const glm::vec3& screenPosition)
+    {
+		PRS_CORE_ASSERT(m_ViewportWidth > 0 && m_ViewportHeight > 0);
+
+		Entity primaryCamera = GetPrimaryCameraEntity();
+		PRS_CORE_ASSERT(primaryCamera);
+
+		auto& cameraComponent = primaryCamera.GetComponent<CameraComponent>();
+		auto& transformComponent = primaryCamera.GetComponent<TransformComponent>();
+
+		const glm::mat4 view = glm::inverse(transformComponent.GetTransform());
+		const glm::mat4& projection = cameraComponent.Camera.GetProjection();
+		const glm::mat4 invVP = glm::inverse(projection * view);
+
+		// Screen -> NDC [-1, 1], Y flipped (screen Y=0 is top)
+		float ndcX = (screenPosition.x / static_cast<float>(m_ViewportWidth)) * 2.0f - 1.0f;
+		float ndcY = 1.0f - (screenPosition.y / static_cast<float>(m_ViewportHeight)) * 2.0f;
+
+		// Un-project near and far points to build a world-space ray
+		glm::vec4 nearClip = invVP * glm::vec4(ndcX, ndcY, -1.0f, 1.0f);
+		nearClip /= nearClip.w;
+
+		glm::vec4 farClip = invVP * glm::vec4(ndcX, ndcY, 1.0f, 1.0f);
+		farClip /= farClip.w;
+
+		glm::vec3 rayOrigin = glm::vec3(nearClip);
+		glm::vec3 rayDir = glm::normalize(glm::vec3(farClip) - rayOrigin);
+
+		// Intersect ray with the target world Z plane (screenPosition.z)
+		const float targetZ = screenPosition.z;
+		float t = 0.0f;
+		if (glm::abs(rayDir.z) > 1e-6f)
+			t = (targetZ - rayOrigin.z) / rayDir.z;
+
+		glm::vec3 worldPos = rayOrigin + t * rayDir;
+
+		return worldPos;
     }
 
     Ref<Scene> Scene::Copy(Ref<Scene> other)

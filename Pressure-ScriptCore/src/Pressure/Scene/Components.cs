@@ -68,4 +68,17 @@
 			InternalCalls.RigidBody2DComponent_ApplyLinearImpulseToCenter(Entity.Id, ref impulse, wake);
 		}
 	}
+
+	public class TextComponent : Component
+	{
+		public string Text
+		{
+			get
+			{
+				InternalCalls.TextComponent_GetText(Entity.Id, out string result);
+				return result;
+			}
+			set => InternalCalls.TextComponent_SetText(Entity.Id, value);
+		}
+	}
 }

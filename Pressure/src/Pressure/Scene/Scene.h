@@ -47,6 +47,9 @@ namespace Pressure
 
 		Entity GetPrimaryCameraEntity();
 
+    	glm::vec2 GetViewportSize() const { return { m_ViewportWidth, m_ViewportHeight }; }
+		glm::vec3 ScreenToWorldPosition(const glm::vec3& screenPosition);
+
 		bool IsRunning() const { return m_IsRunning; }
     	bool IsPaused() const { return m_IsPaused; }
 

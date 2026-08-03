@@ -13,6 +13,12 @@ namespace Pressure
 			Id = id;
 		}
 
+		public bool Enabled
+		{
+			get => InternalCalls.Entity_IsEnabled(Id);
+			set => InternalCalls.Entity_SetEnabled(Id, value);
+		}
+
 		public Vector3 Translation
 		{
 			get

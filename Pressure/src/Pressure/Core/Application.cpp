@@ -112,6 +112,7 @@ namespace Pressure
 
 			const float time = static_cast<float>(glfwGetTime()); // Platform::GetTime
 			Timestep timestep = time - m_LastFrameTime;
+			timestep *= m_TimeScale;
 			m_LastFrameTime = time;
 
 			// Engine stats every 25th frame
