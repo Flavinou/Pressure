@@ -2,6 +2,7 @@
 #include "ScriptGlue.h"
 #include "ScriptEngine.h"
 
+#include "Pressure/Core/Application.h"
 #include "Pressure/Core/Input.h"
 #include "Pressure/Core/KeyCodes.h"
 #include "Pressure/Core/UUID.h"
@@ -27,6 +28,32 @@ namespace Pressure
 		MonoObject* GetScriptInstance(UUID entityId)
 		{
 			return ScriptEngine::GetManagedInstance(entityId);
+		}
+
+		float Engine_GetSpeed()
+		{
+			return Application::Get().GetSpeed();
+		}
+
+		void Engine_SetSpeed(float value)
+		{
+			return Application::Get().SetSpeed(value);
+		}
+
+		void Engine_GetViewportSize(glm::vec2& outSize)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+
+			outSize = scene->GetViewportSize();
+		}
+
+		void Camera_ScreenToWorldPosition(const glm::vec3 screenPosition, glm::vec3& outWorldPosition)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+
+			outWorldPosition = scene->ScreenToWorldPosition(screenPosition);
 		}
 
 		void Entity_GetName(const UUID entityId, MonoString** outName)
@@ -132,14 +159,7 @@ namespace Pressure
 			Entity entity = scene->GetEntityByUUID(entityId);
 			PRS_CORE_ASSERT(entity);
 
-			if (enabled)
-			{
-				entity.RemoveComponent<DisabledComponent>();
-			}
-			else if (!entity.HasComponent<DisabledComponent>())
-			{
-				entity.AddComponent<DisabledComponent>();
-			}
+			entity.SetEnabled(enabled);
 		}
 
 		bool Entity_IsEnabled(const UUID entityId)
@@ -319,6 +339,30 @@ namespace Pressure
 			b2Body_SetType(body, box2dType);
 		}
 
+		void TextComponent_SetText(const UUID entityId, MonoString* text)
+		{
+			char* textCStr = mono_string_to_utf8(text);
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& textComponent = entity.GetComponent<TextComponent>();
+			textComponent.TextString = textCStr;
+			mono_free(textCStr);
+		}
+
+		void TextComponent_GetText(const UUID entityId, MonoString** outText)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			auto& textComponent = entity.GetComponent<TextComponent>();
+			*outText = ScriptEngine::NewString(textComponent.TextString.c_str());
+		}
+
 		bool Input_IsKeyDown(const KeyCode keyCode)
 		{
 			return Input::IsKeyPressed(keyCode);
@@ -368,6 +412,12 @@ namespace Pressure
 	{
 		PRS_ADD_INTERNAL_CALL(GetScriptInstance);
 
+		PRS_ADD_INTERNAL_CALL(Engine_GetSpeed);
+		PRS_ADD_INTERNAL_CALL(Engine_SetSpeed);
+		PRS_ADD_INTERNAL_CALL(Engine_GetViewportSize);
+
+		PRS_ADD_INTERNAL_CALL(Camera_ScreenToWorldPosition);
+
 		PRS_ADD_INTERNAL_CALL(Entity_GetName);
 		PRS_ADD_INTERNAL_CALL(Entity_HasComponent);
 		PRS_ADD_INTERNAL_CALL(Entity_FindEntityByName);
@@ -392,6 +442,8 @@ namespace Pressure
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetGravityScale);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetBodyType);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetBodyType);
+		PRS_ADD_INTERNAL_CALL(TextComponent_GetText);
+		PRS_ADD_INTERNAL_CALL(TextComponent_SetText);
 
 		PRS_ADD_INTERNAL_CALL(Input_IsKeyDown);
 	}

@@ -1,11 +1,28 @@
 ﻿using System;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 namespace Pressure
 {
 	public static class InternalCalls
 	{
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern float Engine_GetSpeed();
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Engine_SetSpeed(float value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Engine_GetViewportSize(out Vector2 result);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]	
+		internal static extern void Camera_ScreenToWorldPosition(Vector3 screenPosition, out Vector3 result);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool Entity_IsEnabled(ulong entityId);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void Entity_SetEnabled(ulong entityId, bool enabled);
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool Entity_GetName(ulong entityId, out string name);
 
@@ -69,6 +86,12 @@ namespace Pressure
 		
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void RigidBody2DComponent_SetBodyType(ulong entityId, RigidBody2DComponent.BodyType bodyType);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void TextComponent_GetText(ulong entityId, out string text);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void TextComponent_SetText(ulong entityId, string text);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool Input_IsKeyDown(KeyCode keyCode);

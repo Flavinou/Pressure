@@ -113,6 +113,7 @@ namespace Pressure
 		~ScriptInstance();
 
 		void InvokeOnCreate() const;
+		void InvokeOnDestroy() const;
 		void InvokeOnUpdate(float ts) const;
 		void InvokeOnCollision2D(Entity otherEntity) const;
 
@@ -150,6 +151,7 @@ namespace Pressure
 		uint32_t m_GCHandle = 0;
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
+		MonoMethod* m_OnDestroyMethod = nullptr;
 		MonoMethod* m_OnUpdateMethod = nullptr;
 		MonoMethod* m_OnCollision2DMethod = nullptr;
 
@@ -182,6 +184,7 @@ namespace Pressure
 		static void OnRuntimeStart(Scene* scene);
 		static void OnRuntimeStop();
 
+		static void OnRegisterEntity(Entity entity);
 		static void OnCreateEntity(Entity entity);
 		static void OnUpdateEntity(Entity entity, Timestep ts);
 		static void OnCollision2D(Entity entity, Entity otherEntity);

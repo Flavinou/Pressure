@@ -120,6 +120,7 @@ namespace Pressure
 		enum class BodyType { Static = 0, Dynamic, Kinematic };
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
+		bool IsBullet = false;
 
 		float GravityScale = 1.0f;
 
@@ -127,7 +128,14 @@ namespace Pressure
 		RuntimeBodyImpl* RuntimeBody;
 
 		RigidBody2DComponent() = default;
-		RigidBody2DComponent(const RigidBody2DComponent&) = default;
+		RigidBody2DComponent(const RigidBody2DComponent& other)
+			: Type(other.Type)
+			, FixedRotation(other.FixedRotation)
+			, IsBullet(other.IsBullet)
+			, GravityScale(other.GravityScale)
+			, RuntimeBody(nullptr) // Never inherit a runtime body from another entity
+		{
+		}
 	};
 
 	struct BoxCollider2DComponent

@@ -369,8 +369,11 @@ namespace Pressure
 
 	MonoObject* ScriptEngine::GetManagedInstance(UUID entityId)
 	{
-		PRS_CORE_ASSERT(s_Data->EntityInstances.find(entityId) != s_Data->EntityInstances.end());
-		return s_Data->EntityInstances[entityId]->GetManagedObject();
+		const auto it = s_Data->EntityInstances.find(entityId);
+		if (it == s_Data->EntityInstances.end())
+			return nullptr;
+
+		return it->second->GetManagedObject();
 	}
 
 	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filePath)
@@ -443,10 +446,16 @@ namespace Pressure
 
 	void ScriptEngine::OnRuntimeStop()
 	{
+		for (auto& [entityId, instance] : s_Data->EntityInstances)
+		{
+			instance->InvokeOnDestroy();
+		}
+
 		s_Data->SceneContext = nullptr;
+		s_Data->EntityInstances.clear();
 	}
 
-	void ScriptEngine::OnCreateEntity(Entity entity)
+	void ScriptEngine::OnRegisterEntity(Entity entity)
 	{
 		const auto& sc = entity.GetComponent<ScriptComponent>();
 		if (!EntityClassExists(sc.ClassName))
@@ -480,8 +489,19 @@ namespace Pressure
 				instance->GetFieldValueInternal(fieldName, fieldInstance.m_Buffer);
 			}
 		}
+	}
 
-		instance->InvokeOnCreate();
+	void ScriptEngine::OnCreateEntity(Entity entity)
+	{
+		UUID entityId = entity.GetUUID();
+		const auto it = s_Data->EntityInstances.find(entityId);
+		if (it == s_Data->EntityInstances.end())
+		{
+			PRS_CORE_ERROR("Script instance for entity '{}' not registered before OnCreate", entity.GetName());
+			return;
+		}
+
+		it->second->InvokeOnCreate();
 	}
 
 	void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
@@ -587,6 +607,7 @@ namespace Pressure
 
 		m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
 		m_OnCreateMethod = scriptClass->GetMethod("OnCreate", 0);
+		m_OnDestroyMethod = scriptClass->GetMethod("OnDestroy", 0);
 		m_OnUpdateMethod = scriptClass->GetMethod("OnUpdate", 1);
 		m_OnCollision2DMethod = scriptClass->GetMethod("OnCollision2D", 1);
 
@@ -615,6 +636,16 @@ namespace Pressure
 		}
 
 		m_ScriptClass->InvokeMethod(GetManagedObject(), m_OnCreateMethod);
+	}
+
+	void ScriptInstance::InvokeOnDestroy() const
+	{
+		if (!m_OnDestroyMethod)
+		{
+			return;
+		}
+
+		m_ScriptClass->InvokeMethod(GetManagedObject(), m_OnDestroyMethod);
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float ts) const
