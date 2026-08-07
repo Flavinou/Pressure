@@ -39,6 +39,16 @@ namespace Pressure
 			set => InternalCalls.TransformComponent_SetScale(Id, ref value);
 		}
 
+		public Vector3 Rotation
+		{
+			get
+			{
+				InternalCalls.TransformComponent_GetRotation(Id, out Vector3 result);
+				return result;
+			}
+			set => InternalCalls.TransformComponent_SetRotation(Id, ref value);
+		}
+
 		public string Name
 		{
 			get

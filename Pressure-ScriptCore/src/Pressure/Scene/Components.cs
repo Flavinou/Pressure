@@ -16,6 +16,26 @@
 			}
 			set => InternalCalls.TransformComponent_SetTranslation(Entity.Id, ref value);
 		}
+
+		public Vector3 Scale
+		{
+			get
+			{
+				InternalCalls.TransformComponent_GetScale(Entity.Id, out Vector3 result);
+				return result;
+			}
+			set => InternalCalls.TransformComponent_SetScale(Entity.Id, ref value);
+		}
+
+		public Vector3 Rotation
+		{
+			get
+			{
+				InternalCalls.TransformComponent_GetRotation(Entity.Id, out Vector3 result);
+				return result;
+			}
+			set => InternalCalls.TransformComponent_SetRotation(Entity.Id, ref value);
+		}
 	}
 
 	public class RigidBody2DComponent : Component
@@ -79,6 +99,19 @@
 				return result;
 			}
 			set => InternalCalls.TextComponent_SetText(Entity.Id, value);
+		}
+	}
+
+	public class SpriteRendererComponent : Component
+	{
+		public Vector4 Color
+		{
+			get
+			{
+				InternalCalls.SpriteRendererComponent_GetColor(Entity.Id, out Vector4 result);
+				return result;
+			}
+			set => InternalCalls.SpriteRendererComponent_SetColor(Entity.Id, ref value);
 		}
 	}
 }

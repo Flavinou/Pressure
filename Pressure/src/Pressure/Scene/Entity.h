@@ -7,6 +7,8 @@
 
 namespace Pressure
 {
+	struct AABB;
+
     class Entity
     {
     public:
@@ -51,10 +53,17 @@ namespace Pressure
             return m_Scene->m_Registry.get<T>(m_EntityHandle);
         }
 
-        template<typename T>
+		template<typename T>
+		const T& GetComponent() const
+		{
+			PRS_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
+			return m_Scene->m_Registry.get<T>(m_EntityHandle);
+		}
+
+        template<typename... T>
         bool HasComponent() const
         {
-            return m_Scene->m_Registry.any_of<T>(m_EntityHandle);
+            return (m_Scene->m_Registry.any_of<T...>(m_EntityHandle));
         }
 
         template<typename T>
@@ -78,6 +87,9 @@ namespace Pressure
 
 		UUID GetUUID();
         const std::string& GetName();
+
+		glm::vec3 GetCenter() const;
+		float GetHalfExtent() const;
 
         bool operator ==(const Entity& other) const 
 		{ 

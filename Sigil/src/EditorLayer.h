@@ -83,6 +83,7 @@ namespace Pressure
 		int m_GizmoType = -1;
 
 		bool m_ShowPhysicsColliders = false;
+		bool m_ShowPhysicsQuadtree = false;
 
 		enum class SceneState : uint8_t
 		{
