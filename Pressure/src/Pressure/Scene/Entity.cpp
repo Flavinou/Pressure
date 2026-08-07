@@ -1,6 +1,7 @@
 #include "prspch.h"
 #include "Entity.h"
 
+#include "Pressure/Containers/QuadTree.h"
 #include "Pressure/Scene/Components.h"
 #include "Pressure/Scripting/ScriptEngine.h"
 
@@ -36,6 +37,44 @@ namespace Pressure
     const std::string& Entity::GetName()
     {
 	    return GetComponent<TagComponent>().Tag;
+    }
+
+    glm::vec3 Entity::GetCenter() const
+    {
+		auto& tc = GetComponent<TransformComponent>();
+
+		if (HasComponent<CircleCollider2DComponent>())
+		{
+			auto& circleCollider = GetComponent<CircleCollider2DComponent>();
+			return tc.Translation + glm::vec3(circleCollider.Offset, 0.0f);
+		}
+
+		if (HasComponent<BoxCollider2DComponent>())
+		{
+			auto& boxCollider = GetComponent<BoxCollider2DComponent>();
+			return tc.Translation + glm::vec3(boxCollider.Offset, 0.0f);
+		}
+
+		return tc.Translation;
+    }
+
+    float Entity::GetHalfExtent() const
+    {
+		auto& tc = GetComponent<TransformComponent>();
+
+		if (HasComponent<CircleCollider2DComponent>())
+		{
+			auto& circleCollider = GetComponent<CircleCollider2DComponent>();
+			return circleCollider.Radius * std::max(tc.Scale.x, tc.Scale.y);
+		}
+
+		if (HasComponent<BoxCollider2DComponent>())
+		{
+			auto& boxCollider = GetComponent<BoxCollider2DComponent>();
+			return std::max(boxCollider.Size.x, boxCollider.Size.y) * 0.5f;
+		}
+
+		return std::max(tc.Scale.x, tc.Scale.y) * 0.5f;
     }
 
 #pragma region OnComponentAddedOrReplaced overloads
@@ -171,4 +210,5 @@ namespace Pressure
 	}
 
 #pragma endregion
+
 }

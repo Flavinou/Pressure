@@ -47,4 +47,11 @@ namespace Pressure
 		}
 	}
 
+	namespace Physics2D
+	{
+		bool CirclesOverlap(const glm::vec3& center, float radius, const glm::vec3& otherCenter, float otherRadius);
+		bool BoxesOverlap(const glm::vec3& center, const glm::vec3& halfExtent, const glm::vec3& otherCenter, const glm::vec3& otherHalfExtent);
+		bool CircleBoxOverlap(const glm::vec3& circleCenter, float circleRadius, const glm::vec3& boxCenter, const glm::vec3& boxHalfExtent);
+	}
+
 }

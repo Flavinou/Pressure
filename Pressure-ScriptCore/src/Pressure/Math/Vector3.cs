@@ -11,7 +11,9 @@
 
 		public float Length => (float)System.Math.Sqrt(LengthSquared);
 
-		public float LengthSquared => X * X + Y * Y;
+		public float LengthSquared => X * X + Y * Y + Z * Z;
+
+		private static readonly float TOLERANCE = 0.0001f;
 
 		public Vector2 XY
 		{
@@ -21,6 +23,18 @@
 				X = value.X;
 				Y = value.Y;
 			}
+		}
+
+		public static bool operator ==(Vector3 a, Vector3 b)
+		{
+			return System.Math.Abs(a.X - b.X) < TOLERANCE 
+			       && System.Math.Abs(a.Y - b.Y) < TOLERANCE 
+			       && System.Math.Abs(a.Z - b.Z) < TOLERANCE;
+		}
+
+		public static bool operator !=(Vector3 a, Vector3 b)
+		{
+			return !(a == b);
 		}
 
 		public static Vector3 operator +(Vector3 a, Vector3 b)
@@ -36,6 +50,11 @@
 		public static Vector3 operator *(Vector3 vector, float scalar)
 		{
 			return new Vector3(vector.X * scalar, vector.Y * scalar, vector.Z * scalar);
+		}
+
+		public static Vector3 operator /(Vector3 vector, float scalar)
+		{
+			return new Vector3(vector.X / scalar, vector.Y / scalar, vector.Z / scalar);
 		}
 
 		public Vector3(float scalar)
@@ -65,6 +84,11 @@
 			return length == 0 
 				? Zero 
 				: new Vector3(X / length, Y / length, Z / length);
+		}
+
+		public override string ToString()
+		{
+			return $"Vector3({X}, {Y}, {Z})";
 		}
 	}
 }

@@ -68,6 +68,7 @@ namespace Pressure
     Scene::Scene()
 		: m_PhysicsImpl(new PhysicsWorldImpl())
     {
+		m_EntityQuadTree = CreateScope<QuadTree<Entity>>(glm::vec3(0.0f), 100.0f);
     }
 
     Scene::~Scene()
@@ -167,6 +168,21 @@ namespace Pressure
 				Entity entity = { e, this };
 				ScriptEngine::OnCreateEntity(entity);
 			}
+
+			// Instantiate native script entities
+			const auto nscView = m_Registry.view<NativeScriptComponent>(entt::exclude<DisabledComponent>);
+			nscView.each([this](auto entity, auto& nsc)
+			{
+				if (!m_Registry.valid(entity))
+					return;
+
+				if (!nsc.Instance)
+				{
+					nsc.Instance = nsc.InstantiateScript();
+					nsc.Instance->m_Entity = Entity{ entity, this };
+					nsc.Instance->OnCreate();
+				}
+			});
 		}
 	}
 
@@ -198,6 +214,9 @@ namespace Pressure
 
 	void Scene::OnPhysics2DStart()
 	{
+		if (!m_Box2DPhysicsSimulationEnabled)
+			return;
+
 		b2WorldDef worldDefinition = b2DefaultWorldDef();
 		worldDefinition.gravity = { 0.0f, -9.81f };
 		m_PhysicsImpl->WorldId = b2CreateWorld(&worldDefinition);
@@ -210,8 +229,117 @@ namespace Pressure
 		}
 	}
 
+	void Scene::OnPhysics2DUpdate(Timestep ts)
+	{
+		if (m_Box2DPhysicsSimulationEnabled)
+		{
+			constexpr int32_t subStepCount = 4;
+			b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
+
+			const auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
+			for (const auto e : view)
+			{
+				Entity entity = { e, this };
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
+
+				const b2BodyId body = rb2d.RuntimeBody->BodyId;
+				const auto [x, y] = b2Body_GetPosition(body);
+				transform.Translation.x = x;
+				transform.Translation.y = y;
+				auto [c, s] = b2Body_GetRotation(body);
+				transform.Rotation.z = std::atan2(s, c);
+
+				b2Body_SetGravityScale(body, rb2d.GravityScale);
+			}
+
+			// Collision detection forwarded to scripting
+			b2ContactEvents contactEvents = b2World_GetContactEvents(m_PhysicsImpl->WorldId);
+			for (int i = 0; i < contactEvents.hitCount; ++i)
+			{
+				b2ContactHitEvent hitEvent = contactEvents.hitEvents[i];
+				b2BodyId bodyA = b2Shape_GetBody(hitEvent.shapeIdA);
+				b2BodyId bodyB = b2Shape_GetBody(hitEvent.shapeIdB);
+				UUID uuidA = reinterpret_cast<uintptr_t>(b2Body_GetUserData(bodyA));
+				UUID uuidB = reinterpret_cast<uintptr_t>(b2Body_GetUserData(bodyB));
+
+				if (m_EntityMap.find(uuidA) == m_EntityMap.end() || m_EntityMap.find(uuidB) == m_EntityMap.end())
+					continue;
+
+				Entity entityA = GetEntityByUUID(uuidA);
+				Entity entityB = GetEntityByUUID(uuidB);
+				PRS_CORE_ASSERT(entityA && entityB);
+				PRS_CORE_ASSERT(entityA != entityB);
+
+				if (entityA.HasComponent<ScriptComponent>())
+				{
+					ScriptEngine::OnCollision2D(entityA, entityB);
+				}
+				if (entityB.HasComponent<ScriptComponent>())
+				{
+					ScriptEngine::OnCollision2D(entityB, entityA);
+				}
+			}
+		}
+		else
+		{
+			// Circle colliders overlap detection forwarded to scripting.
+			// Using a spatial partitioning quadtree structure to reduce the number of collision check.
+			// Entities and their positions are re-added each frame to the QuadTree to cover for their movement.
+			m_EntityQuadTree->Clear();
+
+			auto view = m_Registry.view<TransformComponent, CircleCollider2DComponent>(entt::exclude<DisabledComponent>);
+			for (const auto e : view)
+			{
+				Entity entity = { e, this };
+				if (!m_EntityQuadTree->Add(entity))
+				{
+					// Likely not in visible area, so we can ignore it for collision detection
+					PRS_CORE_TRACE("Entity {0} could not be added to the QuadTree", entity.GetUUID());
+				}
+			}
+
+			std::vector<Entity> neighbours;
+			neighbours.reserve(view.size_hint());
+			for (const auto e : view)
+			{
+				Entity entity = { e, this };
+				if (!entity.HasComponent<CircleCollider2DComponent, BoxCollider2DComponent>())
+					continue;
+
+				neighbours.clear();
+
+				m_EntityQuadTree->QueryRange({ entity.GetCenter(), entity.GetHalfExtent() * 2.0f }, neighbours);
+				for (auto& otherEntity : neighbours)
+				{
+					if (entity == otherEntity)
+						continue;
+
+					if (!CheckCollision(entity, otherEntity))
+						continue;
+
+					// Deferred collision resolution
+					m_PendingCollisions.emplace_back(entity.GetUUID(), otherEntity.GetUUID());
+
+					// Immediate collision resolution
+					// if (entity.HasComponent<ScriptComponent>())
+					// {
+					// 	ScriptEngine::OnCollision2D(entity, otherEntity);
+					// }
+					// if (otherEntity.HasComponent<ScriptComponent>())
+					// {
+					// 	ScriptEngine::OnCollision2D(otherEntity, entity);
+					// }
+				}
+			}
+		}
+	}
+
 	void Scene::OnPhysics2DStop()
 	{
+		if (!m_Box2DPhysicsSimulationEnabled)
+			return;
+
 		b2DestroyWorld(m_PhysicsImpl->WorldId);
 		m_PhysicsImpl->WorldId = b2_nullWorldId;
 		delete m_PhysicsImpl;
@@ -224,6 +352,78 @@ namespace Pressure
 			auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 			rb2d.RuntimeBody = nullptr;
 		}
+	}
+
+	bool Scene::CheckCollision(Entity entity, Entity otherEntity)
+	{
+		const auto& tc = entity.GetComponent<TransformComponent>();
+		const auto& otherTc = otherEntity.GetComponent<TransformComponent>();
+
+		// Scale also affects the collider size, so we need to take it into account when checking for collisions
+		if (entity.HasComponent<CircleCollider2DComponent>() && otherEntity.HasComponent<CircleCollider2DComponent>())
+		{
+			const auto& circleCollider = entity.GetComponent<CircleCollider2DComponent>();
+			const auto& otherCircleCollider = otherEntity.GetComponent<CircleCollider2DComponent>();
+			const float radius = circleCollider.Radius * std::max(tc.Scale.x, tc.Scale.y);
+			const float otherRadius = otherCircleCollider.Radius * std::max(otherTc.Scale.x, otherTc.Scale.y);
+			return Physics2D::CirclesOverlap(entity.GetCenter(), radius,
+				otherEntity.GetCenter(), otherRadius);
+		}
+
+		if (entity.HasComponent<BoxCollider2DComponent>() && otherEntity.HasComponent<BoxCollider2DComponent>())
+		{
+			const auto& boxColliderSize = entity.GetComponent<BoxCollider2DComponent>().Size;
+			const auto& otherBoxColliderSize = otherEntity.GetComponent<BoxCollider2DComponent>().Size;
+			const glm::vec3 boxHalfExtent = { boxColliderSize.x * otherTc.Scale.x * 0.5f, boxColliderSize.y * otherTc.Scale.y * 0.5f, 0.0f };
+			const glm::vec3 otherBoxHalfExtent = { otherBoxColliderSize.x * otherTc.Scale.x * 0.5f, otherBoxColliderSize.y * otherTc.Scale.y * 0.5f, 0.0f };
+			return Physics2D::BoxesOverlap(entity.GetCenter(), boxHalfExtent,
+				otherEntity.GetCenter(), otherBoxHalfExtent);
+		}
+
+		if (entity.HasComponent<CircleCollider2DComponent>() && otherEntity.HasComponent<BoxCollider2DComponent>())
+		{
+			const auto& circleCollider = entity.GetComponent<CircleCollider2DComponent>();
+			const auto& otherBoxColliderSize = otherEntity.GetComponent<BoxCollider2DComponent>().Size;
+			const float radius = circleCollider.Radius * std::max(tc.Scale.x, tc.Scale.y);
+			const glm::vec3 boxHalfExtent = { otherBoxColliderSize.x * otherTc.Scale.x * 0.5f, otherBoxColliderSize.y * otherTc.Scale.y * 0.5f, 0.0f };
+			return Physics2D::CircleBoxOverlap(entity.GetCenter(), radius,
+				otherEntity.GetCenter(), boxHalfExtent);
+		}
+
+		if (entity.HasComponent<BoxCollider2DComponent>() && otherEntity.HasComponent<CircleCollider2DComponent>())
+		{
+			const auto& boxColliderSize = entity.GetComponent<BoxCollider2DComponent>().Size;
+			const auto& otherCircleCollider = otherEntity.GetComponent<CircleCollider2DComponent>();
+			const float otherRadius = otherCircleCollider.Radius * std::max(otherTc.Scale.x, otherTc.Scale.y);
+			const glm::vec3 boxHalfExtent = { boxColliderSize.x * otherTc.Scale.x * 0.5f, boxColliderSize.y * otherTc.Scale.y * 0.5f, 0.0f };
+			return Physics2D::CircleBoxOverlap(otherEntity.GetCenter(), otherRadius,
+				entity.GetCenter(), boxHalfExtent);
+		}
+
+		return false;
+	}
+
+	void Scene::OnScriptEngineUpdate(Timestep ts)
+	{
+		const auto view = m_Registry.view<ScriptComponent>(entt::exclude<DisabledComponent>);
+		const std::vector scriptEntities(view.begin(), view.end());
+		for (const auto e : scriptEntities)
+		{
+			if (!m_Registry.valid(e))
+				continue;
+
+			const Entity entity = { e, this };
+			ScriptEngine::OnUpdateEntity(entity, ts);
+		}
+
+		const auto nscView = m_Registry.view<NativeScriptComponent>(entt::exclude<DisabledComponent>);
+		nscView.each([this, ts](auto entity, auto& nsc)
+		{
+			if (!m_Registry.valid(entity))
+				return;
+
+			nsc.Instance->OnUpdate(ts);
+		});
 	}
 
 	void Scene::RenderScene(EditorCamera& camera)
@@ -268,6 +468,9 @@ namespace Pressure
 
 	void Scene::InstantiatePhysicsBody(Entity entity) const
 	{
+		if (!m_Box2DPhysicsSimulationEnabled)
+			return;
+
 		auto& transform = entity.GetComponent<TransformComponent>();
 		auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
 
@@ -333,86 +536,29 @@ namespace Pressure
         if (!m_IsPaused || m_StepFrames-- > 0)
         {
 			// C# Entity updates
-			const auto view = m_Registry.view<ScriptComponent>(entt::exclude<DisabledComponent>);
-			const std::vector scriptEntities(view.begin(), view.end());
-			for (const auto e : scriptEntities)
-			{
-				if (!m_Registry.valid(e))
-					continue;
-
-				const Entity entity = { e, this };
-				ScriptEngine::OnUpdateEntity(entity, ts);
-			}
-
-			const auto nscView = m_Registry.view<NativeScriptComponent>(entt::exclude<DisabledComponent>);
-			const std::vector nativeScriptEntities(nscView.begin(), nscView.end());
-            nscView.each([this, ts](auto entity, auto& nsc) 
-            {
-				if (!m_Registry.valid(entity))
-					return;
-
-				// TODO: Move to Scene::OnScenePlay and not check this every frame
-                if (!nsc.Instance)
-                {
-					nsc.Instance = nsc.InstantiateScript();
-                    nsc.Instance->m_Entity = Entity{ entity, this };
-					nsc.Instance->OnCreate();
-                }
-
-				nsc.Instance->OnUpdate(ts);
-            });
+			OnScriptEngineUpdate(ts);
 
 			// Physics
+			OnPhysics2DUpdate(ts);
+
+			// Deferred collision resolution
+			for (const auto& collision : m_PendingCollisions)
 			{
-				constexpr int32_t subStepCount = 4;
-				b2World_Step(m_PhysicsImpl->WorldId, ts, subStepCount);
-
-				const auto view = m_Registry.view<RigidBody2DComponent>(entt::exclude<DisabledComponent>);
-				for (const auto e : view)
+				Entity entityA = GetEntityByUUID(collision.first);
+				Entity entityB = GetEntityByUUID(collision.second);
+				if (!entityA || !entityB)
+					continue;
+			
+				if (entityA.HasComponent<ScriptComponent>())
 				{
-					Entity entity = { e, this };
-					auto& transform = entity.GetComponent<TransformComponent>();
-					auto& rb2d = entity.GetComponent<RigidBody2DComponent>();
-
-					const b2BodyId body = rb2d.RuntimeBody->BodyId;
-					const auto [x, y] = b2Body_GetPosition(body);
-					transform.Translation.x = x;
-					transform.Translation.y = y;
-					auto [c, s] = b2Body_GetRotation(body);
-					transform.Rotation.z = std::atan2(s, c);
-
-					b2Body_SetGravityScale(body, rb2d.GravityScale);
+					ScriptEngine::OnCollision2D(entityA, entityB);
 				}
-
-				// Collision detection forwarded to scripting
-				b2ContactEvents contactEvents = b2World_GetContactEvents(m_PhysicsImpl->WorldId);
-				for (int i = 0; i < contactEvents.hitCount; ++i)
+				if (entityB.HasComponent<ScriptComponent>())
 				{
-					b2ContactHitEvent hitEvent = contactEvents.hitEvents[i];
-					b2BodyId bodyA = b2Shape_GetBody(hitEvent.shapeIdA);
-					b2BodyId bodyB = b2Shape_GetBody(hitEvent.shapeIdB);
-					UUID uuidA = reinterpret_cast<uintptr_t>(b2Body_GetUserData(bodyA));
-					UUID uuidB = reinterpret_cast<uintptr_t>(b2Body_GetUserData(bodyB));
-
-					if (m_EntityMap.find(uuidA) == m_EntityMap.end() || m_EntityMap.find(uuidB) == m_EntityMap.end())
-						continue;
-
-					Entity entityA = GetEntityByUUID(uuidA);
-					Entity entityB = GetEntityByUUID(uuidB);
-					PRS_CORE_ASSERT(entityA && entityB);
-					PRS_CORE_ASSERT(entityA != entityB);
-
-					// Find the one that has a script component
-					if (entityA.HasComponent<ScriptComponent>())
-					{
-						ScriptEngine::OnCollision2D(entityA, entityB);
-					}
-					if (entityB.HasComponent<ScriptComponent>())
-					{
-						ScriptEngine::OnCollision2D(entityB, entityA);
-					}
+					ScriptEngine::OnCollision2D(entityB, entityA);
 				}
 			}
+			m_PendingCollisions.clear();
 
 			// Deferred entity destruction
 			for (const auto e : m_PendingDestroyEntities)
@@ -488,6 +634,9 @@ namespace Pressure
 
 	void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
 	{
+		if (!m_Box2DPhysicsSimulationEnabled)
+			return;
+
 		if (!m_IsPaused || m_StepFrames-- > 0)
 		{
 			// Physics
@@ -539,6 +688,10 @@ namespace Pressure
                 cameraComponent.Camera.SetViewportSize(width, height);
             }
         }
+
+		// Rebuild the quad tree
+		m_EntityQuadTree.reset();
+		m_EntityQuadTree = CreateScope<QuadTree<Entity>>(glm::vec3(0.0f), m_ViewportWidth / 2.0f);
     }
 
     void Scene::OnCreateEntityRuntime(Entity entity) const

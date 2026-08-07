@@ -224,6 +224,32 @@ namespace Pressure
 			}
 		}
 
+		void TransformComponent_GetRotation(const UUID entityId, glm::vec3* outRotation)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			*outRotation = entity.GetComponent<TransformComponent>().Rotation;
+		}
+
+		void TransformComponent_SetRotation(const UUID entityId, const glm::vec3* rotation)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			entity.GetComponent<TransformComponent>().Rotation = *rotation;
+
+			// Recreate the physics body if the entity has a RigidBody2DComponent
+			if (entity.HasComponent<RigidBody2DComponent>())
+			{
+				scene->InstantiatePhysicsBody(entity);
+			}
+		}
+
 		void RigidBody2DComponent_GetPosition(const UUID entityId, glm::vec2* outPosition)
 		{
 			Scene* scene = ScriptEngine::GetSceneContext();
@@ -363,6 +389,26 @@ namespace Pressure
 			*outText = ScriptEngine::NewString(textComponent.TextString.c_str());
 		}
 
+		void SpriteRendererComponent_GetColor(const UUID entityId, glm::vec4* outColor)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			*outColor = entity.GetComponent<SpriteRendererComponent>().Color;
+		}
+
+		void SpriteRendererComponent_SetColor(const UUID entityId, const glm::vec4* color)
+		{
+			Scene* scene = ScriptEngine::GetSceneContext();
+			PRS_CORE_ASSERT(scene);
+			Entity entity = scene->GetEntityByUUID(entityId);
+			PRS_CORE_ASSERT(entity);
+
+			entity.GetComponent<SpriteRendererComponent>().Color = *color;
+		}
+
 		bool Input_IsKeyDown(const KeyCode keyCode)
 		{
 			return Input::IsKeyPressed(keyCode);
@@ -432,6 +478,8 @@ namespace Pressure
 		PRS_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
 		PRS_ADD_INTERNAL_CALL(TransformComponent_GetScale);
 		PRS_ADD_INTERNAL_CALL(TransformComponent_SetScale);
+		PRS_ADD_INTERNAL_CALL(TransformComponent_GetRotation);
+		PRS_ADD_INTERNAL_CALL(TransformComponent_SetRotation);
 
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_GetPosition);
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetPosition);
@@ -444,6 +492,8 @@ namespace Pressure
 		PRS_ADD_INTERNAL_CALL(RigidBody2DComponent_SetBodyType);
 		PRS_ADD_INTERNAL_CALL(TextComponent_GetText);
 		PRS_ADD_INTERNAL_CALL(TextComponent_SetText);
+		PRS_ADD_INTERNAL_CALL(SpriteRendererComponent_GetColor);
+		PRS_ADD_INTERNAL_CALL(SpriteRendererComponent_SetColor);
 
 		PRS_ADD_INTERNAL_CALL(Input_IsKeyDown);
 	}

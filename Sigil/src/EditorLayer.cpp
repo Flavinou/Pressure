@@ -70,7 +70,7 @@ namespace Pressure
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
 
-		Renderer2D::SetLineWidth(4.0f);
+		Renderer2D::SetLineWidth(2.0f);
     }
 
     void EditorLayer::OnDetach()
@@ -295,7 +295,17 @@ namespace Pressure
         ImGui::End();
 
 		ImGui::Begin("Settings");
-		ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders); 
+
+		ImGui::Checkbox("Enable Box2D Physics Simulation", m_ActiveScene->IsBox2DPhysicsSimulationEnabled());
+		
+		ImGui::Separator();
+		ImGui::Text("Debug");
+		
+		ImGui::Checkbox("Show physics colliders", &m_ShowPhysicsColliders);
+		ImGui::Checkbox("Show physics quadtree", &m_ShowPhysicsQuadtree);
+
+		ImGui::Separator();
+		ImGui::Text("Currently loaded font atlas");
 
 		ImGui::Image(
 			reinterpret_cast<ImTextureID>(s_Font->GetAtlasTexture()->GetRendererID())
@@ -570,6 +580,16 @@ namespace Pressure
 					Renderer2D::DrawCircle(transform, glm::vec4(0, 1, 0, 1), 0.01f);
 				}
 			}
+		}
+
+		// Does not seem right, don't know why it does not subdivide a cell when the threshold of items for a single cell is reached ?
+		if (m_ShowPhysicsQuadtree)
+		{
+			m_ActiveScene->GetEntityQuadTree().ForEachNode(
+			[](const QuadTreeNode<Entity>& node)
+			{
+				Renderer2D::DrawRect(node.Center, glm::vec2(node.HalfExtent * 2.0f), glm::vec4(0, 1, 0, 1));
+			});
 		}
 
 		// Outline selected entity

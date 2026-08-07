@@ -12,6 +12,19 @@
 
 		public float LengthSquared => X * X + Y * Y;
 
+		private static readonly float TOLERANCE = 0.0001f;
+
+		public static bool operator ==(Vector2 a, Vector2 b)
+		{
+			return System.Math.Abs(a.X - b.X) < TOLERANCE
+			       && System.Math.Abs(a.Y - b.Y) < TOLERANCE;
+		}
+
+		public static bool operator !=(Vector2 a, Vector2 b)
+		{
+			return !(a == b);
+		}
+
 		public static Vector2 operator +(Vector2 a, Vector2 b)
 		{
 			return new Vector2(a.X + b.X, a.Y + b.Y);
@@ -38,6 +51,7 @@
 			X = x;
 			Y = y;
 		}
+
 		public Vector2 Normalized()
 		{
 			var length = Length;

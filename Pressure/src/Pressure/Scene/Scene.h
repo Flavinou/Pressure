@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Pressure/Containers/QuadTree.h"
 #include "Pressure/Core/Timestep.h"
 #include "Pressure/Core/UUID.h"
 #include "Pressure/Renderer/EditorCamera.h"
@@ -50,10 +51,14 @@ namespace Pressure
     	glm::vec2 GetViewportSize() const { return { m_ViewportWidth, m_ViewportHeight }; }
 		glm::vec3 ScreenToWorldPosition(const glm::vec3& screenPosition);
 
+		QuadTree<Entity>& GetEntityQuadTree() const { return *m_EntityQuadTree; }
+
 		bool IsRunning() const { return m_IsRunning; }
     	bool IsPaused() const { return m_IsPaused; }
-
 		void SetPaused(bool paused) { m_IsPaused = paused; }
+
+		bool* IsBox2DPhysicsSimulationEnabled() const { return const_cast<bool*>(&m_Box2DPhysicsSimulationEnabled); }
+		void SetBox2DPhysicsSimulationEnabled(const bool value) { m_Box2DPhysicsSimulationEnabled = value; }
 
 		template<typename... Components>
 		auto GetAllEntitiesWith()
@@ -68,7 +73,12 @@ namespace Pressure
 		void OnComponentAdded(Entity entity, T& component);
 
 		void OnPhysics2DStart();
+		void OnPhysics2DUpdate(Timestep ts);
 		void OnPhysics2DStop();
+
+		static bool CheckCollision(Entity entity, Entity otherEntity);
+
+		void OnScriptEngineUpdate(Timestep ts);
 
 		void RenderScene(EditorCamera& camera);
 
@@ -80,12 +90,19 @@ namespace Pressure
 		bool m_IsRunning = false;
 		bool m_IsPaused = false;
 		int m_StepFrames = 0;
+
+		// Box2D Physics
 		PhysicsWorldImpl* m_PhysicsImpl;
+		bool m_Box2DPhysicsSimulationEnabled = false;
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
 
 		// Runtime
+		std::vector<std::pair<UUID, UUID>> m_PendingCollisions;
 		std::vector<entt::entity> m_PendingDestroyEntities;
+
+		// Spatial partitioning for collision detection
+		Scope<QuadTree<Entity>> m_EntityQuadTree;
 
         friend class Entity;
 		friend class SceneHierarchyPanel;

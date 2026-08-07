@@ -59,6 +59,11 @@ namespace Pressure
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool TransformComponent_SetScale(ulong entityId, ref Vector3 scale);
 
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool TransformComponent_GetRotation(ulong entityId, out Vector3 rotation);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern bool TransformComponent_SetRotation(ulong entityId, ref Vector3 rotation);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void RigidBody2DComponent_GetPosition(ulong entityId, out Vector2 position);
@@ -92,6 +97,12 @@ namespace Pressure
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern void TextComponent_SetText(ulong entityId, string text);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SpriteRendererComponent_GetColor(ulong entityId, out Vector4 color);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		internal static extern void SpriteRendererComponent_SetColor(ulong entityId, ref Vector4 color);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		internal static extern bool Input_IsKeyDown(KeyCode keyCode);
