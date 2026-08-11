@@ -282,6 +282,7 @@ namespace Pressure
 			DisplayAddableComponent<ScriptComponent>("Script");
 			DisplayAddableComponent<SpriteRendererComponent>("Sprite Renderer");
 			DisplayAddableComponent<CircleRendererComponent>("Circle Renderer");
+			DisplayAddableComponent<ParticleEmitterComponent>("Particle Emitter");
 			DisplayAddableComponent<RigidBody2DComponent>("Rigid Body 2D");
 			DisplayAddableComponent<BoxCollider2DComponent>("Box Collider 2D");
 			DisplayAddableComponent<CircleCollider2DComponent>("Circle Collider 2D");
@@ -529,6 +530,25 @@ namespace Pressure
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 			ImGui::DragFloat("Thickness", &component.Thickness, 0.025f, 0.0f, 1.0f);
 			ImGui::DragFloat("Fade", &component.Fade, 0.00025f, 0.0f, 1.0f);
+		});
+
+		DrawComponent<ParticleEmitterComponent>("Particle Emitter", entity, [](auto& component)
+		{
+			ImGui::DragInt("Amount", &component.Amount, 1, 1, 1000);
+
+			ImGui::DragFloat2("Offset", glm::value_ptr(component.ParticleProps.Position), 0.1f, -10.0f, 10.0f);
+
+			ImGui::ColorEdit4("Birth Color", glm::value_ptr(component.ParticleProps.ColorBegin));
+			ImGui::ColorEdit4("Death Color", glm::value_ptr(component.ParticleProps.ColorEnd));
+
+			ImGui::DragFloat("Size Begin", &component.ParticleProps.SizeBegin, 0.1f, 0.0f, 10.0f);
+			ImGui::DragFloat("Size End", &component.ParticleProps.SizeEnd, 0.1f, 0.0f, 10.0f);
+			ImGui::DragFloat("Size Variation", &component.ParticleProps.SizeVariation, 0.1f, 0.0f, 10.0f);
+
+			ImGui::DragFloat2("Velocity", glm::value_ptr(component.ParticleProps.Velocity), 0.1f, -10.0f, 10.0f);
+			ImGui::DragFloat2("Velocity Variation", glm::value_ptr(component.ParticleProps.VelocityVariation), 0.1f, -10.0f, 10.0f);
+
+			ImGui::DragFloat("Life Time", &component.ParticleProps.LifeTime, 0.1f, 0.1f, 10.0f);
 		});
 
 		DrawComponent<RigidBody2DComponent>("RigidBody 2D", entity, [](auto& component)

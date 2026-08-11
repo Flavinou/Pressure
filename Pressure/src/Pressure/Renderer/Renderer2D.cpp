@@ -585,7 +585,7 @@ namespace Pressure
 	}
 
 	void Renderer2D::DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform,
-		const TextParams& textParams, int entityID /* = -1 */)
+	                            const TextParams& textParams, int entityID /* = -1 */)
 	{
 		const auto& fontGeometry = font->GetMSDFData().FontGeometry;
 		const auto& metrics = fontGeometry.getMetrics();

@@ -4,7 +4,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Platform/OpenGL/OpenGLShader.h"
 #include "Pressure/Core/Base.h"
 #include "Pressure/Math/Math.h"
 #include "Pressure/Renderer/Font.h"
@@ -24,8 +23,6 @@ namespace Pressure
 
     EditorLayer::EditorLayer()
         : Layer("EditorLayer")
-		, m_CameraController(1280.0f / 720.0f)
-		, m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
 		, m_SceneHierarchyPanel(CreateScope<SceneHierarchyPanel>())
     {
     }
@@ -90,7 +87,6 @@ namespace Pressure
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
             m_FrameBuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
         }
 
@@ -109,9 +105,6 @@ namespace Pressure
 		{
 			case SceneState::Edit:
 			{
-				if (m_ViewportFocused)
-					m_CameraController.OnUpdate(ts);
-
 				m_EditorCamera.OnUpdate(ts);
 
 				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
@@ -325,7 +318,6 @@ namespace Pressure
 		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
 		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
-        m_ViewportFocused = ImGui::IsWindowFocused();
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportHovered);
 
@@ -405,7 +397,6 @@ namespace Pressure
 
 	void EditorLayer::OnEvent(Event& e)
 	{
-		m_CameraController.OnEvent(e);
 		if (m_SceneState == SceneState::Edit)
 		{
 			m_EditorCamera.OnEvent(e);

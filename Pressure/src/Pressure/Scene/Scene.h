@@ -9,8 +9,8 @@
 
 namespace Pressure
 {
-
-    class Entity;
+	class Entity;
+	class ParticleSystem;
 
 	// Forward declaration of Box2D world id struct
 	struct PhysicsWorldImpl;
@@ -80,6 +80,8 @@ namespace Pressure
 
 		void OnScriptEngineUpdate(Timestep ts);
 
+		void OnParticlesUpdate(Timestep ts);
+
 		void RenderScene(EditorCamera& camera);
 
 		void DestroyEntityImmediate(Entity entity);
@@ -103,6 +105,9 @@ namespace Pressure
 
 		// Spatial partitioning for collision detection
 		Scope<QuadTree<Entity>> m_EntityQuadTree;
+
+		// Particles - not sure if this must live in the scene or in a separate layer ?
+    	Scope<ParticleSystem> m_ParticleSystem;
 
         friend class Entity;
 		friend class SceneHierarchyPanel;

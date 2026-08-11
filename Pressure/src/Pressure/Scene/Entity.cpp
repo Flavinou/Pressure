@@ -180,6 +180,11 @@ namespace Pressure
 	}
 
 	template<>
+	void Entity::OnComponentAddedOrReplaced<ParticleEmitterComponent>(Entity src, ParticleEmitterComponent& component)
+	{
+	}
+
+	template<>
 	void Entity::OnComponentAddedOrReplaced<NativeScriptComponent>(Entity src, NativeScriptComponent& component)
 	{
 	}

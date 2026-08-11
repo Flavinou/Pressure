@@ -3,6 +3,7 @@
 #include "Pressure/Core/UUID.h"
 #include "Pressure/Renderer/Font.h"
 #include "Pressure/Renderer/Texture.h"
+#include "Pressure/Renderer/ParticleSystem.h"
 #include "Pressure/Scene/SceneCamera.h"
 
 #include <glm/glm.hpp>
@@ -76,6 +77,16 @@ namespace Pressure
 
 		CircleRendererComponent() = default;
 		CircleRendererComponent(const CircleRendererComponent&) = default;
+	};
+
+	struct ParticleEmitterComponent
+	{
+		int Amount = 100;
+		ParticleProps ParticleProps;
+		// Ref<Texture2D> Texture; // TODO: Add texture support for particles
+
+		ParticleEmitterComponent() = default;
+		ParticleEmitterComponent(const ParticleEmitterComponent&) = default;
 	};
 
     struct CameraComponent
@@ -188,7 +199,7 @@ namespace Pressure
 
 	using AllComponents = 
 		ComponentGroup<TransformComponent, SpriteRendererComponent, 
-		CircleRendererComponent, CameraComponent, ScriptComponent, 
-		NativeScriptComponent, RigidBody2DComponent, BoxCollider2DComponent, 
-		CircleCollider2DComponent, TextComponent>;
+		CircleRendererComponent, ParticleEmitterComponent, CameraComponent, 
+		ScriptComponent, NativeScriptComponent, RigidBody2DComponent, 
+		BoxCollider2DComponent, CircleCollider2DComponent, TextComponent>;
 }

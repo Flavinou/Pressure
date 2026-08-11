@@ -229,6 +229,26 @@ namespace Pressure
 				out << YAML::EndMap; // CircleRendererComponent node
 			}
 
+			if (entity.HasComponent<ParticleEmitterComponent>())
+			{
+				out << YAML::Key << "ParticleEmitterComponent";
+				out << YAML::BeginMap; // ParticleEmitterComponent node
+
+				auto& pec = entity.GetComponent<ParticleEmitterComponent>();
+				out << YAML::Key << "Amount" << YAML::Value << pec.Amount;
+				out << YAML::Key << "Position" << YAML::Value << pec.ParticleProps.Position;
+				out << YAML::Key << "Velocity" << YAML::Value << pec.ParticleProps.Velocity;
+				out << YAML::Key << "VelocityVariation" << YAML::Value << pec.ParticleProps.VelocityVariation;
+				out << YAML::Key << "ColorBegin" << YAML::Value << pec.ParticleProps.ColorBegin;
+				out << YAML::Key << "ColorEnd" << YAML::Value << pec.ParticleProps.ColorEnd;
+				out << YAML::Key << "SizeBegin" << YAML::Value << pec.ParticleProps.SizeBegin;
+				out << YAML::Key << "SizeEnd" << YAML::Value << pec.ParticleProps.SizeEnd;
+				out << YAML::Key << "SizeVariation" << YAML::Value << pec.ParticleProps.SizeVariation;
+				out << YAML::Key << "LifeTime" << YAML::Value << pec.ParticleProps.LifeTime;
+
+				out << YAML::EndMap; // ParticleEmitterComponent node
+			}
+
 			if (entity.HasComponent<CameraComponent>())
 			{
 				out << YAML::Key << "CameraComponent";
@@ -564,6 +584,21 @@ namespace Pressure
 					Color = circleRendererComponentNode["Color"].as<glm::vec4>();
 					Thickness = circleRendererComponentNode["Thickness"].as<float>();
 					Fade = circleRendererComponentNode["Fade"].as<float>();
+				}
+
+				if (auto particleEmitterComponentNode = entityNode["ParticleEmitterComponent"])
+				{
+					auto& [Amount, ParticleProps] = deserializedEntity.AddComponent<ParticleEmitterComponent>();
+					Amount = particleEmitterComponentNode["Amount"].as<int>();
+					ParticleProps.Position = particleEmitterComponentNode["Position"].as<glm::vec2>();
+					ParticleProps.Velocity = particleEmitterComponentNode["Velocity"].as<glm::vec2>();
+					ParticleProps.VelocityVariation = particleEmitterComponentNode["VelocityVariation"].as<glm::vec2>();
+					ParticleProps.ColorBegin = particleEmitterComponentNode["ColorBegin"].as<glm::vec4>();
+					ParticleProps.ColorEnd = particleEmitterComponentNode["ColorEnd"].as<glm::vec4>();
+					ParticleProps.SizeBegin = particleEmitterComponentNode["SizeBegin"].as<float>();
+					ParticleProps.SizeEnd = particleEmitterComponentNode["SizeEnd"].as<float>();
+					ParticleProps.SizeVariation = particleEmitterComponentNode["SizeVariation"].as<float>();
+					ParticleProps.LifeTime = particleEmitterComponentNode["LifeTime"].as<float>();
 				}
 
 				if (auto rigidBody2DComponent = entityNode["RigidBody2DComponent"])
