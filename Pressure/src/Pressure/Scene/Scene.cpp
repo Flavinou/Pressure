@@ -4,6 +4,7 @@
 #include "Pressure/Core/Application.h"
 #include "Pressure/Physics/Physics2D.h"
 #include "Pressure/Renderer/Renderer2D.h"
+#include "Pressure/Renderer/ParticleSystem.h"
 #include "Pressure/Scene/Components.h"
 #include "Pressure/Scene/Entity.h"
 #include "Pressure/Scripting/ScriptEngine.h"
@@ -69,6 +70,7 @@ namespace Pressure
 		: m_PhysicsImpl(new PhysicsWorldImpl())
     {
 		m_EntityQuadTree = CreateScope<QuadTree<Entity>>(glm::vec3(0.0f), 100.0f);
+		m_ParticleSystem = CreateScope<ParticleSystem>();
     }
 
     Scene::~Scene()
@@ -541,6 +543,9 @@ namespace Pressure
 			// Physics
 			OnPhysics2DUpdate(ts);
 
+			// Particle updates
+			m_ParticleSystem->OnUpdate(ts);
+
 			// Deferred collision resolution
 			for (const auto& collision : m_PendingCollisions)
 			{
@@ -616,6 +621,22 @@ namespace Pressure
 				}
 			}
 
+			// Draw particles
+			{
+				const auto view = m_Registry.view<TransformComponent, ParticleEmitterComponent>(entt::exclude<DisabledComponent>);
+				for (auto entity : view)
+				{
+					auto& [transform, emitter] = view.get<TransformComponent, ParticleEmitterComponent>(entity);
+
+					// Emit particles at this entity's position with the specified particle properties
+					const glm::mat4& transformMatrix = transform.GetTransform();
+					for (unsigned int i = 0; i < emitter.Amount; ++i)
+						m_ParticleSystem->Emit(transformMatrix, emitter.ParticleProps);
+				}
+
+				m_ParticleSystem->OnRender();
+			}
+
 			// Draw text
             {
 	            const auto view = m_Registry.view<TransformComponent, TextComponent>(entt::exclude<DisabledComponent>);
@@ -630,7 +651,6 @@ namespace Pressure
             Renderer2D::EndScene();
         }
     }
-
 
 	void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
 	{
@@ -831,6 +851,11 @@ namespace Pressure
 
 	template<>
 	void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentAdded<ParticleEmitterComponent>(Entity entity, ParticleEmitterComponent& component)
 	{
 	}
 
