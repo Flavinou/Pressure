@@ -25,6 +25,7 @@ namespace Pressure
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+		bool OnWindowDrop(WindowDropEvent& e);
 
 		void OnOverlayRender();
 
@@ -35,12 +36,11 @@ namespace Pressure
 
 		void NewScene();
 		void OpenScene();
-		void OpenScene(const std::filesystem::path& path);
+		void OpenScene(AssetHandle handle);
 		void SaveSceneAs();
 		void SaveScene();
 
 		static void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
-		static bool DeserializeScene(Ref<Scene> scene, const std::filesystem::path& path);
 
 		void OnScenePlay();
 		void OnSceneStop();

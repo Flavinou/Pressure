@@ -1,6 +1,8 @@
 #include "prspch.h"
 #include "Pressure/Renderer/Renderer2D.h"
 
+#include "Pressure/Asset/AssetManager.h"
+
 #include "Pressure/Renderer/Font.h"
 #include "Pressure/Renderer/MSDFData.h"
 #include "Pressure/Renderer/RenderCommand.h"
@@ -208,7 +210,7 @@ namespace Pressure
 
 		s_Data.WhiteTexture = Texture2D::Create(TextureSpecification{ 1, 1, ImageFormat::RGBA8, false });
 		uint32_t whiteTextureData = 0xffffffff;
-		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
+		s_Data.WhiteTexture->SetData(Buffer(&whiteTextureData, sizeof(uint32_t)));
 
 		int32_t samplers[s_Data.MaxTextureSlots];
 		for (uint32_t i = 0 ; i < s_Data.MaxTextureSlots; i++)
@@ -437,6 +439,7 @@ namespace Pressure
     void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor /*= 1.0f*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/, int entityID /*= -1*/)
     {
         PRS_PROFILE_FUNCTION();
+		PRS_CORE_VERIFY(texture);
 
         constexpr size_t quadVertexCount = 4;
         constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -572,11 +575,13 @@ namespace Pressure
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawSprite(const glm::mat4 transform, SpriteRendererComponent& src, int entityID)
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
 	{
 		if (src.Texture)
 		{
-			DrawQuad(transform, src.Texture, src.TilingFactor, src.Color, entityID);
+			// TODO: A bit lazy to get the texture from the asset manager every time, should probably already have a texture loaded beforehand
+			const Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(src.Texture);
+			DrawQuad(transform, texture, src.TilingFactor, src.Color, entityID);
 		}
 		else
 		{

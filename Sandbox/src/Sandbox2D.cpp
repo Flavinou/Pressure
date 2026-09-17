@@ -1,6 +1,8 @@
 #include "Sandbox2D.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Pressure/Debug/Instrumentor.h"
+#include "Pressure/Asset/TextureImporter.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,7 +17,7 @@ void Sandbox2D::OnAttach()
 {
 	PRS_PROFILE_FUNCTION();
 
-	m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
+	m_VoronoiTexture = Pressure::TextureImporter::LoadTexture2D("assets/textures/Voronoi2.png");
 }
 
 void Sandbox2D::OnDetach()

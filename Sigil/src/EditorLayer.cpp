@@ -5,7 +5,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Pressure/Asset/AssetManager.h"
+#include "Pressure/Asset/TextureImporter.h"
 #include "Pressure/Core/Base.h"
+#include "Pressure/Debug/Instrumentor.h"
 #include "Pressure/Math/Math.h"
 #include "Pressure/Renderer/Font.h"
 #include "Pressure/Scene/SceneSerializer.h"
@@ -13,6 +16,7 @@
 #include "Pressure/Utils/PlatformUtils.h"
 
 #include "ImGuizmo.h"
+#include "Pressure/Asset/SceneImporter.h"
 
 namespace Pressure
 {
@@ -42,12 +46,12 @@ namespace Pressure
         fbSpec.Height = 720;
         m_FrameBuffer = FrameBuffer::Create(fbSpec);
 
-		m_IconPlay = Texture2D::Create("resources/icons/play_icon.png");
-		m_IconStep = Texture2D::Create("resources/icons/step_icon.png");
-		m_IconPause = Texture2D::Create("resources/icons/pause_icon.png");
-		m_IconResume = Texture2D::Create("resources/icons/resume_icon.png");
-		m_IconStop = Texture2D::Create("resources/icons/stop_icon.png");
-		m_IconSimulate = Texture2D::Create("resources/icons/simulate_icon.png");
+		m_IconPlay = TextureImporter::LoadTexture2D("resources/icons/play_icon.png");
+		m_IconStep = TextureImporter::LoadTexture2D("resources/icons/step_icon.png");
+		m_IconPause = TextureImporter::LoadTexture2D("resources/icons/pause_icon.png");
+		m_IconResume = TextureImporter::LoadTexture2D("resources/icons/resume_icon.png");
+		m_IconStop = TextureImporter::LoadTexture2D("resources/icons/stop_icon.png");
+		m_IconSimulate = TextureImporter::LoadTexture2D("resources/icons/simulate_icon.png");
 
 		m_EditorScene = CreateRef<Scene>();
 		m_ActiveScene = m_EditorScene;
@@ -329,10 +333,8 @@ namespace Pressure
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
-				const wchar_t* path = static_cast<const wchar_t*>(payload->Data);
-
-				OpenScene(path);
-				ImGui::EndDragDropTarget();
+				AssetHandle handle = *static_cast<AssetHandle*>(payload->Data);
+				OpenScene(handle);
 			}
 		}
 
@@ -404,6 +406,7 @@ namespace Pressure
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(PRS_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(PRS_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+		dispatcher.Dispatch<WindowDropEvent>(PRS_BIND_EVENT_FN(EditorLayer::OnWindowDrop));
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -518,6 +521,14 @@ namespace Pressure
 		return false;
 	}
 
+	bool EditorLayer::OnWindowDrop(WindowDropEvent& e)
+	{
+		// TODO: If a project is dropped in, probably open it
+		// AssetManager::ImportAsset();
+
+		return true;
+	}
+
 	void EditorLayer::OnOverlayRender()
 	{
 		if (m_SceneState == SceneState::Play)
@@ -613,8 +624,12 @@ namespace Pressure
 			const std::string title = fmt::format("Sigil Editor - {}", projectName);
 			SetWindowTitle(title);
 
-			auto startScenePath = Project::GetAssetRelativePath(project->GetConfig().StartScene);
-			OpenScene(startScenePath);
+			AssetHandle startScene = Project::GetActive()->GetConfig().StartScene;
+			if (startScene)
+			{
+				OpenScene(startScene);
+			}
+
 			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
 		}
 	}
@@ -634,41 +649,33 @@ namespace Pressure
 
 	void EditorLayer::OpenScene()
 	{
-		std::string filePath = FileDialogs::OpenFile({
-			{ "Pressure Scene files", "*.prs" },
-			{ "All files", "*.*" }
-			});
-		if (!filePath.empty())
-		{
-			OpenScene(filePath);
-		}
+		// std::string filePath = FileDialogs::OpenFile({
+		// 	{ "Pressure Scene files", "*.prs" },
+		// 	{ "All files", "*.*" }
+		// 	});
+		// if (!filePath.empty())
+		// {
+		// 	OpenScene(filePath);
+		// }
 	}
 
-	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	void EditorLayer::OpenScene(AssetHandle handle)
 	{
+		PRS_CORE_ASSERT(handle);
+
 		if (m_SceneState != SceneState::Edit)
 		{
 			OnSceneStop();
 		}
 
-		if (path.extension().string() != ".prs")
-		{
-			PRS_CORE_ERROR("Could not load scene '{0}' - not a \".prs\" scene file", path.filename().string());
-			return;
-		}
-
-		Ref<Scene> newScene = CreateRef<Scene>();
-		if (!DeserializeScene(newScene, path))
-		{
-			PRS_CORE_ERROR("Could not load scene '{0}' - deserialization failed", path.filename().string());
-			return;
-		}
+		Ref<Scene> readOnlyScene = AssetManager::GetAsset<Scene>(handle);
+		Ref<Scene> newScene = Scene::Copy(readOnlyScene);
 
 		m_EditorScene = newScene;
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 
 		m_ActiveScene = m_EditorScene;
-		m_EditorScenePath = path;
+		m_EditorScenePath = Project::GetActive()->GetEditorAssetManager()->GetFilePath(handle);
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -698,14 +705,7 @@ namespace Pressure
 
 	void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)
 	{
-    	SceneSerializer serializer(scene);
-    	serializer.Serialize(path.string());
-	}
-
-	bool EditorLayer::DeserializeScene(Ref<Scene> scene, const std::filesystem::path& path)
-	{
-		SceneSerializer serializer(scene);
-		return serializer.Deserialize(path.string());
+		SceneImporter::SaveScene(scene, path);
 	}
 
 	void EditorLayer::OnScenePlay()

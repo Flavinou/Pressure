@@ -208,9 +208,7 @@ namespace Pressure
 
 				auto& src = entity.GetComponent<SpriteRendererComponent>();
 				out << YAML::Key << "Color" << YAML::Value << src.Color;
-				if (src.Texture)
-					out << YAML::Key << "TexturePath" << YAML::Value << src.Texture->GetPath();
-
+				out << YAML::Key << "TextureHandle" << YAML::Value << src.Texture;
 				out << YAML::Key << "TilingFactor" << YAML::Value << src.TilingFactor;
 
 				out << YAML::EndMap; // SpriteRendererComponent node
@@ -383,7 +381,7 @@ namespace Pressure
 	{
 	}
 
-	void SceneSerializer::Serialize(const std::string& filePath)
+	void SceneSerializer::Serialize(const std::filesystem::path& filePath)
 	{		
 		PRS_CORE_TRACE("Serializing active scene...");
 
@@ -408,13 +406,13 @@ namespace Pressure
 		PRS_CORE_TRACE("Serializing done.");
 	}
 
-	void SceneSerializer::SerializeRuntime(const std::string& filePath)
+	void SceneSerializer::SerializeRuntime(const std::filesystem::path& filePath)
 	{
 		// Not implemented
 		PRS_CORE_ASSERT(false);
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& filePath)
+	bool SceneSerializer::Deserialize(const std::filesystem::path& filePath)
 	{
 		try 
 		{
@@ -422,7 +420,7 @@ namespace Pressure
 
 			try
 			{
-				rootNode = YAML::LoadFile(filePath);
+				rootNode = YAML::LoadFile(filePath.string());
 			}
 			catch (YAML::ParserException& e)
 			{
@@ -540,13 +538,19 @@ namespace Pressure
 					auto& [Color, Texture, TilingFactor] = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					Color = spriteRendererComponentNode["Color"].as<glm::vec4>();
 
-					if (spriteRendererComponentNode["TexturePath"])
-					{
-						std::string texturePath = spriteRendererComponentNode["TexturePath"].as<std::string>();
-						auto path = Project::GetAssetRelativePath(texturePath);
-						Texture = Texture2D::Create(path.string());
-					}
+					// TODO: Legacy, could try and find something in the asset registry that matches?
+					// if (spriteRendererComponentNode["TexturePath"])
+					// {
+					// 	std::string texturePath = spriteRendererComponentNode["TexturePath"].as<std::string>();
+					// 	auto path = Project::GetAssetRelativePath(texturePath);
+					// 	Texture = Texture2D::Create(path.string());
+					// }
 					
+					if (spriteRendererComponentNode["TextureHandle"])
+					{
+						Texture = spriteRendererComponentNode["TextureHandle"].as<AssetHandle>();
+					}
+
 					if (spriteRendererComponentNode["TilingFactor"])
 					{
 						TilingFactor = spriteRendererComponentNode["TilingFactor"].as<float>();
@@ -611,7 +615,7 @@ namespace Pressure
 		return true;
 	}
 
-	bool SceneSerializer::DeserializeRuntime(const std::string& filePath)
+	bool SceneSerializer::DeserializeRuntime(const std::filesystem::path& filePath)
 	{
 		//Not implemented
 		PRS_CORE_ASSERT(false);

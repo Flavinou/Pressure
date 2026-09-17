@@ -24,6 +24,7 @@
 #include <unordered_set>
 
 #include "Pressure/Core/Base.h"
+#include "Pressure/Core/Buffer.h"
 
 #include "Pressure/Core/Log.h"
 

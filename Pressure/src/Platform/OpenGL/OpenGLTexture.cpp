@@ -35,7 +35,7 @@ namespace Pressure
 
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(const TextureSpecification& specification)
+	OpenGLTexture2D::OpenGLTexture2D(const TextureSpecification& specification, Buffer data/* = {}*/)
 		: m_Specification(specification)
 	{
 		PRS_PROFILE_FUNCTION();
@@ -51,65 +51,10 @@ namespace Pressure
 
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	}
-
-	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
-		: m_Path(path)
-	{
-		PRS_PROFILE_FUNCTION();
-
-		int width, height, channels;
-		stbi_set_flip_vertically_on_load(1);
-
-		stbi_uc* data;
-		{
-			PRS_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&)");
-			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-		}
 
 		if (data)
 		{
-			m_IsLoaded = true;
-			
-			m_Specification.Width = width;
-			m_Specification.Height = height;
-
-			// Support both RGB and RGBA
-			GLenum internalFormat = 0, dataFormat = 0;
-			if (channels == 4)
-			{
-				internalFormat = GL_RGBA8;
-				dataFormat = GL_RGBA;
-			}
-			else if (channels == 3)
-			{
-				internalFormat = GL_RGB8;
-				dataFormat = GL_RGB;
-			}
-
-			m_InternalFormat = internalFormat;
-			m_DataFormat = dataFormat;
-
-			PRS_CORE_ASSERT(internalFormat & dataFormat, "Format not supported !");
-
-			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Specification.Width, m_Specification.Height);
-
-			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			GLenum wrapMode = m_Specification.Clamp ? GL_CLAMP_TO_EDGE : GL_REPEAT;
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, wrapMode);
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, wrapMode);
-
-			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, dataFormat, GL_UNSIGNED_BYTE, data);
-			
-			if (m_Specification.GenerateMips)
-			{
-				glGenerateMipmap(GL_TEXTURE_2D);
-			}
-
-			stbi_image_free(data);
+			OpenGLTexture2D::SetData(data);
 		}
 	}
 
@@ -120,19 +65,19 @@ namespace Pressure
 		glDeleteTextures(1, &m_RendererID);
 	}
 
-	void OpenGLTexture2D::SetData(void* data, uint32_t size)
+	void OpenGLTexture2D::SetData(Buffer data)
 	{
 		PRS_PROFILE_FUNCTION();
 
 		uint32_t bytesPerPixel = m_DataFormat == GL_RGBA ? 4 : 3;
-		PRS_CORE_ASSERT(size == m_Specification.Width * m_Specification.Height * bytesPerPixel, "Data must be entire texture !");
+		PRS_CORE_ASSERT(data.Size == m_Specification.Width * m_Specification.Height * bytesPerPixel, "Data must be entire texture !");
 
 		if (m_DataFormat == GL_RGB)
 		{
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		}
 
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Specification.Width, m_Specification.Height, m_DataFormat, GL_UNSIGNED_BYTE, data.Data);
 
 		if (m_DataFormat == GL_RGB)
 		{

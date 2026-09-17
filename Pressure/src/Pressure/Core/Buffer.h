@@ -17,6 +17,11 @@ namespace Pressure
 			Allocate(size);
 		}
 
+		Buffer(const void* data, uint64_t size)
+			: Data((std::byte*)data), Size(size)
+		{
+		}
+
 		static Buffer Copy(Buffer other)
 		{
 			Buffer result(other.Size);
@@ -28,13 +33,13 @@ namespace Pressure
 		{
 			Release();
 
-			Data = new std::byte[size];
+			Data = (std::byte*)malloc(size);
 			Size = size;
 		}
 
 		void Release()
 		{
-			delete[] Data;
+			free(Data);
 			Data = nullptr;
 			Size = 0;
 		}

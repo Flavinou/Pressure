@@ -48,7 +48,7 @@ namespace Pressure
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.0f, float fade = 0.05f, int entityID = -1);
 
-		static void DrawSprite(const glm::mat4 transform, SpriteRendererComponent& src, int entityID);
+		static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID);
 
 		struct TextParams
 		{

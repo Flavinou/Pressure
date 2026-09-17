@@ -2,6 +2,7 @@
 
 #include "Pressure/Core/Base.h"
 #include "Pressure/Core/Application.h"
+#include "Pressure/Debug/Instrumentor.h"
 
 #ifdef PRS_PLATFORM_WINDOWS
 

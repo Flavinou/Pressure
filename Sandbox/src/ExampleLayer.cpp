@@ -1,6 +1,7 @@
 #include "ExampleLayer.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Pressure/Asset/TextureImporter.h"
 
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -123,8 +124,8 @@ ExampleLayer::ExampleLayer()
 
 	auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
-	m_VoronoiTexture = Pressure::Texture2D::Create("assets/textures/Voronoi2.png");
-	m_CloudyTexture = Pressure::Texture2D::Create("assets/textures/cloudy.png");
+	m_VoronoiTexture = Pressure::TextureImporter::LoadTexture2D("assets/textures/Voronoi2.png");
+	m_CloudyTexture = Pressure::TextureImporter::LoadTexture2D("assets/textures/cloudy.png");
 
 	textureShader->Bind();
 	textureShader->SetInt("u_Texture", 0);

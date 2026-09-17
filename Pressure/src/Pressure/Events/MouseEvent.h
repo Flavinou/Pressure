@@ -3,6 +3,8 @@
 #include "Pressure/Events/Event.h"
 #include "Pressure/Core/MouseCodes.h"
 
+#include <sstream>
+
 namespace Pressure {
 
 	class MouseMovedEvent : public Event

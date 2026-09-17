@@ -23,6 +23,11 @@ namespace Pressure
 
 			project->m_ProjectDirectory = path.parent_path();
 			ms_ActiveProject = project;
+			Ref<EditorAssetManager> editorAssetManager = CreateRef<EditorAssetManager>();
+			ms_ActiveProject->m_AssetManager = editorAssetManager;
+
+			editorAssetManager->DeserializeAssetRegistry();
+
 			return ms_ActiveProject;
 		}
 

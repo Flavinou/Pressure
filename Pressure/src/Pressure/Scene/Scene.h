@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Pressure/Asset/Asset.h"
 #include "Pressure/Core/Timestep.h"
 #include "Pressure/Core/UUID.h"
 #include "Pressure/Renderer/EditorCamera.h"
 
 #include <entt.hpp>
-
 namespace Pressure
 {
 
@@ -14,7 +14,7 @@ namespace Pressure
 	// Forward declaration of Box2D world id struct
 	struct PhysicsWorldImpl;
 
-    class Scene
+    class Scene : public Asset
     {
     public:
         Scene();
@@ -55,6 +55,8 @@ namespace Pressure
 
         static Ref<Scene> Copy(Ref<Scene> other);
 
+		AssetType GetType() const override { return AssetType::Scene; }
+
     private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -63,6 +65,7 @@ namespace Pressure
 		void OnPhysics2DStop();
 
 		void RenderScene(EditorCamera& camera);
+
     private:
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
